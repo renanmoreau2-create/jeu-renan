@@ -130,7 +130,9 @@ Les types s'inspirent des grandes références du genre : les infectés spéciau
 ## 7. Vagues et économie
 
 - Nombre de zombies : environ 10 à la vague 1, environ 50 à la vague 10, plus de 100 à la vague 20.
-- Points de vie : multipliés par environ 1,13 par vague (courbe exponentielle, conforme aux retours des joueurs du genre).
+- Points de vie : multipliés par environ 1,12 par vague (courbe exponentielle, conforme aux retours des joueurs du genre).
+- Chaque nouveau type de zombie est annoncé à son arrivée, avec la parade conseillée.
+- Armure du boss progressive : 4 à la vague 10, 6 à la vague 20, 8 à partir de la vague 30.
 - Intervalle d'apparition : de plus en plus court. Les zombies se répartissent entre les chemins ouverts.
 - Récompense par zombie : augmente avec la vague. La prime de fin de vague est garantie.
 - Vitesse de jeu ×1, ×2 ou ×3, et pause.
@@ -142,7 +144,17 @@ Les types s'inspirent des grandes références du genre : les infectés spéciau
 - **Minigun** : exclu, parce qu'il n'est pas portable à la main par un soldat. La demande était « toutes les armes qu'un soldat peut porter ».
 - **RPO-A Shmel en arme finale** : c'est l'arme portable non guidée au souffle le plus puissant de la liste (charge thermobarique). Un missile guidé comme l'Akeron MP ou le Javelin aurait moins de sens contre des zombies.
 
-## 9. Pistes V2
+## 9. Calibrage V1 (simulations automatiques)
+
+Un joueur automatique qui répartit ses achats entre tours, armes, pièges, améliorations et modules atteint la **vague 20 à 30**. Un joueur qui thésaurise sans renforcer le bunker tombe vers la **vague 12** (arrivée de la Brute). Les murs de difficulté voulus sont les boss des vagues 10, 20 et 30.
+
+Ajustements faits après simulation :
+- Bouffi moins destructeur au contact.
+- Cracheur à portée de toutes les armes sauf le lance-flammes : le Benelli ne pouvait plus l'atteindre.
+- Premier boss allégé : il était quasi invulnérable aux armes disponibles à la vague 10.
+- Brute un peu moins résistante.
+
+## 10. Pistes V2
 
 - Défenses qui s'usent : barbelés arrachés par les brutes, à réparer.
 - Munitions et rechargement par arme.
