@@ -4,8 +4,9 @@ Tower defense post-apocalyptique pour téléphone : un homme seul tient un basti
 
 **Jouer :** https://renanmoreau2-create.github.io/jeu-renan/
 
-- Trois arbres d'évolution : les armes de l'homme (11 armes réelles, du Glock 17 au RPO-A Shmel), le bunker (des sacs de sable au bunker blindé, avec modules), les défenses du chemin (pièges et tours, 3 niveaux chacun).
-- Neuf types de zombies, un boss toutes les 10 vagues, trois chemins qui s'ouvrent au fil des vagues.
+- Un arbre d'évolution unique : on démarre par un nid de mitrailleuse, puis on part en Tir (11 armes réelles, du Glock 17 au RPO-A Shmel), Appui (tours), Génie (pièges) ou Fortification (bunker et modules).
+- Tours sur emplacements balisés uniquement, pièges libres sur le chemin.
+- Des hordes : neuf types de zombies, un boss toutes les 10 vagues, trois chemins qui s'ouvrent au fil des vagues.
 - Sauvegarde automatique sur l'appareil entre deux vagues.
 
 Fichiers :

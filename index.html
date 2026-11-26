@@ -87,6 +87,34 @@
   .bcard .d{font-size:11px;color:var(--mute);margin-top:3px;line-height:1.3}
   .bcard:disabled{opacity:.45}
   .hint{font-size:12px;color:var(--mute);margin:2px 2px 8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  /* Arbre */
+  #tree{position:fixed;inset:0;z-index:8;background:#101315;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+  #tree.hide{display:none}
+  .thead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#14171a}
+  #treeMoney{color:var(--khaki);font-weight:700}
+  #treeBody{flex:1;overflow-y:auto;padding:8px 10px calc(24px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+  .lane{margin-top:14px}
+  .lane h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--khaki);margin:0}
+  .lane .ld{font-size:11px;color:var(--mute);margin-bottom:4px}
+  .tn{position:relative}
+  .tc{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin:5px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+  .tc.own{border-color:var(--khaki2);background:#23231b}
+  .tc.av{border-color:#8a9a5e;box-shadow:0 0 0 1px rgba(200,178,115,.25)}
+  .tc.lock{opacity:.5}
+  .tc.open{border-bottom-left-radius:0;border-bottom-right-radius:0}
+  .tc .nm{font-size:13px;font-weight:600}
+  .tc .st{font-size:11px;color:var(--mute);margin-top:1px}
+  .tc .cost{color:var(--khaki);font-size:13px;font-weight:700;white-space:nowrap}
+  .xr{font-size:10px;font-weight:500;color:#b9a46a;border:1px solid #4a4430;border-radius:8px;padding:1px 6px;margin-left:5px;white-space:nowrap}
+  .tk{margin-left:10px;padding-left:12px;border-left:2px solid #333a3e}
+  .tk.own{border-left-color:var(--khaki2)}
+  .tk>.tn:before{content:"";position:absolute;left:-12px;top:21px;width:11px;height:2px;background:#333a3e}
+  .tk>.tn.own:before{background:var(--khaki2)}
+  .td{background:#181b1d;border:1px solid var(--line);border-top:0;border-radius:0 0 9px 9px;margin:-5px 0 6px;padding:8px 9px}
+  .lvrow{font-size:12px;padding:4px 0;border-bottom:1px dashed #2c3236;opacity:.65}
+  .lvrow.cur{opacity:1;color:var(--khaki)}
+  .lvrow.done{opacity:.85}
   /* Overlay */
   #overlay{position:fixed;inset:0;background:rgba(8,9,10,.93);display:flex;align-items:center;justify-content:center;z-index:10;padding:24px}
   #overlay.hide{display:none}
@@ -117,12 +145,15 @@
   </div>
   <div id="weaponBar"></div>
   <nav id="tabs">
-    <button class="tab" data-tab="armes">Armes</button>
-    <button class="tab" data-tab="bunker">Bunker</button>
-    <button class="tab" data-tab="defenses">Défenses</button>
+    <button class="tab" data-tab="arbre">Arbre</button>
+    <button class="tab" data-tab="construire">Construire</button>
     <button id="btnWave">Lancer vague 1</button>
   </nav>
   <section id="panel"></section>
+</div>
+<div id="tree" class="hide">
+  <div class="thead"><div><b>Arbre d'évolution</b><div class="note">Argent : <span id="treeMoney">0</span></div></div><button class="btn" data-act="closeTree">Fermer</button></div>
+  <div id="treeBody"></div>
 </div>
 <div id="overlay"></div>
 <noscript><p style="padding:20px">Ce jeu nécessite JavaScript.</p></noscript>
@@ -135,7 +166,7 @@
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
 const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
-const SKEY = 'dernierBastion.save.v2', BKEY = 'dernierBastion.best';
+const SKEY = 'dernierBastion.save.v3', BKEY = 'dernierBastion.best';
 
 const PATHS_DEF = [
   { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
@@ -165,7 +196,7 @@ const WEAPONS = [
     note:"Lance-grenades revolver 40 mm à 6 coups." },
   { id:'hecate', name:'PGM Hécate II',            short:'Hécate II',  kind:'bullet',   dmg:340, rate:0.75,range:420, pierce:4, ap:0.85, cost:6500,  snd:'heavy',
     note:"Fusil anti-matériel 12,7 mm de l'armée française." },
-  { id:'m2flame',name:'Lance-flammes M2',         short:'Lance-flammes', kind:'flame', dmg:9,   rate:15,  range:80,  cone:0.42, burn:22, ap:1, cost:8500, snd:'flame',
+  { id:'m2flame',name:'Lance-flammes M2',         short:'Lance-flammes M2', kind:'flame', dmg:9,   rate:15,  range:80,  cone:0.42, burn:22, ap:1, cost:8500, snd:'flame',
     note:"Lance-flammes dorsal, portée efficace d'environ 20 m." },
   { id:'carlg',  name:'Carl Gustaf M4',           short:'Carl Gustaf',kind:'explosive',dmg:300, rate:0.55,range:270, radius:65, speed:330, ap:0.5, cost:12000, snd:'boom',
     note:"Arme multirôle sans recul de 84 mm." },
@@ -222,7 +253,7 @@ const DEF = {
            { n:'Mortier 60 mm',      cost:500,  dmg:55,  r:36, rate:0.45, range:230, min:45 },
            { n:'Mortier 81 mm',      cost:950,  dmg:120, r:46, rate:0.5,  range:260, min:45 },
            { n:'Mortier 120 mm',     cost:2000, dmg:280, r:60, rate:0.5,  range:300, min:50 } ] },
-  flamer:{ name:'Lance-flammes', place:'side', levels:[
+  flamer:{ name:'Tour lance-flammes', place:'side', levels:[
            { n:'Lance-flammes léger',cost:550,  dps:30,  range:62, burn:8 },
            { n:'Lance-flammes lourd',cost:1000, dps:60,  range:72, burn:15 },
            { n:'Lance-napalm',       cost:2100, dps:110, range:82, burn:30 } ] },
@@ -231,14 +262,14 @@ const DEF_ORDER = ['wire','mine','ditch','mgnest','sniper','mortar','flamer'];
 
 // Bestiaire
 const ZT = {
-  walker:  { name:'Rôdeur',     hp:30,   speed:20, dmg:6,  armor:0, reward:4,   r:7,  color:'#6f7d5c', from:1,  w:10 },
-  runner:  { name:'Coureur',    hp:20,   speed:46, dmg:5,  armor:0, reward:4,   r:6,  color:'#a3a97c', from:3,  w:6 },
-  crawler: { name:'Rampant',    hp:36,   speed:15, dmg:5,  armor:0, reward:5,   r:6,  color:'#5e5b48', from:5,  w:4, noWire:true },
-  bloater: { name:'Bouffi',     hp:75,   speed:15, dmg:0,  armor:0, reward:8,   r:11, color:'#9ca24c', from:7,  w:2.5, boom:50 },
-  armored: { name:'Blindé',     hp:110,  speed:18, dmg:8,  armor:4, reward:9,   r:8,  color:'#4c5866', from:8,  w:3 },
-  spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:8,   r:7,  color:'#6fae4a', from:9,  w:2, spit:12, spitRange:100, spitCd:2 },
-  screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:9,   r:7,  color:'#cfc6b2', from:11, w:1.5, aura:70 },
-  brute:   { name:'Brute',      hp:700,  speed:13, dmg:22, armor:3, reward:50,  r:14, color:'#7a3d2c', from:12, w:0.6 },
+  walker:  { name:'Rôdeur',     hp:30,   speed:20, dmg:6,  armor:0, reward:5,   r:7,  color:'#6f7d5c', from:1,  w:10 },
+  runner:  { name:'Coureur',    hp:20,   speed:46, dmg:5,  armor:0, reward:5,   r:6,  color:'#a3a97c', from:3,  w:6 },
+  crawler: { name:'Rampant',    hp:36,   speed:15, dmg:5,  armor:0, reward:6,   r:6,  color:'#5e5b48', from:5,  w:4, noWire:true },
+  bloater: { name:'Bouffi',     hp:75,   speed:15, dmg:0,  armor:0, reward:10,  r:11, color:'#9ca24c', from:7,  w:2.5, boom:50 },
+  armored: { name:'Blindé',     hp:110,  speed:18, dmg:8,  armor:4, reward:11,  r:8,  color:'#4c5866', from:8,  w:3 },
+  spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:10,  r:7,  color:'#6fae4a', from:9,  w:2, spit:12, spitRange:100, spitCd:2 },
+  screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:11,  r:7,  color:'#cfc6b2', from:11, w:1.5, aura:70 },
+  brute:   { name:'Brute',      hp:700,  speed:13, dmg:22, armor:3, reward:60,  r:14, color:'#7a3d2c', from:12, w:0.6 },
   boss:    { name:'Abomination',hp:2400, speed:9,  dmg:60, armor:8, reward:400, r:22, color:'#3f2643', from:999, w:0, boss:true },
 };
 
@@ -310,7 +341,8 @@ function freshState() {
     defs: [], defMap: new Map(),
     zombies: [], projs: [], tracers: [], booms: [], parts: [], texts: [],
     queue: [], spawnT: 0, waveCount: 0, killed: 0,
-    speed: 1, paused: false, tab: 'armes', panelOpen: true, placing: null, selected: null, focus: null,
+    speed: 1, paused: false, tab: 'construire', panelOpen: true, placing: null, selected: null, focus: null,
+    unlocked: {}, defLv: { wire: 0, mine: 0, ditch: 0, mgnest: 0, sniper: 0, mortar: 0, flamer: 0 }, treeOpen: false, treeSel: null, treePaused: false,
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
   };
 }
@@ -820,6 +852,103 @@ function gameOver() {
 }
 
 /* =========================================================
+   ARBRE D'EVOLUTION UNIQUE
+   Chaque noeud = un élément (arme, tour, piège, niveau de bunker, module).
+   Débloquer un noeud ouvre ses enfants ; à l'intérieur d'un noeud acquis,
+   on améliore l'élément (cadence/puissance/zone, ou niveaux 2 et 3).
+   ========================================================= */
+const ROOT = 'mgnest';
+const LANES = [
+  { id:'tir',   name:'Tir',           desc:"Les armes de l'homme" },
+  { id:'appui', name:'Appui',         desc:'Tours de tir, sur les emplacements balisés' },
+  { id:'genie', name:'Génie',         desc:'Pièges, sur le chemin' },
+  { id:'fort',  name:'Fortification', desc:'Le bunker et ses modules' },
+];
+const UNLOCK_COST = { mgnest:50, wire:80, sniper:250, mine:150, ditch:120, mortar:600, flamer:600 };
+const TREE = [
+  { id:'mgnest',  kind:'def',    ref:'mgnest',  lane:'root',  parent:null },
+  // Tir
+  { id:'glock',   kind:'weapon', ref:'glock',   lane:'tir',   parent:'mgnest', start:true },
+  { id:'mp5',     kind:'weapon', ref:'mp5',     lane:'tir',   parent:'glock' },
+  { id:'benelli', kind:'weapon', ref:'benelli', lane:'tir',   parent:'mp5' },
+  { id:'m32',     kind:'weapon', ref:'m32',     lane:'tir',   parent:'benelli', req:[['mine', 1]] },
+  { id:'carlg',   kind:'weapon', ref:'carlg',   lane:'tir',   parent:'m32',     req:[['mortar', 1]] },
+  { id:'shmel',   kind:'weapon', ref:'shmel',   lane:'tir',   parent:'carlg',   req:[['m2flame', 1]] },
+  { id:'m2flame', kind:'weapon', ref:'m2flame', lane:'tir',   parent:'benelli', req:[['flamer', 1]] },
+  { id:'hk416',   kind:'weapon', ref:'hk416',   lane:'tir',   parent:'mp5' },
+  { id:'scar',    kind:'weapon', ref:'scar',    lane:'tir',   parent:'hk416' },
+  { id:'hecate',  kind:'weapon', ref:'hecate',  lane:'tir',   parent:'scar',    req:[['sniper', 1]] },
+  { id:'minimi',  kind:'weapon', ref:'minimi',  lane:'tir',   parent:'hk416',   req:[['mgnest', 2]] },
+  // Appui
+  { id:'sniper',  kind:'def',    ref:'sniper',  lane:'appui', parent:'mgnest' },
+  { id:'mortar',  kind:'def',    ref:'mortar',  lane:'appui', parent:'sniper',  req:[['mine', 1]] },
+  { id:'flamer',  kind:'def',    ref:'flamer',  lane:'appui', parent:'mgnest',  req:[['ditch', 1]] },
+  // Génie
+  { id:'wire',    kind:'def',    ref:'wire',    lane:'genie', parent:'mgnest' },
+  { id:'mine',    kind:'def',    ref:'mine',    lane:'genie', parent:'wire' },
+  { id:'ditch',   kind:'def',    ref:'ditch',   lane:'genie', parent:'wire' },
+  // Fortification
+  { id:'muret',   kind:'bunker', ref:1,         lane:'fort',  parent:'mgnest' },
+  { id:'mWire',   kind:'module', ref:'wire',    lane:'fort',  parent:'muret',   req:[['wire', 1]] },
+  { id:'hesco',   kind:'bunker', ref:2,         lane:'fort',  parent:'muret' },
+  { id:'mClay',   kind:'module', ref:'claymore',lane:'fort',  parent:'hesco',   req:[['mine', 1]] },
+  { id:'mMg',     kind:'module', ref:'mg',      lane:'fort',  parent:'hesco',   req:[['mgnest', 3]] },
+  { id:'casemate',kind:'bunker', ref:3,         lane:'fort',  parent:'hesco' },
+  { id:'mFlame',  kind:'module', ref:'flame',   lane:'fort',  parent:'casemate',req:[['flamer', 1]] },
+  { id:'blinde',  kind:'bunker', ref:4,         lane:'fort',  parent:'casemate' },
+  { id:'mRock',   kind:'module', ref:'rockets', lane:'fort',  parent:'blinde' },
+];
+const NODE = Object.fromEntries(TREE.map(n => [n.id, n]));
+
+function nodeName(n) { return n.kind === 'weapon' ? WBY[n.ref].name : n.kind === 'def' ? DEF[n.ref].name : n.kind === 'bunker' ? BUNKER_LV[n.ref].name : MODULES[n.ref].name; }
+function shortName(n) { return n.kind === 'weapon' ? WBY[n.ref].short : nodeName(n); }
+function nodeCost(n) { return n.kind === 'weapon' ? WBY[n.ref].cost : n.kind === 'def' ? UNLOCK_COST[n.ref] : n.kind === 'bunker' ? BUNKER_LV[n.ref].cost : MODULES[n.ref].levels[0].cost; }
+function nodeLevel(n) {
+  switch (n.kind) {
+    case 'def': return G.unlocked[n.ref] ? G.defLv[n.ref] + 1 : 0;
+    case 'weapon': return G.weapons[n.ref].owned ? 1 : 0;
+    case 'bunker': return G.bunkerLv >= n.ref ? 1 : 0;
+    default: return G.mods[n.ref];
+  }
+}
+const owned = n => nodeLevel(n) > 0;
+const rootOwned = () => !!G.unlocked[ROOT];
+function nodeReqs(n) { const r = n.parent ? [[n.parent, 1]] : []; return r.concat(n.req || []); }
+function nodeAvailable(n) {
+  if (owned(n)) return false;
+  if (n.id !== ROOT && !rootOwned()) return false;
+  return nodeReqs(n).every(([id, lv]) => nodeLevel(NODE[id]) >= lv);
+}
+function reqText(n) {
+  if (n.id !== ROOT && !rootOwned()) return 'Nid de mitrailleuse';
+  return nodeReqs(n).filter(([id, lv]) => nodeLevel(NODE[id]) < lv).map(([id, lv]) => shortName(NODE[id]) + (lv > 1 ? ' niv. ' + lv : '')).join(' + ');
+}
+const defUpCost = (type, toLv) => Math.round(DEF[type].levels[toLv].cost * 2);
+const placeCost = type => Math.round(DEF[type].levels[0].cost * (1 + 0.5 * G.defLv[type]));
+
+function buyNode(id) {
+  const n = NODE[id];
+  if (!n || !nodeAvailable(n)) return false;
+  if (!spend(nodeCost(n))) return false;
+  if (n.kind === 'weapon') { G.weapons[n.ref].owned = true; G.equipped = n.ref; }
+  else if (n.kind === 'def') { G.unlocked[n.ref] = true; G.defLv[n.ref] = 0; }
+  else if (n.kind === 'bunker') { const old = bunkerMax(); G.bunkerLv = n.ref; G.hp += bunkerMax() - old; }
+  else G.mods[n.ref] = 1;
+  const opened = TREE.filter(x => nodeAvailable(x) && nodeReqs(x).some(([p]) => p === id));
+  toast(`${nodeName(n)} débloqué.` + (opened.length ? ` Ouvre : ${opened.map(shortName).join(', ')}.` : ''), 3200);
+  return true;
+}
+function upgradeDef(type) {
+  const lv = G.defLv[type];
+  if (!G.unlocked[type] || lv >= 2) return false;
+  if (!spend(defUpCost(type, lv + 1))) return false;
+  G.defLv[type] = lv + 1;
+  G.defs.forEach(d => { if (d.type === type) d.lv = lv + 1; });
+  toast(`${DEF[type].levels[lv + 1].n} : toutes les défenses de ce type sont améliorées.`, 2800);
+  return true;
+}
+
+/* =========================================================
    SAUVEGARDE
    ========================================================= */
 function loadBest() { try { return parseInt(localStorage.getItem(BKEY) || '0', 10) || 0; } catch (e) { return 0; } }
@@ -827,11 +956,12 @@ function saveBest() { try { localStorage.setItem(BKEY, String(G.best)); } catch 
 function saveGame() {
   if (G.mode !== 'build') return;
   try {
-    localStorage.setItem(SKEY, JSON.stringify({ v:1, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
-      weapons:G.weapons, equipped:G.equipped, defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent })) }));
+    localStorage.setItem(SKEY, JSON.stringify({ v:3, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
+      weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defLv:G.defLv,
+      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, spent:d.spent })) }));
   } catch (e) {}
 }
-function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v === 1 ? d : null; } catch (e) { return null; } }
+function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v === 3 ? d : null; } catch (e) { return null; } }
 
 function newGame(fromSave) {
   G = freshState();
@@ -841,19 +971,21 @@ function newGame(fromSave) {
     G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods);
     WEAPONS.forEach(w => { if (d.weapons[w.id]) G.weapons[w.id] = d.weapons[w.id]; });
     G.equipped = G.weapons[d.equipped] && G.weapons[d.equipped].owned ? d.equipped : 'glock';
-    d.defs.forEach(x => addDef(x.type, x.c, x.r, x.lv, x.spent));
+    G.unlocked = d.unlocked || {}; G.defLv = Object.assign(G.defLv, d.defLv || {});
+    d.defs.forEach(x => { if (G.unlocked[x.type]) addDef(x.type, x.c, x.r, G.defLv[x.type], x.spent); });
   }
   G.mode = 'build'; G.panelOpen = true;
   hideOverlay();
   renderAll();
-  toast(fromSave ? `Partie reprise : prochaine vague ${G.wave + 1}` : 'Préparez la défense, puis lancez la vague.', 2800);
+  toast(fromSave ? `Partie reprise : prochaine vague ${G.wave + 1}` : "Ouvrez l'arbre : premier choix, le nid de mitrailleuse.", 3200);
 }
 
 /* =========================================================
    ACTIONS JOUEUR
    ========================================================= */
 function addDef(type, c, r, lv, spent) {
-  const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: lv || 0, spent: spent || DEF[type].levels[0].cost, cd: 0, ang: -Math.PI / 2, flash: 0, on: 0 };
+  const L = lv === undefined ? (G.defLv[type] || 0) : lv;
+  const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: L, spent: spent || placeCost(type), cd: 0, ang: -Math.PI / 2, flash: 0, on: 0 };
   G.defs.push(d); G.defMap.set(c + ',' + r, d);
   return d;
 }
@@ -867,20 +999,35 @@ function canPlace(type, c, r) {
 }
 function spend(n) { if (G.money < n) { toast('Pas assez d\'argent.'); return false; } G.money -= n; return true; }
 
+function openTree(sel) {
+  if (G.mode === 'wave' && !G.paused) { G.paused = true; G.treePaused = true; }
+  G.treeOpen = true; G.treeSel = sel || null; G.placing = null;
+  renderAll();
+  if (sel) requestAnimationFrame(() => { const el = document.querySelector(`#treeBody .tc[data-id="${sel}"]`); if (el) el.scrollIntoView({ block: 'center' }); });
+}
+function closeTree() {
+  G.treeOpen = false;
+  if (G.treePaused) { G.paused = false; G.treePaused = false; }
+  renderAll();
+}
+
 function act(a, ds) {
   SND.init(); SND.play('click');
   switch (a) {
     case 'equip': if (G.weapons[ds.id].owned) { G.equipped = ds.id; G.heroCd = Math.min(G.heroCd, 0.2); } break;
-    case 'unlock': { const w = WBY[ds.id]; if (spend(w.cost)) { G.weapons[w.id].owned = true; G.equipped = w.id; toast(`${w.name} débloqué.`); } break; }
-    case 'upW': { const w = WBY[ds.id], b = +ds.b, st = G.weapons[w.id]; if (st.up[b] < 5 && spend(upCost(w, st.up[b]))) st.up[b]++; break; }
-    case 'bunkerUp': { const n = G.bunkerLv + 1; if (n < BUNKER_LV.length && spend(BUNKER_LV[n].cost)) { const old = bunkerMax(); G.bunkerLv = n; G.hp += bunkerMax() - old; toast(`${BUNKER_LV[n].name} construit.`); } break; }
-    case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv < 3 && G.bunkerLv >= m.req && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
+    case 'node': buyNode(ds.id); break;
+    case 'upW': { const w = WBY[ds.id], b = +ds.b, st = G.weapons[w.id]; if (rootOwned() && st.owned && st.up[b] < 5 && spend(upCost(w, st.up[b]))) st.up[b]++; break; }
+    case 'defUp': upgradeDef(ds.type); break;
+    case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv >= 1 && lv < 3 && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
     case 'repair': { const miss = bunkerMax() - G.hp, cost = Math.ceil(miss / 2), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * 2); } break; }
-    case 'place': G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; if (G.placing) G.panelOpen = false; break;
-    case 'stopPlace': G.placing = null; G.tab = 'defenses'; G.panelOpen = true; break;
-    case 'upDef': { const d = G.selected; if (d && d.lv < 2) { const c = DEF[d.type].levels[d.lv + 1].cost; if (spend(c)) { d.lv++; d.spent += c; } } break; }
+    case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; if (G.placing) G.panelOpen = false; break;
+    case 'stopPlace': G.placing = null; G.tab = 'construire'; G.panelOpen = true; break;
     case 'sellDef': { const d = G.selected; if (d) { G.money += Math.floor(d.spent * 0.6); G.defs = G.defs.filter(x => x !== d); G.defMap.delete(d.c + ',' + d.r); G.selected = null; } break; }
     case 'closeSel': G.selected = null; break;
+    case 'treeSel': G.treeSel = G.treeSel === ds.id ? null : ds.id; break;
+    case 'openTree': openTree(null); return;
+    case 'openNode': openTree(ds.id); return;
+    case 'closeTree': closeTree(); return;
     case 'new': { const s = loadSave(); if (s && !confirmNew()) return; try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null); return; }
     case 'continue': { const s = loadSave(); newGame(s); return; }
   }
@@ -901,10 +1048,14 @@ function onTap(wx, wy) {
   if (G.mode !== 'build' && G.mode !== 'wave') return;
   const c = Math.floor(wx / T), r = Math.floor(wy / T), k = c + ',' + r;
   if (G.placing) {
-    if (G.defMap.has(k)) { G.placing = null; G.selected = G.defMap.get(k); G.tab = 'defenses'; G.panelOpen = true; renderAll(); return; }
+    if (G.defMap.has(k)) { G.placing = null; G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
     if (canPlace(G.placing, c, r)) {
-      const L0 = DEF[G.placing].levels[0];
-      if (spend(L0.cost)) { addDef(G.placing, c, r); SND.play('click'); if (G.money < L0.cost) { G.placing = null; G.panelOpen = G.mode === 'build'; toast('Fonds épuisés pour cette défense.', 1500); } if (G.mode === 'build') saveGame(); }
+      const cost = placeCost(G.placing);
+      if (spend(cost)) {
+        addDef(G.placing, c, r, G.defLv[G.placing], cost); SND.play('click');
+        if (G.money < placeCost(G.placing)) { G.placing = null; G.panelOpen = G.mode === 'build'; toast('Fonds épuisés pour cette défense.', 1500); }
+        if (G.mode === 'build') saveGame();
+      }
     } else {
       toast(DEF[G.placing].place === 'path' ? 'Un piège se pose sur le chemin.' : 'Une tour se pose uniquement sur un emplacement balisé.', 1400);
     }
@@ -914,8 +1065,8 @@ function onTap(wx, wy) {
   let bestZ = null, bd = 22 * 22;
   for (const z of G.zombies) { if (z.dead) continue; const d2 = (z.x - wx) ** 2 + (z.y - wy) ** 2; if (d2 < bd) { bd = d2; bestZ = z; } }
   if (bestZ) { G.focus = bestZ; return; }
-  if (G.defMap.has(k)) { G.selected = G.defMap.get(k); G.tab = 'defenses'; G.panelOpen = true; renderAll(); return; }
-  if (Math.hypot(wx - BX, wy - BY) < BR + 6) { G.tab = 'bunker'; G.selected = null; G.panelOpen = true; renderAll(); return; }
+  if (G.defMap.has(k)) { G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
+  if (Math.hypot(wx - BX, wy - BY) < BR + 6) { G.tab = 'construire'; G.selected = null; G.panelOpen = true; renderAll(); return; }
   if (G.selected) { G.selected = null; renderAll(); }
 }
 
@@ -943,32 +1094,6 @@ function statLine(w, s) {
   return parts.join(' · ');
 }
 
-function panelArmes() {
-  let h = '<div class="sect">L\'homme et son arsenal</div>';
-  const firstLocked = WEAPONS.findIndex(w => !G.weapons[w.id].owned);
-  WEAPONS.forEach((w, i) => {
-    const st = G.weapons[w.id];
-    if (st.owned) {
-      const s = ws(w.id), eq = G.equipped === w.id;
-      h += `<div class="card ${eq ? 'eq' : ''}"><div class="row"><div><b>${w.name}</b><div class="note">${w.note}</div></div>` +
-        (eq ? '<span class="tag">Équipée</span>' : `<button class="btn" data-act="equip" data-id="${w.id}">Équiper</button>`) + `</div>` +
-        `<div class="stats">${statLine(w, s)}</div>` +
-        ['Cadence', 'Puissance', 'Zone : ' + zoneLabel(w).toLowerCase()].map((lab, b) => {
-          const lv = st.up[b];
-          return `<div class="br"><span class="bl">${lab}</span>${pips(lv, 5)}` +
-            (lv < 5 ? `<button class="btn buy" data-act="upW" data-id="${w.id}" data-b="${b}" data-cost="${upCost(w, lv)}">+ ${fmt(upCost(w, lv))}</button>` : '<span class="tag">Max</span>') + '</div>';
-        }).join('') + '</div>';
-    } else if (i === firstLocked) {
-      h += `<div class="card"><div class="row"><div><b>${w.name}</b><div class="note">${w.note}</div></div>` +
-        `<button class="btn buy" data-act="unlock" data-id="${w.id}" data-cost="${w.cost}">Débloquer ${fmt(w.cost)}</button></div>` +
-        `<div class="stats">${statLine(w, w)}</div></div>`;
-    } else {
-      h += `<div class="card locked"><b>${w.name}</b> · ${fmt(w.cost)}<div class="note">Après : ${WEAPONS[i - 1].short}</div></div>`;
-    }
-  });
-  return h;
-}
-
 function modDesc(id, L) {
   switch (id) {
     case 'wire': return `Ralentit de ${Math.round(L.slow * 100)} % et inflige ${L.dps} dégâts/s autour du bunker (sauf rampants)`;
@@ -978,29 +1103,6 @@ function modDesc(id, L) {
     case 'rockets': return `Salve de ${L.n} roquettes (${L.dmg} dégâts de zone) toutes les ${String(L.cd).replace('.', ',')} s`;
   }
   return '';
-}
-function panelBunker() {
-  const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / 2);
-  let h = `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div>`;
-  h += `<div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()} : chaque coup reçu est réduit d'autant</div></div>` +
-    (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
-  h += '<div class="sect">Structure (tronc de l\'arbre)</div><div class="tree">';
-  BUNKER_LV.forEach((L, i) => {
-    const done = i <= G.bunkerLv, next = i === G.bunkerLv + 1;
-    h += `<div class="tnode ${done ? 'done' : ''}"><div class="card ${i === G.bunkerLv ? 'eq' : ''} ${!done && !next ? 'locked' : ''}"><div class="row"><div><b>${i + 1}. ${L.name}</b><div class="note">${fmt(L.hp)} PV · armure ${L.armor}</div></div>` +
-      (done ? (i === G.bunkerLv ? '<span class="tag">Actuel</span>' : '<span class="tag">Acquis</span>') :
-        next ? `<button class="btn buy" data-act="bunkerUp" data-cost="${L.cost}">Construire ${fmt(L.cost)}</button>` : `<span class="note">${fmt(L.cost)}</span>`) + '</div></div></div>';
-  });
-  h += '</div><div class="sect">Modules (branches)</div><div class="tree">';
-  MOD_ORDER.forEach(id => {
-    const m = MODULES[id], lv = G.mods[id], ok = G.bunkerLv >= m.req;
-    const Lc = lv ? m.levels[lv - 1] : m.levels[0];
-    h += `<div class="tnode"><div class="card ${!ok ? 'locked' : ''}"><div class="row"><div><b>${m.name}</b><div class="note">${ok ? (lv ? 'Actuel : ' : 'Niv. 1 : ') + modDesc(id, Lc) + (lv && lv < 3 ? '<br>Niv. ' + (lv + 1) + ' : ' + modDesc(id, m.levels[lv]) : '') : 'Requiert : ' + BUNKER_LV[m.req].name}</div></div>` +
-      (!ok ? '' : lv >= 3 ? '<span class="tag">Max</span>' : `<button class="btn buy" data-act="modUp" data-id="${id}" data-cost="${m.levels[lv].cost}">${lv ? 'Niv. ' + (lv + 1) : 'Installer'} ${fmt(m.levels[lv].cost)}</button>`) +
-      `</div>${ok ? `<div class="br"><span class="bl">Niveau</span>${pips(lv, 3)}</div>` : ''}</div></div>`;
-  });
-  h += '</div>';
-  return h;
 }
 
 function defDesc(type, L) {
@@ -1015,33 +1117,117 @@ function defDesc(type, L) {
   }
   return '';
 }
-function panelDefenses() {
+
+function treeCard(n) {
+  const lv = nodeLevel(n), own = lv > 0, av = nodeAvailable(n);
+  let st;
+  if (own) {
+    if (n.kind === 'weapon') { const u = G.weapons[n.ref].up; st = (G.equipped === n.ref ? 'Équipée · ' : '') + `cad. ${u[0]} · puis. ${u[1]} · zone ${u[2]}`; }
+    else if (n.kind === 'def') st = `Niv. ${lv}/3 · ${DEF[n.ref].levels[lv - 1].n}`;
+    else if (n.kind === 'module') st = `Niv. ${lv}/3`;
+    else st = 'Construit';
+  } else st = av ? 'Disponible' : 'Requiert : ' + reqText(n);
+  const x = (n.req || []).map(([id, l]) => `<span class="xr">+ ${shortName(NODE[id])}${l > 1 ? ' niv. ' + l : ''}</span>`).join('');
+  const right = own ? '<span class="tag">Acquis</span>' : `<span class="${av ? 'cost' : 'note'}">${fmt(nodeCost(n))}</span>`;
+  return `<div class="tc ${own ? 'own' : av ? 'av' : 'lock'} ${G.treeSel === n.id ? 'open' : ''}" data-act="treeSel" data-id="${n.id}"><div><div class="nm">${nodeName(n)}${x}</div><div class="st">${st}</div></div>${right}</div>` +
+    (G.treeSel === n.id ? treeDetail(n) : '');
+}
+function lvRows(levels, lv, own, desc) {
+  return levels.map((L, i) => `<div class="lvrow ${own && i === lv - 1 ? 'cur' : own && i < lv ? 'done' : ''}"><b>Niv. ${i + 1}${L.n ? ' · ' + L.n : ''}</b><div class="note">${desc(L)}</div></div>`).join('');
+}
+function treeDetail(n) {
+  const lv = nodeLevel(n), own = lv > 0, av = nodeAvailable(n), gate = rootOwned();
+  let h = '<div class="td">';
+  if (n.kind === 'weapon') {
+    const w = WBY[n.ref], st = G.weapons[w.id];
+    h += `<div class="note">${w.note}</div><div class="stats">${statLine(w, own ? ws(w.id) : w)}</div>`;
+    if (own) {
+      h += G.equipped === w.id ? '<div class="br"><span class="tag">Équipée</span></div>' : `<div class="br"><button class="btn" data-act="equip" data-id="${w.id}">Équiper</button></div>`;
+      h += ['Cadence', 'Puissance', 'Zone : ' + zoneLabel(w).toLowerCase()].map((lab, b) => {
+        const l = st.up[b];
+        return `<div class="br"><span class="bl">${lab}</span>${pips(l, 5)}` +
+          (l >= 5 ? '<span class="tag">Max</span>' : gate ? `<button class="btn buy" data-act="upW" data-id="${w.id}" data-b="${b}" data-cost="${upCost(w, l)}">+ ${fmt(upCost(w, l))}</button>` : '<span class="note">après le nid</span>') + '</div>';
+      }).join('');
+    }
+  } else if (n.kind === 'def') {
+    const D = DEF[n.ref];
+    h += `<div class="note">${D.place === 'path' ? 'Piège : se pose sur le chemin.' : 'Tour : se pose sur un emplacement balisé.'}</div>`;
+    h += lvRows(D.levels, lv, own, L => defDesc(n.ref, L));
+    if (own) {
+      h += `<div class="note" style="margin-top:6px">Coût de pose : ${fmt(placeCost(n.ref))} par unité. Améliorer s'applique à toutes celles déjà posées.</div>`;
+      if (lv < 3) h += `<div class="br"><button class="btn buy" data-act="defUp" data-type="${n.ref}" data-cost="${defUpCost(n.ref, lv)}">Niv. ${lv + 1} partout : ${fmt(defUpCost(n.ref, lv))}</button></div>`;
+    }
+  } else if (n.kind === 'bunker') {
+    const L = BUNKER_LV[n.ref];
+    h += `<div class="stats">${fmt(L.hp)} PV · armure ${L.armor}</div>`;
+  } else {
+    const m = MODULES[n.ref];
+    h += lvRows(m.levels, lv, own, L => modDesc(n.ref, L));
+    if (own && lv < 3) h += `<div class="br"><button class="btn buy" data-act="modUp" data-id="${n.ref}" data-cost="${m.levels[lv].cost}">Niv. ${lv + 1} : ${fmt(m.levels[lv].cost)}</button></div>`;
+  }
+  if (!own) h += av ? `<div class="br"><button class="btn buy" data-act="node" data-id="${n.id}" data-cost="${nodeCost(n)}">Débloquer : ${fmt(nodeCost(n))}</button></div>`
+                   : `<div class="note" style="margin-top:6px">Requiert : ${reqText(n)}</div>`;
+  const kids = TREE.filter(x => nodeReqs(x).some(([p]) => p === n.id));
+  if (kids.length) h += `<div class="note" style="margin-top:6px">Ouvre : ${kids.map(shortName).join(', ')}</div>`;
+  return h + '</div>';
+}
+function renderTree() {
+  $('tree').classList.toggle('hide', !G.treeOpen);
+  if (!G.treeOpen) return;
+  $('treeMoney').textContent = fmt(G.money);
+  const body = $('treeBody'), top = body.scrollTop;
+  const sub = n => {
+    const ks = TREE.filter(x => x.parent === n.id && x.lane === n.lane);
+    return `<div class="tn ${owned(n) ? 'own' : ''}">` + treeCard(n) + (ks.length ? `<div class="tk ${owned(n) ? 'own' : ''}">${ks.map(sub).join('')}</div>` : '') + '</div>';
+  };
+  let h = rootOwned() ? '<div class="hint">Touchez un élément pour le détailler. Débloquer ouvre de nouvelles branches ; dans un élément acquis, vous l\'améliorez.</div>'
+                      : '<div class="hint">Premier et seul choix possible : le nid de mitrailleuse. Il ouvre les quatre directions.</div>';
+  h += `<div class="lane"><h3>Point de départ</h3>${treeCard(NODE[ROOT])}</div>`;
+  LANES.forEach(L => {
+    const tops = TREE.filter(x => x.lane === L.id && x.parent === ROOT);
+    h += `<div class="lane"><h3>${L.name}</h3><div class="ld">${L.desc}</div><div class="tk ${rootOwned() ? 'own' : ''}">${tops.map(sub).join('')}</div></div>`;
+  });
+  body.innerHTML = h; body.scrollTop = top;
+  refreshAfford(true);
+}
+
+function panelBuild() {
   let h = '';
   const d = G.selected;
   if (d) {
-    const D = DEF[d.type], L = D.levels[d.lv], N = D.levels[d.lv + 1];
+    const D = DEF[d.type], L = D.levels[d.lv];
     h += `<div class="sect">${D.name} · niveau ${d.lv + 1}</div><div class="card sel"><b>${L.n}</b><div class="stats">${defDesc(d.type, L)}</div>` +
-      `<div class="br"><span class="bl">Niveau</span>${pips(d.lv + 1, 3)}</div>` +
-      (N ? `<div class="br"><span class="bl">Suivant</span><span style="flex:1;font-size:12px">${N.n} : ${defDesc(d.type, N)}</span></div>` : '') +
-      `<div class="row" style="margin-top:8px">` +
-      (N ? `<button class="btn buy" data-act="upDef" data-cost="${N.cost}">Améliorer ${fmt(N.cost)}</button>` : '<span class="tag">Niveau max</span>') +
+      `<div class="note">L'amélioration se fait dans l'arbre et s'applique à toutes les défenses de ce type.</div>` +
+      `<div class="row" style="margin-top:8px"><button class="btn buy" data-act="openNode" data-id="${d.type}">Voir dans l'arbre</button>` +
       `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div></div>`;
   }
+  const ownedW = WEAPONS.filter(w => G.weapons[w.id].owned);
+  h += `<div class="sect">Arme de l'homme</div><div class="chips">${ownedW.map(w => `<button class="wchip ${G.equipped === w.id ? 'eq' : ''}" data-act="equip" data-id="${w.id}">${w.short}</button>`).join('')}</div>`;
+  const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / 2);
+  h += `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div><div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}. Évolutions : arbre, branche Fortification.</div></div>` +
+    (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
   const freeSlots = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
-  h += `<div class="sect">Construire</div><div class="hint">Pièges : n'importe où sur le chemin. Tours : uniquement sur les emplacements balisés (${freeSlots} libre${freeSlots > 1 ? 's' : ''} sur ${SLOTS.length}). Touchez une défense posée pour l'améliorer.</div><div class="grid2">`;
-  DEF_ORDER.forEach(type => {
-    const D = DEF[type], L = D.levels[0];
-    h += `<button class="bcard ${G.placing === type ? 'on' : ''}" data-act="place" data-type="${type}" data-cost="${L.cost}"><span class="k">${D.place === 'path' ? 'Piège' : 'Tour'}</span><b>${D.name}</b><span class="c">${fmt(L.cost)}</span><div class="d">${D.levels.map(x => x.n).join(' > ')}</div></button>`;
-  });
-  return h + '</div>';
+  h += `<div class="sect">Poser une défense</div><div class="hint">Pièges : n'importe où sur le chemin. Tours : uniquement sur les emplacements balisés (${freeSlots} libre${freeSlots > 1 ? 's' : ''} sur ${SLOTS.length}).</div>`;
+  const avail = DEF_ORDER.filter(t => G.unlocked[t]);
+  if (!avail.length) {
+    h += `<div class="card"><div class="row"><div>Aucune défense débloquée.<div class="note">Premier choix dans l'arbre : le nid de mitrailleuse.</div></div><button class="btn buy" data-act="openTree">Ouvrir l'arbre</button></div></div>`;
+  } else {
+    h += '<div class="grid2">' + avail.map(type => {
+      const D = DEF[type], lv = G.defLv[type], c = placeCost(type);
+      return `<button class="bcard ${G.placing === type ? 'on' : ''}" data-act="place" data-type="${type}" data-cost="${c}"><span class="k">${D.place === 'path' ? 'Piège' : 'Tour'} · niv. ${lv + 1}</span><b>${D.name}</b><span class="c">${fmt(c)}</span><div class="d">${D.levels[lv].n}</div></button>`;
+    }).join('') + '</div>';
+    const locked = DEF_ORDER.length - avail.length;
+    if (locked) h += `<div class="hint" style="margin-top:8px">${locked} autre${locked > 1 ? 's' : ''} défense${locked > 1 ? 's' : ''} à débloquer dans l'arbre.</div>`;
+  }
+  return h;
 }
 
 function renderPanel() {
   panel.classList.toggle('closed', !G.panelOpen);
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', G.panelOpen && b.dataset.tab === G.tab));
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === 'arbre' ? G.treeOpen : G.panelOpen));
   if (!G.panelOpen) return;
   const top = panel.scrollTop;
-  panel.innerHTML = G.tab === 'armes' ? panelArmes() : G.tab === 'bunker' ? panelBunker() : panelDefenses();
+  panel.innerHTML = panelBuild();
   panel.scrollTop = top;
   refreshAfford(true);
 }
@@ -1049,7 +1235,8 @@ function refreshAfford(force) {
   const m = Math.floor(G.money);
   if (!force && m === G.lastMoney) return;
   G.lastMoney = m;
-  panel.querySelectorAll('[data-cost]').forEach(b => { b.disabled = m < +b.dataset.cost; });
+  document.querySelectorAll('#panel [data-cost], #treeBody [data-cost]').forEach(b => { b.disabled = m < +b.dataset.cost; });
+  if (G.treeOpen) $('treeMoney').textContent = fmt(G.money);
 }
 function renderWeaponBar() {
   const owned = WEAPONS.filter(w => G.weapons[w.id].owned);
@@ -1064,7 +1251,7 @@ function renderWaveBtn() {
 function renderPlaceBar() {
   const pb = $('placeBar');
   pb.classList.toggle('show', !!G.placing);
-  if (G.placing) $('placeTxt').textContent = `${DEF[G.placing].name} (${fmt(DEF[G.placing].levels[0].cost)}) : ${DEF[G.placing].place === 'path' ? 'touchez le chemin' : 'touchez un emplacement'}`;
+  if (G.placing) $('placeTxt').textContent = `${DEF[G.placing].name} (${fmt(placeCost(G.placing))}) : ${DEF[G.placing].place === 'path' ? 'touchez le chemin' : 'touchez un emplacement'}`;
 }
 function renderButtons() {
   $('btnSpeed').textContent = 'x' + G.speed; $('btnSpeed').classList.toggle('on', G.speed > 1);
@@ -1072,7 +1259,7 @@ function renderButtons() {
   $('btnSound').classList.toggle('on', SND.on);
   $('weaponBar').classList.toggle('hide', G.panelOpen || !(G.mode === 'build' || G.mode === 'wave'));
 }
-function renderAll() { renderPanel(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
+function renderAll() { renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
 
 let hudCache = '';
 function hud(force) {
@@ -1096,8 +1283,8 @@ function showOverlay(kind) {
       `<button class="big" data-act="new">Nouvelle partie</button><div class="rec">Record : vague ${best}</div>`;
   } else {
     h += `<h1>DERNIER BASTION</h1><div class="sub">Tenez le bastion. Aussi longtemps que possible.</div>` +
-      `<p>Les zombies suivent les chemins jusqu'au bastion central. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
-      `Entre deux vagues : améliorez ses armes (cadence, puissance, zone), faites évoluer le bunker et posez des défenses. Les pièges se posent sur le chemin, les tours à côté.</p>` +
+      `<p>Les hordes suivent les chemins jusqu'au bastion central. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
+      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Les pièges se posent sur le chemin, les tours sur les emplacements balisés.</p>` +
       (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
       (best ? `<div class="rec">Record : vague ${best}</div>` : '');
   }
@@ -1450,7 +1637,7 @@ function draw() {
   // portées
   const showRange = (x, y, r, col) => { ctx.strokeStyle = col; ctx.setLineDash([4, 4]); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); };
   if (G.selected) { const L = DEF[G.selected.type].levels[G.selected.lv]; if (L.range) showRange(G.selected.x, G.selected.y, L.range, 'rgba(200,178,115,0.7)'); ctx.strokeStyle = '#c8b273'; ctx.lineWidth = 1.5; ctx.strokeRect(G.selected.c * T + 1, G.selected.r * T + 1, T - 2, T - 2); }
-  if (G.mode === 'build' && (G.tab === 'armes' && G.panelOpen)) showRange(BX, BY, ws(G.equipped).range, 'rgba(200,178,115,0.35)');
+  if (G.mode === 'build' && G.panelOpen && !G.selected && !G.placing) showRange(BX, BY, ws(G.equipped).range, 'rgba(200,178,115,0.35)');
   // cible prioritaire
   if (G.focus && !G.focus.dead) {
     const f = G.focus, rr = f.r + 5 + Math.sin(G.time * 10) * 1.5;
@@ -1493,10 +1680,10 @@ $('placeBar').addEventListener('click', e => { const b = e.target.closest('[data
 $('overlay').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   SND.init();
-  if (G.tab === b.dataset.tab && G.panelOpen) G.panelOpen = false; else { G.tab = b.dataset.tab; G.panelOpen = true; }
-  if (G.tab !== 'defenses') G.placing = null;
-  renderAll();
+  if (b.dataset.tab === 'arbre') { openTree(null); return; }
+  G.panelOpen = !G.panelOpen; G.tab = 'construire'; renderAll();
 }));
+$('tree').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
 $('btnWave').addEventListener('click', () => { SND.init(); startWave(); });
 $('btnSpeed').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; renderButtons(); });
 $('btnPause').addEventListener('click', () => { G.paused = !G.paused; renderButtons(); });
@@ -1517,7 +1704,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET,
+  get G() { return G; }, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeDef, placeCost, defUpCost, openTree, closeTree,
 };
 })();
 </script>
