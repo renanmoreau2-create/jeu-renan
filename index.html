@@ -143,7 +143,23 @@
   .ov p{font-size:13px;color:#c9c5b8;line-height:1.5;text-align:left;background:#15181a;border:1px solid var(--line);border-radius:10px;padding:12px}
   .ov .big{display:block;width:100%;margin-top:10px;padding:14px;border-radius:10px;font-weight:700;font-size:15px;background:var(--khaki);color:#16140c}
   .ov .big.alt{background:#262b2e;color:var(--txt);border:1px solid var(--line)}
-  .ov .rec{margin-top:14px;font-size:12px;color:var(--mute)}
+  .ov .rec{margin-top:14px;font-size:12px;color:var(--mute);line-height:1.6}
+  .ov .big.diff{text-align:left;font-weight:400}
+  .ov .big.diff b{display:block;font-size:16px}
+  .ov .big.diff span{font-size:12px;opacity:.8}
+  #btnWave.early{background:#d08a3a;color:#16140c}
+  .zl{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px}
+  .zc{font-size:11px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:6px;padding:2px 6px;color:var(--txt)}
+  .rrow{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 0;border-bottom:1px dashed #2c3236}
+  .rrow[data-act]{cursor:pointer}
+  .rrow .rn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rrow .rk{color:var(--mute);font-size:11px;white-space:nowrap}
+  .rrow .rbar{flex:0 0 54px;height:6px;background:#262b2e;border-radius:3px;overflow:hidden}
+  .rrow .rbar i{display:block;height:100%;background:var(--khaki)}
+  .rrow .rp{flex:0 0 34px;text-align:right;color:var(--khaki);font-size:11px}
+  .tgt{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+  .tgt .bl{font-size:11px;color:var(--mute);margin-right:2px}
+  .tgt .wchip{padding:4px 9px;font-size:11px}
 </style>
 </head>
 <body>
@@ -190,7 +206,7 @@
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
 const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
-const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best';
+const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best', BKEY2 = 'dernierBastion.best.v5';
 
 const PATHS_DEF = [
   { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
@@ -318,8 +334,18 @@ const ZTIP = {
   brute:   'énorme et résistant. Concentrez le feu.',
 };
 const hpMult  = w => Math.pow(1.07, w - 1) * Math.pow(1.06, Math.max(0, w - 15));
-const dmgMult = w => 1 + 0.05 * (w - 1);
-const rewMult = w => 1 + 0.08 * (w - 1);
+const dmgMult = w => (1 + 0.05 * (w - 1)) * (G ? DIFF[G.diff].dmg : 1);
+const rewMult = w => (1 + 0.08 * (w - 1)) * (G ? DIFF[G.diff].rew : 1);
+
+/* Difficulté : la horde suit une courbe fixe, identique à chaque partie.
+   Victoire à la vague 40, puis mode infini. */
+const VICTORY = 40;
+const DIFF = {
+  facile:    { name: 'Facile',    hp: 0.45, dmg: 0.85, rew: 1.1,  desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
+  normal:    { name: 'Normal',    hp: 0.7,  dmg: 1,    rew: 1,    desc: "L'équilibre prévu : la vague 40 se mérite." },
+  cauchemar: { name: 'Cauchemar', hp: 0.85, dmg: 1.2,  rew: 0.95, desc: 'Pour ceux qui ont déjà gagné en Normal.' },
+};
+const DIFF_ORDER = ['facile', 'normal', 'cauchemar'];
 
 /* =========================================================
    CHEMINS
@@ -365,6 +391,9 @@ const fmt = n => Math.floor(n).toLocaleString('fr-FR');
 const cases = px => (Math.round(px / T * 10) / 10).toString().replace('.', ',');
 
 let G = null;
+// Statistiques de tir : SRC désigne la source des dégâts en cours (l'homme, une tour, un piège, un module)
+let SRC = null;
+const newSt = () => ({ dmg: 0, kills: 0, wd: 0, wk: 0 });
 function freshState() {
   const weapons = {};
   WEAPONS.forEach(w => weapons[w.id] = { owned: w.id === 'glock', up: [0, 0, 0] });
@@ -381,6 +410,8 @@ function freshState() {
     bonus: { superTir: 0, arty: 0, repair: 0 }, bcd: { superTir: 0, arty: 0, repair: 0 }, superT: 0, superMult: 1, aim: null,
     pressure: 1, hpScale: 1, power: 0, waveDmg: 0, budget: 0, depthSum: 0, depthN: 0, lastDepth: 0, pMax: 1, treeOpen: false, treeSel: null, treePaused: false, tv: { x: 0, y: 0, s: 1 }, tvInit: false, treeSeen: {},
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
+    diff: 'normal', won: false, next: null, waveFrom: 1, prime: 0, report: null, hp0: 0, defNo: {},
+    st: { hero: newSt(), arty: newSt(), wire: newSt(), claymore: newSt(), mg: newSt(), flame: newSt(), rockets: newSt() },
   };
 }
 
@@ -490,12 +521,16 @@ function firepower() {
 // Budget de PV de la horde proportionnel à la puissance de feu (exposant beta < 1 :
 // investir rend toujours plus fort), plus une lente montée dans le temps (gamma)
 // et la pression ajustée selon les résultats de la vague précédente.
-const DIR = { K: 14, beta: 0.9, gamma: 0.05, gain: 1.2, target: 0.62 };
+const DIR = { K: 14, beta: 0.9, gamma: 0.05, ramp: 0.2, pMin: 0.85, pMax: 1.15 };
+// Puissance de feu de référence : celle d'un joueur appliqué à la vague w, mesurée par simulation.
+// La horde suit cette courbe fixe : un joueur qui fait mieux que la référence prend l'avantage.
+const refPower = w => 85 + 5.5 * w * w;
 function hordeBudget(w) {
-  const P = firepower();
-  G.power = P;
-  return DIR.K * Math.pow(Math.max(P, 25), DIR.beta) * (1 + DIR.gamma * (w - 1)) * G.pressure;
+  G.power = firepower();
+  return DIR.K * Math.pow(refPower(w), DIR.beta) * (1 + DIR.gamma * (w - 1)) * (1 + DIR.ramp * Math.max(0, w - 10)) * DIFF[G.diff].hp * G.pressure;
 }
+// Puissance repère affichée au joueur pour la difficulté choisie
+const advisedPower = w => refPower(w) * Math.pow(DIFF[G.diff].hp / DIFF.cauchemar.hp, 1 / DIR.beta);
 const bunkerMax = () => BUNKER_LV[G.bunkerLv].hp;
 const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor;
 
@@ -534,18 +569,49 @@ function buildWave(w) {
   return out;
 }
 
+const earlyPrime = () => Math.round((50 + 15 * (G.wave + 1)) * 0.5 * DIFF[G.diff].rew);
+const canEarly = () => G.mode === 'wave' && !G.queue.length && !G.paused;
+function statSources() {
+  const out = [{ name: "L'homme", st: G.st.hero }];
+  G.defs.forEach(d => out.push({ name: defLabel(d), st: d.st, def: d }));
+  MOD_ORDER.forEach(id => { if (G.mods[id]) out.push({ name: MODULES[id].name, st: G.st[id] }); });
+  if (G.bonus.arty) out.push({ name: BONUS.arty.name, st: G.st.arty });
+  return out;
+}
+const defLabel = d => `${DEF[d.type].name} ${d.no}`;
 function startWave() {
+  if (G.mode === 'wave') { if (canEarly()) launchWave(true); return; }
   if (G.mode !== 'build') return;
+  launchWave(false);
+}
+function waveSummary(q, w) {
+  const cnt = {};
+  q.forEach(it => { cnt[it.type] = (cnt[it.type] || 0) + 1; });
+  const types = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(k => [k, cnt[k]]);
+  const paths = [...new Set(q.map(it => PATHS[it.path].name))];
+  const fresh = Object.keys(ZT).filter(k => ZT[k].from === w).map(k => ZT[k].name);
+  return { types, paths, fresh, total: q.length, boss: !!cnt.boss };
+}
+function launchWave(early) {
+  const q = G.next || buildWave(G.wave + 1);
+  if (early) { const pr = earlyPrime(); G.money += pr; G.prime += pr; floatText(BX, BY - 34, '+' + fmt(pr)); }
   G.wave++;
-  G.queue = buildWave(G.wave);
+  if (!early) {
+    G.waveFrom = G.wave; G.prime = 0; G.hp0 = G.hp; G.report = null;
+    G.waveDmg = 0; G.depthSum = 0; G.depthN = 0; G.waveCount = 0; G.killed = 0;
+    statSources().forEach(s => { s.st.wd = 0; s.st.wk = 0; });
+    G.placing = null; G.selected = null;
+    G.defs.forEach(d => { d.cd = 0; });
+    G.ms.clayCd = 0;
+  }
+  G.queue = q;
   const baseSum = G.queue.reduce((a, it) => a + ZT[it.type].hp, 0);
-  G.budget = hordeBudget(G.wave); G.hpScale = G.budget / Math.max(1, baseSum); G.waveDmg = 0; G.depthSum = 0; G.depthN = 0;
-  G.waveCount = G.queue.length; G.killed = 0; G.spawnT = 0.5;
-  G.mode = 'wave'; G.placing = null; G.selected = null;
-  G.defs.forEach(d => { d.cd = 0; });
-  G.ms.clayCd = 0;
+  G.budget = hordeBudget(G.wave); G.hpScale = G.budget / Math.max(1, baseSum);
+  G.waveCount += G.queue.length; G.spawnT = 0.5;
+  G.mode = 'wave';
+  G.next = buildWave(G.wave + 1);
   const np = PATHS.find(p => p.opens === G.wave && G.wave > 1);
-  toast(np ? `Vague ${G.wave} : le chemin ${np.name} est ouvert !` : `Vague ${G.wave}`);
+  toast((early ? `Appel anticipé : vague ${G.wave}` : `Vague ${G.wave}`) + (np ? ` · le chemin ${np.name} est ouvert !` : '') + (G.wave === VICTORY && !G.won ? ' · dernière vague avant la victoire' : ''));
   const fresh = Object.keys(ZTIP).filter(k => ZT[k].from === G.wave);
   fresh.forEach((k, i) => setTimeout(() => toast(`Nouveau : ${ZT[k].name}, ${ZTIP[k]}`, 4000), 2200 + i * 4200));
   if (G.wave % 10 === 0) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2200 + fresh.length * 4200);
@@ -555,29 +621,38 @@ function startWave() {
 }
 
 function endWave() {
-  const bonus = 50 + 15 * G.wave;
+  let bonus = 0;
+  for (let w = G.waveFrom; w <= G.wave; w++) bonus += 50 + 15 * w;
+  bonus = Math.round(bonus * DIFF[G.diff].rew);
   G.money += bonus;
   // le directeur mesure jusqu'où les zombies sont arrivés avant de mourir et ajuste la horde suivante
   const lost = G.waveDmg / bunkerMax(), depth = G.depthN ? G.depthSum / G.depthN : 0.5;
   // objectif : quelques dégâts réguliers (3 à 15 % par vague) plutôt que zéro puis l'effondrement
-  let f;
-  if (lost > 0.3) f = 0.75;
-  else if (lost > 0.15) f = 0.9;
-  else if (lost > 0.03) f = 1.0;
-  else f = clamp(Math.exp(DIR.gain * (DIR.target - depth)), 0.97, 1.12);
-  // le répit ne descend jamais sous 80 % de la pression maximale déjà atteinte : la menace finit toujours par gagner
-  G.pMax = Math.max(G.pMax || 1, G.pressure);
-  G.pressure = clamp(Math.max(G.pressure * f, G.pMax * 0.8), 0.3, 80); G.lastDepth = depth;
+  // correction légère (plus ou moins 15 % au total) : la courbe fixe reste la règle
+  let f = 1;
+  if (lost > 0.3) f = 0.93;
+  else if (lost > 0.15) f = 0.97;
+  else if (lost < 0.02 && depth < 0.55) f = 1.03;
+  G.pressure = clamp(G.pressure * f, DIR.pMin, DIR.pMax); G.lastDepth = depth;
+  // bilan de la vague
+  const src = statSources().filter(x => x.st.wd > 0).sort((a, b) => b.st.wd - a.st.wd);
+  const tot = src.reduce((a, x) => a + x.st.wd, 0) || 1;
+  G.report = { from: G.waveFrom, to: G.wave, bonus, prime: G.prime, kills: G.killed, lost: Math.round(Math.max(0, G.hp0 - G.hp) / bunkerMax() * 100),
+    rows: src.slice(0, 7).map(x => ({ name: x.name, k: x.st.wk, pct: Math.round(x.st.wd / tot * 100), def: x.def ? G.defs.indexOf(x.def) : -1, lv: x.def ? x.def.lv + 1 : 0 })) };
+  G.prime = 0;
   G.superT = 0; G.aim = null;
   G.mode = 'build';
   G.focus = null;
   G.projs = [];
-  if (G.wave > G.best) { G.best = G.wave; saveBest(); }
+  let victory = false;
+  if (!G.won && G.wave >= VICTORY) { G.won = true; victory = true; }
+  recordBest();
   const np = PATHS.find(p => p.opens === G.wave + 1 && G.wave + 1 > 1);
   toast(`Vague ${G.wave} repoussée. Prime +${fmt(bonus)}` + (np ? ` · Attention : le chemin ${np.name} s'ouvre à la prochaine vague.` : ''), 3500);
   G.panelOpen = true;
   saveGame();
   renderAll();
+  if (victory) setTimeout(() => showOverlay('victory'), 700);
 }
 
 /* =========================================================
@@ -600,10 +675,11 @@ function hurt(z, amount, ap, fire) {
   if (z.dead || amount <= 0) return;
   const arm = fire ? 0 : z.armor * (1 - (ap || 0));
   const eff = Math.max(amount * 0.15, amount - arm);
+  if (SRC) { const done = Math.min(eff, z.hp); SRC.dmg += done; SRC.wd += done; }
   z.hp -= eff; z.hitT = 0.06;
-  if (z.hp <= 0) kill(z, true);
+  if (z.hp <= 0) { if (SRC) { SRC.kills++; SRC.wk++; } kill(z, true); }
 }
-function setBurn(z, dps, t) { z.burnDps = Math.max(z.burnDps, dps); z.burnT = t || 3; }
+function setBurn(z, dps, t) { z.burnDps = Math.max(z.burnDps, dps); z.burnT = t || 3; if (SRC) z.burnSrc = SRC; }
 
 function kill(z, reward) {
   if (z.dead) return;
@@ -635,7 +711,7 @@ function updateZombies(dt) {
     const Z = ZT[z.type];
     if (z.hitT > 0) z.hitT -= dt;
     if (z.burnT > 0) {
-      z.burnT -= dt; hurt(z, z.burnDps * dt, 1, true);
+      z.burnT -= dt; SRC = z.burnSrc || null; hurt(z, z.burnDps * dt, 1, true); SRC = null;
       if (z.dead) continue;
       if (rand() < dt * 12) part(z.x + (rand() - 0.5) * z.r, z.y + (rand() - 0.5) * z.r, (rand() - 0.5) * 10, -20 - rand() * 20, 0.4, rand() < 0.5 ? '#ff9a2e' : '#ffcf4a', 2.2, 'fire', 4);
       if (z.burnT <= 0) z.burnDps = 0;
@@ -645,7 +721,7 @@ function updateZombies(dt) {
     const c = Math.floor(z.x / T), r = Math.floor(z.y / T);
     const tr = G.defMap.get(c + ',' + r);
     if (tr && DEF[tr.type].place === 'path') {
-      const L = DEF[tr.type].levels[tr.lv];
+      const L = DEF[tr.type].levels[tr.lv]; SRC = tr.st;
       if (tr.type === 'wire') {
         if (!Z.noWire) { mul *= 1 - L.slow; hurt(z, L.dps * dt, 0); }
       } else if (tr.type === 'ditch') {
@@ -653,12 +729,13 @@ function updateZombies(dt) {
       } else if (tr.type === 'mine' && tr.cd <= 0) {
         tr.cd = L.cd; explode(tr.x, tr.y, L.r, L.dmg, 0.5, 0, false);
       }
+      SRC = null;
       if (z.dead) continue;
     }
     // couronne de barbelés
     if (wireM && !Z.noWire) {
       const dd = Math.hypot(z.x - BX, z.y - BY);
-      if (dd <= wireM.r) { mul *= 1 - wireM.slow; hurt(z, wireM.dps * dt, 0); if (z.dead) continue; }
+      if (dd <= wireM.r) { mul *= 1 - wireM.slow; SRC = G.st.wire; hurt(z, wireM.dps * dt, 0); SRC = null; if (z.dead) continue; }
     }
     // hurleur
     if (z.type !== 'screamer') {
@@ -697,15 +774,18 @@ function updateZombies(dt) {
 /* =========================================================
    TIR : utilitaires
    ========================================================= */
-function pickTarget(x, y, range, minR) {
-  let best = null, bestRem = Infinity;
-  const r2 = range * range, m2 = (minR || 0) ** 2;
+// Priorités de tir : first = le plus avancé vers le bastion, strong = le plus de PV,
+// near = le plus proche de la tour, armored = le mieux blindé
+const TGT = { first: 'Premier', strong: 'Plus fort', near: 'Plus proche', armored: 'Blindé' };
+function pickTarget(x, y, range, minR, mode) {
+  let best = null, bs = Infinity;
+  const m2 = (minR || 0) ** 2;
   for (const z of G.zombies) {
     if (z.dead) continue;
     const d2 = (z.x - x) ** 2 + (z.y - y) ** 2;
     if (d2 > (range + z.r) ** 2 || d2 < m2) continue;
-    const rem = z.path.total - z.d;
-    if (rem < bestRem) { bestRem = rem; best = z; }
+    const sc = mode === 'strong' ? -z.hp : mode === 'near' ? d2 : mode === 'armored' ? -(z.armor * 1e6 + z.hp) : z.path.total - z.d;
+    if (sc < bs) { bs = sc; best = z; }
   }
   return best;
 }
@@ -759,7 +839,8 @@ function predict(z, t) {
 /* =========================================================
    HOMME (heros), TOURS, MODULES, PROJECTILES
    ========================================================= */
-function updateHero(dt) {
+function updateHero(dt) { SRC = G.st.hero; heroFire(dt); SRC = null; }
+function heroFire(dt) {
   const s = ws(G.equipped);
   G.heroCd -= dt; if (G.flash > 0) G.flash -= dt;
   let t = null;
@@ -784,7 +865,7 @@ function fireWeapon(s, t) {
   } else if (s.kind === 'explosive') {
     const dd = Math.hypot(t.x - BX, t.y - BY), tt = dd / s.speed, p = predict(t, tt);
     G.projs.push({ type: s.id === 'm32' ? 'gren' : 'rocket', sx: BX, sy: BY, tx: p.x, ty: p.y, t: 0, dur: Math.max(0.12, Math.hypot(p.x - BX, p.y - BY) / s.speed), h0: heroH(), h1: 2,
-      dmg: s.dmg, r: s.radius, ap: s.ap, burn: s.burn || 0 });
+      dmg: s.dmg, r: s.radius, ap: s.ap, burn: s.burn || 0, src: SRC });
   } else if (s.kind === 'flame') {
     cone(BX, BY, a, s.range, s.cone, s.dmg, s.burn);
     flameFx(BX, BY, a, s.range, s.cone, heroH() - 4);
@@ -797,8 +878,9 @@ function updateDefs(dt) {
     const D = DEF[d.type], L = D.levels[d.lv];
     if (d.cd > 0) d.cd -= dt;
     if (D.place === 'path') continue;
+    SRC = d.st;
     if (d.type === 'mgnest' || d.type === 'sniper') {
-      const t = pickTarget(d.x, d.y, L.range);
+      const t = pickTarget(d.x, d.y, L.range, 0, d.tgt);
       if (!t) continue;
       d.ang = Math.atan2(t.y - d.y, t.x - d.x);
       if (d.cd <= 0) {
@@ -808,18 +890,19 @@ function updateDefs(dt) {
       }
     } else if (d.type === 'mortar') {
       if (d.cd > 0) continue;
-      const t = pickTarget(d.x, d.y, L.range, L.min);
+      const t = pickTarget(d.x, d.y, L.range, L.min, d.tgt);
       if (!t) continue;
       const p = predict(t, 1.15);
-      G.projs.push({ type:'shell', sx:d.x, sy:d.y, tx:p.x + (rand() - 0.5) * 8, ty:p.y + (rand() - 0.5) * 8, t:0, dur:1.15, dmg:L.dmg, r:L.r, ap:0.4, burn:0, h0: 22, h1: 0 });
+      G.projs.push({ type:'shell', sx:d.x, sy:d.y, tx:p.x + (rand() - 0.5) * 8, ty:p.y + (rand() - 0.5) * 8, t:0, dur:1.15, dmg:L.dmg, r:L.r, ap:0.4, burn:0, h0: 22, h1: 0, src: d.st });
       d.flash = 0.08; d.cd = 1 / L.rate; d.ang = Math.atan2(p.y - d.y, p.x - d.x); SND.play('thump');
     } else if (d.type === 'flamer') {
-      const t = pickTarget(d.x, d.y, L.range);
+      const t = pickTarget(d.x, d.y, L.range, 0, d.tgt);
       if (!t) { d.on = 0; continue; }
       d.ang = Math.atan2(t.y - d.y, t.x - d.x); d.on = 0.15;
       if (d.cd <= 0) { cone(d.x, d.y, d.ang, L.range, 0.45, L.dps * 0.1, L.burn); flameFx(d.x, d.y, d.ang, L.range, 0.45, 9); d.cd = 0.1; SND.play('flame'); }
     }
   }
+  SRC = null;
 }
 
 function updateModules(dt) {
@@ -835,7 +918,7 @@ function updateModules(dt) {
         for (const z of G.zombies) {
           if (z.dead) continue;
           const dx = z.x - BX, dy = z.y - BY, d = Math.hypot(dx, dy);
-          if (d <= L.r + z.r && angDiff(Math.atan2(dy, dx), a) <= 0.55 + Math.atan(z.r / Math.max(d, 1))) hurt(z, L.dmg, 0.6);
+          if (d <= L.r + z.r && angDiff(Math.atan2(dy, dx), a) <= 0.55 + Math.atan(z.r / Math.max(d, 1))) { SRC = G.st.claymore; hurt(z, L.dmg, 0.6); SRC = null; }
         }
         for (let i = 0; i < 26; i++) { const aa = a + (rand() - 0.5) * 1.1, sp = 250 + rand() * 200; part(BX, BY, Math.cos(aa) * sp, Math.sin(aa) * sp, 0.25, '#e8dcb0', 1.6, 'spark', 4); }
         S.clayCd = L.cd; S.clayFlash = 0.15; S.clayAng = a; G.shake = Math.min(8, G.shake + 3); SND.play('boom');
@@ -848,7 +931,7 @@ function updateModules(dt) {
     const t = pickTarget(BX, BY, L.range);
     if (t) {
       S.mgAng = Math.atan2(t.y - (BY - 10), t.x - (BX + 10));
-      if (S.mgCd <= 0) { hitscan(BX + 13, BY + 9, S.mgAng, L.range, L.dmg, 1, L.ap, '#ffd98a', 1.4, roofH() + 6); S.mgCd += 1 / L.rate; if (S.mgCd < 0) S.mgCd = 0; SND.play('shot'); }
+      if (S.mgCd <= 0) { SRC = G.st.mg; hitscan(BX + 13, BY + 9, S.mgAng, L.range, L.dmg, 1, L.ap, '#ffd98a', 1.4, roofH() + 6); SRC = null; S.mgCd += 1 / L.rate; if (S.mgCd < 0) S.mgCd = 0; SND.play('shot'); }
     } else if (S.mgCd < 0) S.mgCd = 0;
   }
   if (M.flame) {
@@ -857,7 +940,7 @@ function updateModules(dt) {
     const t = pickTarget(BX, BY, L.range);
     if (t) {
       S.flameAng = Math.atan2(t.y - BY, t.x - BX); S.flameOn = 0.15;
-      if (S.flameT <= 0) { cone(BX, BY, S.flameAng, L.range, 0.5, L.dps * 0.1, L.burn); flameFx(BX, BY + 20, S.flameAng, L.range, 0.5, Math.max(8, roofH() * 0.45)); S.flameT = 0.1; SND.play('flame'); }
+      if (S.flameT <= 0) { SRC = G.st.flame; cone(BX, BY, S.flameAng, L.range, 0.5, L.dps * 0.1, L.burn); SRC = null; flameFx(BX, BY + 20, S.flameAng, L.range, 0.5, Math.max(8, roofH() * 0.45)); S.flameT = 0.1; SND.play('flame'); }
     }
   }
   if (M.rockets) {
@@ -869,7 +952,7 @@ function updateModules(dt) {
         inR.sort((a, b) => b.hp - a.hp);
         for (let i = 0; i < L.n; i++) {
           const z = inR[i % inR.length], p = predict(z, 0.6);
-          G.projs.push({ type:'rocket', sx:BX + 12, sy:BY + 12, tx:p.x + (rand() - 0.5) * 14, ty:p.y + (rand() - 0.5) * 14, t:-i * 0.09, dur:0.6, dmg:L.dmg, r:L.radius, ap:0.4, burn:0, h0: roofH() + 8, h1: 2 });
+          G.projs.push({ type:'rocket', sx:BX + 12, sy:BY + 12, tx:p.x + (rand() - 0.5) * 14, ty:p.y + (rand() - 0.5) * 14, t:-i * 0.09, dur:0.6, dmg:L.dmg, r:L.radius, ap:0.4, burn:0, h0: roofH() + 8, h1: 2, src: G.st.rockets });
         }
         S.rocketCd = L.cd;
       }
@@ -888,7 +971,7 @@ function updateProjs(dt) {
     if (p.t >= p.dur) {
       p.done = true;
       if (p.type === 'spit') { bunkerHit(p.dmg); if (G.mode !== 'wave') return; for (let i = 0; i < 6; i++) part(BX + (rand() - 0.5) * 20, BY + (rand() - 0.5) * 20, (rand() - 0.5) * 40, (rand() - 0.5) * 40, 0.4, '#8fd45a', 2, 'spark'); }
-      else explode(p.tx, p.ty, p.r, p.dmg, p.ap, p.burn, false);
+      else { SRC = p.src || null; explode(p.tx, p.ty, p.r, p.dmg, p.ap, p.burn, false); SRC = null; }
     }
   }
   G.projs = G.projs.filter(p => !p.done);
@@ -955,7 +1038,7 @@ function artyStrike(x, y) {
   const L = BONUS.arty.levels[G.bonus.arty - 1];
   for (let i = 0; i < L.shells; i++) {
     const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 46, tx = x + Math.cos(a) * r, ty = y + Math.sin(a) * r;
-    G.projs.push({ type: 'shell', sx: tx, sy: ty, tx, ty, t: -0.4 - i * 0.14, dur: 0.7, dmg: L.dmg * 30 * G.hpScale, r: 36, ap: 0.5, burn: 0, h0: 240, h1: 0 });
+    G.projs.push({ type: 'shell', sx: tx, sy: ty, tx, ty, t: -0.4 - i * 0.14, dur: 0.7, dmg: L.dmg * 30 * G.hpScale, r: 36, ap: 0.5, burn: 0, h0: 240, h1: 0, src: G.st.arty });
   }
   G.bcd.arty = L.cd; G.aim = null; SND.play('horn');
 }
@@ -963,7 +1046,7 @@ function artyStrike(x, y) {
 function gameOver() {
   if (G.mode === 'over') return;
   G.mode = 'over';
-  if (G.wave > G.best) { G.best = G.wave; saveBest(); }
+  recordBest();
   try { localStorage.removeItem(SKEY); } catch (e) {}
   explodeFx(BX, BY, 70, true); G.shake = 10; SND.play('boom');
   setTimeout(() => showOverlay('over'), 900);
@@ -1081,33 +1164,54 @@ function upgradeInst(d) {
 /* =========================================================
    SAUVEGARDE
    ========================================================= */
-function loadBest() { try { return parseInt(localStorage.getItem(BKEY) || '0', 10) || 0; } catch (e) { return 0; } }
-function saveBest() { try { localStorage.setItem(BKEY, String(G.best)); } catch (e) {} }
+// Records par difficulté : { facile: { w, won }, normal: {...}, cauchemar: {...} }
+function loadBest() {
+  const b = {}; DIFF_ORDER.forEach(k => b[k] = { w: 0, won: false });
+  try {
+    const j = JSON.parse(localStorage.getItem(BKEY2) || 'null');
+    if (j) DIFF_ORDER.forEach(k => { if (j[k]) b[k] = { w: j[k].w || 0, won: !!j[k].won }; });
+    else { const old = parseInt(localStorage.getItem(BKEY) || '0', 10) || 0; b.normal.w = old; }
+  } catch (e) {}
+  return b;
+}
+function recordBest() {
+  const r = G.best[G.diff];
+  if (G.wave > r.w) r.w = G.wave;
+  if (G.won) r.won = true;
+  try { localStorage.setItem(BKEY2, JSON.stringify(G.best)); } catch (e) {}
+}
+const recText = b => DIFF_ORDER.filter(k => b[k].w > 0).map(k => `${DIFF[k].name} : vague ${b[k].w}${b[k].won ? ' (victoire)' : ''}`).join(' · ');
 function saveGame() {
   if (G.mode !== 'build') return;
   try {
-    localStorage.setItem(SKEY, JSON.stringify({ v:4, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
-      weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure, pMax:G.pMax,
-      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent })) }));
+    localStorage.setItem(SKEY, JSON.stringify({ v:5, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
+      weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure,
+      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo,
+      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt })) }));
   } catch (e) {}
 }
-function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v === 4 ? d : null; } catch (e) { return null; } }
+function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && (d.v === 4 || d.v === 5) ? d : null; } catch (e) { return null; } }
 
-function newGame(fromSave) {
+function newGame(fromSave, diff) {
   G = freshState();
+  G.diff = DIFF[(fromSave && fromSave.diff) || diff] ? ((fromSave && fromSave.diff) || diff) : 'normal';
   clearDecals();
   if (fromSave) {
     const d = fromSave;
     G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods);
     WEAPONS.forEach(w => { if (d.weapons[w.id]) G.weapons[w.id] = d.weapons[w.id]; });
     G.equipped = G.weapons[d.equipped] && G.weapons[d.equipped].owned ? d.equipped : 'glock';
-    G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {}); G.pressure = d.pressure || 1; G.pMax = d.pMax || G.pressure;
-    d.defs.forEach(x => { if (G.unlocked[x.type]) addDef(x.type, x.c, x.r, x.lv || 0, x.spent); });
+    G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {});
+    G.pressure = clamp(d.pressure || 1, DIR.pMin, DIR.pMax); G.won = !!d.won;
+    if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
+    d.defs.forEach(x => { if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; } });
+    if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
   }
+  G.power = firepower(); G.next = buildWave(G.wave + 1);
   G.mode = 'build'; G.panelOpen = true;
   hideOverlay();
   renderAll();
-  toast(fromSave ? `Partie reprise : prochaine vague ${G.wave + 1}` : "Ouvrez l'arbre : premier choix, le nid de mitrailleuse.", 3200);
+  toast(fromSave ? `Partie reprise (${DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : `${DIFF[G.diff].name}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse.`, 3200);
 }
 
 /* =========================================================
@@ -1115,7 +1219,9 @@ function newGame(fromSave) {
    ========================================================= */
 function addDef(type, c, r, lv, spent) {
   const L = lv || 0;
-  const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: L, spent: spent || placeCost(type), cd: 0, ang: -Math.PI / 2, flash: 0, on: 0 };
+  G.defNo[type] = (G.defNo[type] || 0) + 1;
+  const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: L, spent: spent || placeCost(type), cd: 0, ang: -Math.PI / 2, flash: 0, on: 0,
+    st: newSt(), no: G.defNo[type], tgt: type === 'sniper' ? 'strong' : 'first' };
   G.defs.push(d); G.defMap.set(c + ',' + r, d);
   return d;
 }
@@ -1162,7 +1268,13 @@ function act(a, ds) {
     case 'closeTree': closeTree(); return;
     case 'tz': treeZoom(+ds.z); return;
     case 'tcenter': treeCenter(G.treeSel || ROOT); return;
-    case 'new': { const s = loadSave(); if (s && !confirmNew()) return; try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null); return; }
+    case 'new': showOverlay('diff'); return;
+    case 'newDiff': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, ds.d); return; }
+    case 'back': showOverlay(G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : 'victory'); return;
+    case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); return;
+    case 'tgt': if (G.selected && TGT[ds.m]) G.selected.tgt = ds.m; break;
+    case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.panelOpen = true; } break; }
+    case 'closeReport': G.report = null; break;
     case 'continue': { const s = loadSave(); newGame(s); return; }
   }
   if (G.mode === 'build') saveGame();
@@ -1313,10 +1425,25 @@ function panelBuild() {
         ? `<div class="br"><span style="flex:1;font-size:12px">Niv. ${d.lv + 2} · ${N.n} : ${defDesc(d.type, N)}</span></div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="upInst" data-cost="${N.cost}">Améliorer celle-ci : ${fmt(N.cost)}</button>`
         : `<div class="note" style="margin-top:6px">Niveau ${d.lv + 2} (${N.n}) : option à débloquer dans l'arbre.</div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="openNode" data-id="${d.type}${d.lv + 2}">Voir dans l'arbre</button>`;
     } else h += '<div class="row" style="margin-top:6px"><span class="tag">Niveau max</span>';
-    h += `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div></div>`;
+    h += `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div>`;
+    if (D.place === 'side') h += `<div class="tgt"><span class="bl">Priorité de tir</span>${Object.keys(TGT).map(m => `<button class="wchip ${d.tgt === m ? 'eq' : ''}" data-act="tgt" data-m="${m}">${TGT[m]}</button>`).join('')}</div>`;
+    h += `<div class="note" style="margin-top:7px">Depuis le début : ${fmt(d.st.kills)} éliminations, ${fmt(d.st.dmg)} dégâts. Dernière vague : ${fmt(d.st.wk)} éliminations.</div></div>`;
   }
-  const budget = G.mode === 'wave' ? G.budget : hordeBudget(G.wave + 1);
-  h += `<div class="sect">Directeur de vagues</div><div class="card"><b>Puissance de feu : ${fmt(G.power)}</b><div class="note">Horde ${G.mode === 'wave' ? 'en cours' : 'prévue'} : environ ${fmt(budget)} PV au total. La horde grossit avec votre puissance de feu et s'ajuste selon la distance à laquelle vous arrêtez les zombies.</div></div>`;
+  if (G.report && G.mode === 'build') {
+    const R = G.report;
+    h += `<div class="sect">Bilan · vague${R.from < R.to ? 's ' + R.from + ' à ' + R.to : ' ' + R.to}</div><div class="card"><div class="note">${fmt(R.kills)} zombies abattus · bastion ${R.lost > 0 ? '-' + R.lost + ' % de PV' : 'intact'} · prime +${fmt(R.bonus)}${R.prime ? ' · appel anticipé +' + fmt(R.prime) : ''}</div>` +
+      R.rows.map(r => `<div class="rrow" ${r.def >= 0 ? `data-act="selDef" data-i="${r.def}"` : ''}><span class="rn">${r.name}${r.lv ? ' · niv. ' + r.lv : ''}</span><span class="rk">${r.k} élim.</span><span class="rbar"><i style="width:${r.pct}%"></i></span><span class="rp">${r.pct} %</span></div>`).join('') +
+      `<div class="row" style="margin-top:6px"><span class="note" style="flex:1">Part des dégâts. Touchez une défense pour la sélectionner.</span><button class="btn" data-act="closeReport">Fermer</button></div></div>`;
+  }
+  if (G.next) {
+    const w = G.wave + 1, S = waveSummary(G.next, w);
+    G.power = firepower();
+    h += `<div class="sect">Prochaine vague · ${w}${w === VICTORY && !G.won ? ' · la dernière avant la victoire' : ''}</div><div class="card"><div class="zl">${S.types.map(([k, n]) => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} x${n}</span>`).join('')}</div>` +
+      `<div class="note">${S.total} zombies · ${S.paths.length > 1 ? 'routes' : 'route'} ${S.paths.join(', ')}${S.fresh.length ? ' · nouveau : ' + S.fresh.join(', ') : ''}</div>` +
+      `<div class="note">Votre puissance de feu : <b style="color:${G.power >= advisedPower(w) ? 'var(--khaki)' : '#e3a08f'}">${fmt(G.power)}</b> · repère ${DIFF[G.diff].name} : ${fmt(advisedPower(w))}</div>` +
+      (G.power < advisedPower(w) * 0.8 ? `<div class="note" style="color:#e3a08f">Puissance nettement sous le repère : une horde peut percer d'un coup. Renforcez tours et pièges, et le bastion.</div>` : '') +
+      (G.mode === 'wave' ? '' : `<div class="note">Pendant une vague, dès que tous les zombies sont sortis, le bouton du bas permet d'appeler la suivante plus tôt contre une prime.</div>`) + '</div>';
+  }
   const ownedW = WEAPONS.filter(w => G.weapons[w.id].owned);
   h += `<div class="sect">Arme de l'homme</div><div class="chips">${ownedW.map(w => `<button class="wchip ${G.equipped === w.id ? 'eq' : ''}" data-act="equip" data-id="${w.id}">${w.short}</button>`).join('')}</div>`;
   const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / 2);
@@ -1379,7 +1506,10 @@ function renderWeaponBar() {
 }
 function renderWaveBtn() {
   const b = $('btnWave');
+  const early = canEarly() && G.next;
+  b.classList.toggle('early', !!early);
   if (G.mode === 'build') { b.disabled = false; b.textContent = `Lancer vague ${G.wave + 1}`; }
+  else if (early) { b.disabled = false; b.textContent = `Vague ${G.wave + 1} maintenant +${fmt(earlyPrime())}`; }
   else if (G.mode === 'wave') { b.disabled = true; b.textContent = `Restants : ${G.queue.length + G.zombies.length}`; }
   else { b.disabled = true; b.textContent = '...'; }
 }
@@ -1399,30 +1529,39 @@ function renderAll() { renderBonusBar(true); renderPanel(); renderTree(); render
 let hudCache = '';
 function hud(force) {
   const max = bunkerMax();
-  const key = G.wave + '|' + Math.floor(G.money) + '|' + Math.ceil(G.hp) + '|' + G.mode + '|' + (G.queue.length + G.zombies.length);
+  const key = G.wave + '|' + Math.floor(G.money) + '|' + Math.ceil(G.hp) + '|' + G.mode + '|' + (G.queue.length + G.zombies.length) + '|' + G.queue.length + '|' + G.paused;
   if (!force && key === hudCache) return;
   hudCache = key;
-  $('hudWave').textContent = G.wave;
+  $('hudWave').textContent = G.won || G.mode === 'title' ? G.wave : `${G.wave}/${VICTORY}`;
   $('hudMoney').textContent = fmt(G.money);
   $('hpFill').style.width = clamp(G.hp / max * 100, 0, 100) + '%';
   $('hpText').textContent = `${fmt(Math.ceil(G.hp))}/${fmt(max)}`;
-  if (G.mode === 'wave') $('btnWave').textContent = `Restants : ${G.queue.length + G.zombies.length}`;
+  if (G.mode === 'wave') renderWaveBtn();
   refreshAfford(false);
 }
 function hudFrame() { hud(false); renderBonusBar(false); }
 
 function showOverlay(kind) {
-  const o = $('overlay'), save = loadSave(), best = G ? G.best : loadBest();
+  const o = $('overlay'), save = loadSave(), best = G ? G.best : loadBest(), rt = recText(best);
   let h = '<div class="ov">';
   if (kind === 'over') {
-    h += `<h2>Le bastion est tombé</h2><div class="sub">Vous avez tenu jusqu'à la vague ${G.wave}.</div>` +
-      `<button class="big" data-act="new">Nouvelle partie</button><div class="rec">Record : vague ${best}</div>`;
+    h += `<h2>Le bastion est tombé</h2><div class="sub">${DIFF[G.diff].name} : vous avez tenu jusqu'à la vague ${G.wave}${G.won ? ', après la victoire' : ` sur ${VICTORY}`}.</div>` +
+      `<button class="big" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
+  } else if (kind === 'victory') {
+    h += `<h1>VICTOIRE</h1><div class="sub">Vague ${VICTORY} tenue en ${DIFF[G.diff].name}. Le bastion tient toujours.</div>` +
+      `<p>La partie peut continuer en mode infini : les hordes ne s'arrêtent plus, seul compte votre record.</p>` +
+      `<button class="big" data-act="endless">Continuer en mode infini</button><button class="big alt" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
+  } else if (kind === 'diff') {
+    h += `<h2 style="color:var(--khaki)">Choisir la difficulté</h2><div class="sub">Victoire à la vague ${VICTORY}, puis mode infini.</div>` +
+      DIFF_ORDER.map(k => `<button class="big diff ${k === 'normal' ? '' : 'alt'}" data-act="newDiff" data-d="${k}"><b>${DIFF[k].name}</b><span>${DIFF[k].desc}${best[k].w ? ` Record : vague ${best[k].w}${best[k].won ? ', victoire' : ''}.` : ''}</span></button>`).join('') +
+      (save ? `<div class="rec">La partie en cours (vague ${save.wave + 1}) sera effacée.</div>` : '') +
+      `<button class="big alt" data-act="back">Retour</button>`;
   } else {
     h += `<h1>DERNIER BASTION</h1><div class="sub">Tenez le bastion. Aussi longtemps que possible.</div>` +
-      `<p>Les hordes suivent les chemins jusqu'au bastion central. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
-      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Les pièges se posent sur le chemin, les tours sur les emplacements balisés.</p>` +
-      (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
-      (best ? `<div class="rec">Record : vague ${best}</div>` : '');
+      `<p>Les hordes suivent les chemins jusqu'au bastion central. Tenez ${VICTORY} vagues pour gagner. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
+      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Les pièges se posent sur le chemin, les tours sur les emplacements balisés. La prochaine vague est annoncée dans le panneau Construire.</p>` +
+      (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1}, ${DIFF[save.diff || 'normal'].name})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
+      (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   }
   o.innerHTML = h + '</div>';
   o.classList.remove('hide');
@@ -2270,7 +2409,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll,
 };
 })();
 </script>

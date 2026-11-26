@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.4)
+# DERNIER BASTION — document de conception (V1.5)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -12,7 +12,8 @@ Titre provisoire. Toutes les valeurs d'équilibrage sont regroupées en tête du
 2. **Vague** : les zombies sortent des bords de la carte et suivent les chemins jusqu'au bunker. L'homme tire automatiquement sur la cible la plus avancée. Un appui sur un zombie force la cible.
 3. **Récompense** : chaque zombie tué rapporte de l'argent, plus une prime de fin de vague.
 4. **Escalade** : plus de zombies, plus résistants, plus variés, et de nouveaux chemins s'ouvrent.
-5. **Défaite** : les points de vie du bunker tombent à zéro. Le record est conservé et la partie est sauvegardée à chaque début de préparation.
+5. **Victoire** : tenir la vague 40. La partie peut continuer en mode infini.
+6. **Défaite** : les points de vie du bunker tombent à zéro. Le record est conservé par difficulté, et la partie est sauvegardée à chaque début de préparation.
 
 Choix de conception (référence : boucle classique du genre et principes de Defender's Quest) :
 - **Pas de défilement** : toute la carte tient sur l'écran du téléphone.
@@ -74,6 +75,48 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 ter. Changements V1.5 (gameplay : un but, de l'information, des décisions)
+
+**Pourquoi.** Le directeur de vagues V1.4 réglait la horde sur la puissance de feu du joueur : chaque amélioration était aussitôt compensée, et un bon placement n'était pas récompensé. Les références du genre (Kingdom Rush, Bloons TD 6) font l'inverse : des vagues fixes, identiques à chaque partie, qu'on bat en optimisant.
+
+**Courbe fixe.** Le total de PV d'une vague ne dépend plus du joueur :
+
+`budget(w) = 14 × Pref(w)^0,9 × (1 + 0,05 (w − 1)) × (1 + 0,2 × max(0, w − 10)) × difficulté × correction`
+
+- `Pref(w) = 85 + 5,5 w²` : puissance de feu d'un joueur automatique appliqué à la vague w, mesurée par simulation (85 à la vague 1, 9 000 environ à la vague 40).
+- Le terme en `0,2 × (w − 10)` reproduit la pression que les joueurs automatiques encaissaient sous le directeur V1.4.
+- **Correction** : il reste un léger rattrapage, borné entre 0,85 et 1,15 (-7 % après une vague à plus de 30 % de pertes, +3 % après une vague sans dégâts).
+
+**Trois difficultés**, choisies au lancement :
+
+| Difficulté | PV des hordes | Dégâts des zombies | Argent |
+|---|---|---|---|
+| Facile | × 0,45 | × 0,85 | × 1,1 |
+| Normal | × 0,7 | × 1 | × 1 |
+| Cauchemar | × 0,85 | × 1,2 | × 0,95 |
+
+**Victoire à la vague 40**, puis mode infini au choix. Records conservés par difficulté, avec la mention de victoire. Le compteur affiche « 12/40 ».
+
+**Aperçu de la prochaine vague** (onglet Construire) : composition par type, routes, nouveaux types. La puissance de feu du joueur y est comparée à un repère pour la difficulté choisie ; un avertissement apparaît en dessous de 80 % du repère.
+
+**Appel anticipé** (Kingdom Rush) : dès que tous les zombies d'une vague sont sortis, le bouton du bas permet d'appeler la suivante. Prime immédiate : la moitié de la prime de fin de la vague appelée. Les primes de fin de vague restent toutes versées.
+
+**Statistiques et bilan** (Bloons TD 6) : chaque tour, piège, module et l'homme comptent leurs dégâts et éliminations. Après chaque vague, un bilan classe les sources par part des dégâts ; toucher une ligne sélectionne la défense. La fiche d'une défense affiche ses chiffres depuis le début et sur la dernière vague.
+
+**Priorité de tir par tour** : Premier (le plus avancé), Plus fort (le plus de PV), Plus proche, Blindé. Le tireur d'élite démarre sur « Plus fort », les autres sur « Premier ».
+
+**Calibrage V1.5** (joueurs automatiques parfaits, sans appel anticipé ni priorités de tir) :
+
+| Profil | Normal | Cauchemar (× 0,9) |
+|---|---|---|
+| Équilibré | vague 57, pertes rares | vague 31 |
+| Génie d'abord | vague 58 | vague 50, pertes fréquentes |
+| Armes d'abord | vague 21 : mur brutal, bastion resté faible | vague 19 |
+| Équilibré, achats toutes les 3 vagues (proche d'un humain) | vague 60, pertes dans 13 vagues sur 40 | non testé |
+| Génie, achats toutes les 3 vagues | vague 56, pertes dans 12 vagues sur 40 | non testé |
+
+Cauchemar a ensuite été adouci à × 0,85. **Limite connue** : un joueur qui délaisse tours, pièges et bastion tombe d'un coup vers la vague 20, sans pertes préalables. Les hordes rendent la défaite binaire. L'avertissement de l'aperçu est la parade actuelle.
 
 ## 3. L'arbre d'évolution unique (V1.2)
 
@@ -293,6 +336,8 @@ Ajustements faits après simulation :
 - Brute un peu moins résistante.
 
 ## 11. Pistes V2
+
+- **Retenu : rogue-lite hybride.** L'arbre reste dans la partie. Toutes les 5 vagues, une carte parmi 3, valable pour la partie. Entre les parties, des insignes achètent des avantages permanents modestes.
 
 - Défenses qui s'usent : barbelés arrachés par les brutes, à réparer.
 - Munitions et rechargement par arme.
