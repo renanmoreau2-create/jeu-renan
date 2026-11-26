@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.8)
+# DERNIER BASTION — document de conception (V1.9)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,34 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 septies. Changement V1.9 : portées revues
+
+Constat de Renan : avec l'aperçu de portée, le mortier couvrait presque toute la carte, et le tireur d'élite aussi. Le placement ne comptait plus. Une échelle réaliste au mètre près est impossible : la carte ne représente que quelques centaines de mètres, et un mortier de 120 mm porte à plus de 7 km. Les portées sont donc fixées par paliers, dans le bon ordre, pour que chaque emplacement couvre une partie seulement des routes. Une case vaut 40 unités ; la carte fait 9 × 13 cases et le bastion est au centre.
+
+| Palier | Portée | Défenses |
+|---|---|---|
+| Contact | 1,5 à 2 cases | lance-flammes (tour, module, M2), couronne de barbelés, Claymore |
+| Courte | 2,5 à 3 cases | nid de mitrailleuse, pistolets, MP5, Benelli |
+| Moyenne | 3,5 à 4,5 cases | mortier (avec zone morte de 1,4 à 1,6 case), mitrailleuse 12,7 du bastion, HK416, Minimi, M32 |
+| Longue | 4 à 5,5 cases | tireur d'élite, SCAR-H, Carl Gustaf, Shmel, lance-roquettes du bastion, Hécate II (la plus longue : 5,5 cases) |
+
+| Élément | Avant (unités) | Après (unités) |
+|---|---|---|
+| Tireur d'élite niv. 1 à 3 | 210 / 250 / 330 | 160 / 180 / 200 |
+| Mortier niv. 1 à 3 | 230 / 260 / 300, zone morte 45 à 50 | 150 / 165 / 180, zone morte 55 / 60 / 65 |
+| Nid de mitrailleuse niv. 1 à 3 | 105 / 115 / 135 | 100 / 110 / 120 |
+| Tour lance-flammes niv. 1 à 3 | 62 / 72 / 82 | 60 / 68 / 76 |
+| Lance-roquettes du bastion | 260 / 280 / 300 | 170 / 185 / 200 |
+| Mitrailleuse 12,7 du bastion | 160 / 170 / 185 | 140 / 150 / 160 |
+| Claymore | 95 / 100 / 110 | 80 / 85 / 90 |
+| Hécate II (homme) | 420 | 220 |
+| SCAR-H, Carl Gustaf, Shmel (homme) | 260, 270, 290 | 190, 190, 200 |
+| M32, Minimi, HK416 (homme) | 210, 180, 175 | 170, 165, 160 |
+
+Le Benelli garde 110 : il doit atteindre le Cracheur, qui crache à 100 du bastion.
+
+**Recalibrage.** Les tours engagent moins longtemps, donc défendent moins. En simulation, le joueur automatique « achats toutes les 3 vagues » tombait 3 fois sur 6 avant la vague 40 (vagues 21, 21 et 30). Les PV des hordes ont donc été baissés de 16 % dans les trois difficultés. Résultat en Normal, sur 4 parties : fin entre les vagues 59 et 70, avec des pertes dans 7 à 11 vagues sur 40, comme en V1.6.
 
 ## 2 sexies. Changement V1.8 : confirmation avec portée, menu des défenses posées
 
@@ -153,9 +181,9 @@ Tout débloquer coûte 163 insignes, soit environ 4 à 6 parties en Normal.
 
 | Difficulté | PV des hordes | Dégâts des zombies | Argent |
 |---|---|---|---|
-| Facile | × 0,45 | × 0,85 | × 1,1 |
-| Normal | × 0,75 (× 0,7 en V1.5) | × 1 | × 1 |
-| Cauchemar | × 0,9 (× 0,85 en V1.5) | × 1,2 | × 0,95 |
+| Facile | × 0,38 (× 0,45 avant la V1.9) | × 0,85 | × 1,1 |
+| Normal | × 0,63 (× 0,7 en V1.5, × 0,75 en V1.6) | × 1 | × 1 |
+| Cauchemar | × 0,76 (× 0,85 en V1.5, × 0,9 en V1.6) | × 1,2 | × 0,95 |
 
 **Victoire à la vague 40**, puis mode infini au choix. Records conservés par difficulté, avec la mention de victoire. Le compteur affiche « 12/40 ».
 

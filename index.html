@@ -267,27 +267,27 @@ const TRAP_SET = new Set(TRAP_SLOTS.map(([c, r]) => c + ',' + r));
 
 // Armes de l'homme (ordre de progression)
 const WEAPONS = [
-  { id:'glock',  name:'Pistolet Glock 17',        short:'Glock 17',   kind:'bullet',   dmg:10,  rate:2.5, range:125, pierce:1, ap:0,    cost:0,     snd:'shot',
+  { id:'glock',  name:'Pistolet Glock 17',        short:'Glock 17',   kind:'bullet',   dmg:10,  rate:2.5, range:115, pierce:1, ap:0,    cost:0,     snd:'shot',
     note:"Arme de poing réglementaire des armées françaises (Gen 5 FR)." },
-  { id:'mp5',    name:'Pistolet-mitrailleur MP5', short:'MP5',        kind:'bullet',   dmg:7,   rate:8,   range:120, pierce:1, ap:0,    cost:350,   snd:'shot',
+  { id:'mp5',    name:'Pistolet-mitrailleur MP5', short:'MP5',        kind:'bullet',   dmg:7,   rate:8,   range:115, pierce:1, ap:0,    cost:350,   snd:'shot',
     note:"Pistolet-mitrailleur 9 mm des unités d'intervention." },
   { id:'benelli',name:'Fusil à pompe Benelli M4', short:'Benelli M4', kind:'shotgun',  dmg:9,   rate:1.5, range:110, pellets:6, spread:0.5, ap:0, cost:650, snd:'shotgun',
     note:"Fusil de combat semi-automatique (M1014 aux États-Unis)." },
-  { id:'hk416',  name:"Fusil d'assaut HK416F",    short:'HK416F',     kind:'bullet',   dmg:16,  rate:6,   range:175, pierce:1, ap:0.1,  cost:1200,  snd:'shot',
+  { id:'hk416',  name:"Fusil d'assaut HK416F",    short:'HK416F',     kind:'bullet',   dmg:16,  rate:6,   range:160, pierce:1, ap:0.1,  cost:1200,  snd:'shot',
     note:"Fusil d'assaut réglementaire, successeur du FAMAS." },
-  { id:'scar',   name:'FN SCAR-H PR',             short:'SCAR-H',     kind:'bullet',   dmg:55,  rate:1.7, range:260, pierce:2, ap:0.3,  cost:2000,  snd:'heavy',
+  { id:'scar',   name:'FN SCAR-H PR',             short:'SCAR-H',     kind:'bullet',   dmg:55,  rate:1.7, range:190, pierce:2, ap:0.3,  cost:2000,  snd:'heavy',
     note:"Fusil de précision semi-automatique 7,62 mm." },
-  { id:'minimi', name:'Mitrailleuse FN Minimi',   short:'Minimi',     kind:'bullet',   dmg:15,  rate:12,  range:180, pierce:1, ap:0.1,  cost:3000,  snd:'shot',
+  { id:'minimi', name:'Mitrailleuse FN Minimi',   short:'Minimi',     kind:'bullet',   dmg:15,  rate:12,  range:165, pierce:1, ap:0.1,  cost:3000,  snd:'shot',
     note:"Mitrailleuse légère 5,56 mm." },
-  { id:'m32',    name:'Lance-grenades M32 MGL',   short:'M32',        kind:'explosive',dmg:70,  rate:1.5, range:210, radius:42, speed:260, ap:0.3, cost:4200, snd:'thump',
+  { id:'m32',    name:'Lance-grenades M32 MGL',   short:'M32',        kind:'explosive',dmg:70,  rate:1.5, range:170, radius:42, speed:260, ap:0.3, cost:4200, snd:'thump',
     note:"Lance-grenades revolver 40 mm à 6 coups." },
-  { id:'hecate', name:'PGM Hécate II',            short:'Hécate II',  kind:'bullet',   dmg:340, rate:0.75,range:420, pierce:4, ap:0.85, cost:6500,  snd:'heavy',
+  { id:'hecate', name:'PGM Hécate II',            short:'Hécate II',  kind:'bullet',   dmg:340, rate:0.75,range:220, pierce:4, ap:0.85, cost:6500,  snd:'heavy',
     note:"Fusil anti-matériel 12,7 mm de l'armée française." },
-  { id:'m2flame',name:'Lance-flammes M2',         short:'Lance-flammes M2', kind:'flame', dmg:9,   rate:15,  range:80,  cone:0.42, burn:22, ap:1, cost:8500, snd:'flame',
+  { id:'m2flame',name:'Lance-flammes M2',         short:'Lance-flammes M2', kind:'flame', dmg:9,   rate:15,  range:70,  cone:0.42, burn:22, ap:1, cost:8500, snd:'flame',
     note:"Lance-flammes dorsal, portée efficace d'environ 20 m." },
-  { id:'carlg',  name:'Carl Gustaf M4',           short:'Carl Gustaf',kind:'explosive',dmg:300, rate:0.55,range:270, radius:65, speed:330, ap:0.5, cost:12000, snd:'boom',
+  { id:'carlg',  name:'Carl Gustaf M4',           short:'Carl Gustaf',kind:'explosive',dmg:300, rate:0.55,range:190, radius:65, speed:330, ap:0.5, cost:12000, snd:'boom',
     note:"Arme multirôle sans recul de 84 mm." },
-  { id:'shmel',  name:'RPO-A Shmel',              short:'Shmel',      kind:'explosive',dmg:760, rate:0.32,range:290, radius:105,speed:230, ap:0.6, burn:60, cost:17000, snd:'boom',
+  { id:'shmel',  name:'RPO-A Shmel',              short:'Shmel',      kind:'explosive',dmg:760, rate:0.32,range:200, radius:105,speed:230, ap:0.6, burn:60, cost:17000, snd:'boom',
     note:"Lance-roquettes thermobarique portable : l'arme finale." },
 ];
 const WBY = Object.fromEntries(WEAPONS.map(w => [w.id, w]));
@@ -304,13 +304,13 @@ const MODULES = {
   wire:    { name:'Barbelé concertina en couronne', req:1, levels:[
               { cost:300,  slow:0.35, dps:4,  r:60 }, { cost:700, slow:0.45, dps:9, r:64 }, { cost:1500, slow:0.55, dps:18, r:68 } ] },
   claymore:{ name:'Ceinture de Claymore', req:2, levels:[
-              { cost:900,  dmg:160, r:95,  cd:10 }, { cost:1900, dmg:320, r:100, cd:8 }, { cost:3800, dmg:640, r:110, cd:6 } ] },
+              { cost:900,  dmg:160, r:80,  cd:10 }, { cost:1900, dmg:320, r:85,  cd:8 }, { cost:3800, dmg:640, r:90,  cd:6 } ] },
   mg:      { name:'Mitrailleuse 12,7 M2', req:2, levels:[
-              { cost:1100, dmg:16, rate:6,   range:160, ap:0.3 }, { cost:2400, dmg:24, rate:7.5, range:170, ap:0.3 }, { cost:5000, dmg:36, rate:9, range:185, ap:0.4 } ] },
+              { cost:1100, dmg:16, rate:6,   range:140, ap:0.3 }, { cost:2400, dmg:24, rate:7.5, range:150, ap:0.3 }, { cost:5000, dmg:36, rate:9, range:160, ap:0.4 } ] },
   flame:   { name:'Lance-flammes fixe', req:3, levels:[
-              { cost:2600, dps:45, range:74, burn:15 }, { cost:5200, dps:80, range:80, burn:25 }, { cost:9500, dps:140, range:88, burn:40 } ] },
+              { cost:2600, dps:45, range:68, burn:15 }, { cost:5200, dps:80, range:72, burn:25 }, { cost:9500, dps:140, range:78, burn:40 } ] },
   rockets: { name:'Lance-roquettes automatique', req:4, levels:[
-              { cost:6000, n:4, dmg:150, radius:45, cd:4.5, range:260 }, { cost:11000, n:6, dmg:220, radius:50, cd:4, range:280 }, { cost:18000, n:8, dmg:320, radius:55, cd:3.5, range:300 } ] },
+              { cost:6000, n:4, dmg:150, radius:45, cd:4.5, range:170 }, { cost:11000, n:6, dmg:220, radius:50, cd:4, range:185 }, { cost:18000, n:8, dmg:320, radius:55, cd:3.5, range:200 } ] },
 };
 const MOD_ORDER = ['wire','claymore','mg','flame','rockets'];
 
@@ -337,21 +337,21 @@ const DEF = {
            { n:'Fossé à pieux',      cost:220, slow:0.55, dps:12 },
            { n:'Fossé incendiaire',  cost:500, slow:0.6,  dps:30, burn:10 } ] },
   mgnest:{ name:'Nid de mitrailleuse', place:'side', levels:[
-           { n:'MAG 58',             cost:200, dmg:8,  rate:5, range:105, ap:0 },
-           { n:'Double MAG 58',      cost:380, dmg:9,  rate:9, range:115, ap:0 },
-           { n:'M2 Browning 12,7',   cost:800, dmg:22, rate:7, range:135, ap:0.3 } ] },
+           { n:'MAG 58',             cost:200, dmg:8,  rate:5, range:100, ap:0 },
+           { n:'Double MAG 58',      cost:380, dmg:9,  rate:9, range:110, ap:0 },
+           { n:'M2 Browning 12,7',   cost:800, dmg:22, rate:7, range:120, ap:0.3 } ] },
   sniper:{ name:"Tireur d'élite", place:'side', levels:[
-           { n:'FR-F2',              cost:350,  dmg:60,  rate:0.8, range:210, pierce:1, ap:0.3 },
-           { n:'SCAR-H PR',          cost:700,  dmg:120, rate:1.1, range:250, pierce:2, ap:0.4 },
-           { n:'Hécate II',          cost:1500, dmg:340, rate:0.9, range:330, pierce:3, ap:0.85 } ] },
+           { n:'FR-F2',              cost:350,  dmg:60,  rate:0.8, range:160, pierce:1, ap:0.3 },
+           { n:'SCAR-H PR',          cost:700,  dmg:120, rate:1.1, range:180, pierce:2, ap:0.4 },
+           { n:'Hécate II',          cost:1500, dmg:340, rate:0.9, range:200, pierce:3, ap:0.85 } ] },
   mortar:{ name:'Mortier', place:'side', levels:[
-           { n:'Mortier 60 mm',      cost:500,  dmg:55,  r:36, rate:0.45, range:230, min:45 },
-           { n:'Mortier 81 mm',      cost:950,  dmg:120, r:46, rate:0.5,  range:260, min:45 },
-           { n:'Mortier 120 mm',     cost:2000, dmg:280, r:60, rate:0.5,  range:300, min:50 } ] },
+           { n:'Mortier 60 mm',      cost:500,  dmg:55,  r:36, rate:0.45, range:150, min:55 },
+           { n:'Mortier 81 mm',      cost:950,  dmg:120, r:46, rate:0.5,  range:165, min:60 },
+           { n:'Mortier 120 mm',     cost:2000, dmg:280, r:60, rate:0.5,  range:180, min:65 } ] },
   flamer:{ name:'Tour lance-flammes', place:'side', levels:[
-           { n:'Lance-flammes léger',cost:550,  dps:30,  range:62, burn:8 },
-           { n:'Lance-flammes lourd',cost:1000, dps:60,  range:72, burn:15 },
-           { n:'Lance-napalm',       cost:2100, dps:110, range:82, burn:30 } ] },
+           { n:'Lance-flammes léger',cost:550,  dps:30,  range:60, burn:8 },
+           { n:'Lance-flammes lourd',cost:1000, dps:60,  range:68, burn:15 },
+           { n:'Lance-napalm',       cost:2100, dps:110, range:76, burn:30 } ] },
 };
 const DEF_ORDER = ['wire','mine','ditch','mgnest','sniper','mortar','flamer'];
 
@@ -385,9 +385,9 @@ const rewMult = w => (1 + 0.08 * (w - 1)) * (G ? DIFF[G.diff].rew * (1 + 0.15 * 
    Victoire à la vague 40, puis mode infini. */
 const VICTORY = 40;
 const DIFF = {
-  facile:    { name: 'Facile',    hp: 0.45, dmg: 0.85, rew: 1.1,  ins: 0.5, desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
-  normal:    { name: 'Normal',    hp: 0.75, dmg: 1,    rew: 1,    ins: 1,   desc: "L'équilibre prévu : la vague 40 se mérite." },
-  cauchemar: { name: 'Cauchemar', hp: 0.9,  dmg: 1.2,  rew: 0.95, ins: 1.5, desc: 'Pour ceux qui ont déjà gagné en Normal.' },
+  facile:    { name: 'Facile',    hp: 0.38, dmg: 0.85, rew: 1.1,  ins: 0.5, desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
+  normal:    { name: 'Normal',    hp: 0.63, dmg: 1,    rew: 1,    ins: 1,   desc: "L'équilibre prévu : la vague 40 se mérite." },
+  cauchemar: { name: 'Cauchemar', hp: 0.76, dmg: 1.2,  rew: 0.95, ins: 1.5, desc: 'Pour ceux qui ont déjà gagné en Normal.' },
 };
 const DIFF_ORDER = ['facile', 'normal', 'cauchemar'];
 
