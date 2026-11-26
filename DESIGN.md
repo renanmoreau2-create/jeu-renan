@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.6)
+# DERNIER BASTION — document de conception (V1.7)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,16 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 quinquies. Changement V1.7 : construction directe sur la carte
+
+Retour de Renan : le réflexe est de toucher la case où l'on veut construire, pas d'aller dans le menu Construire. Comme dans Kingdom Rush, un appui sur un emplacement libre ouvre maintenant un menu au-dessus de la case :
+- seulement les défenses compatibles (tours sur les dalles, pièges sur les marquages de la route), avec leur icône et leur prix ;
+- un bouton grisé si l'argent manque, qui se réactive dès que l'argent arrive ;
+- un raccourci vers l'arbre s'il reste des défenses de ce type à débloquer ;
+- la case est surlignée tant que le menu est ouvert. Un appui ailleurs le ferme.
+
+La construction directe fonctionne aussi pendant une vague. Le mode « Poser une défense » du panneau reste disponible pour enchaîner plusieurs poses du même type.
 
 ## 2 quater. Changements V1.6 : rogue-lite hybride
 

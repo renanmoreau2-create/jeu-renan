@@ -148,6 +148,14 @@
   .ov .big.diff b{display:block;font-size:16px}
   .ov .big.diff span{font-size:12px;opacity:.8}
   #btnWave.early{background:#d08a3a;color:#16140c}
+  .sm{position:absolute;z-index:6;display:flex;gap:6px;align-items:stretch;background:rgba(15,17,18,.95);border:1px solid var(--khaki2);border-radius:12px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+  .sm.hide{display:none}
+  .sm button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;width:72px;padding:5px 2px 6px;border-radius:9px;background:#1f2427;border:1px solid var(--line);color:var(--txt);font-size:10.5px;line-height:1.15}
+  .sm button img{width:34px;height:34px}
+  .sm button .p{color:var(--khaki);font-weight:700;font-size:12px}
+  .sm button:disabled{opacity:.45}
+  .sm .smx{width:30px;justify-content:center;font-size:18px;color:var(--mute)}
+  .sm .sme{width:auto;max-width:210px;padding:6px 10px;font-size:12px;text-align:left}
   .dcard{display:block;width:100%;text-align:left;margin-top:10px;padding:12px 12px 12px 14px;border-radius:10px;background:#1c2124;border:1px solid var(--line);border-left:5px solid var(--c);color:var(--txt)}
   .dcard .dk{font-size:11px;color:var(--c);text-transform:uppercase;letter-spacing:.06em}
   .dcard b{display:block;font-size:16px;margin:2px 0 3px}
@@ -189,6 +197,7 @@
     <div id="toast"></div>
     <div id="bonusBar"></div>
     <div id="placeBar"><span id="placeTxt"></span><button class="btn" data-act="stopPlace">Terminer</button></div>
+    <div id="slotMenu" class="sm hide"></div>
   </div>
   <div id="weaponBar"></div>
   <nav id="tabs">
@@ -486,7 +495,7 @@ function freshState() {
     pressure: 1, hpScale: 1, power: 0, waveDmg: 0, budget: 0, depthSum: 0, depthN: 0, lastDepth: 0, pMax: 1, treeOpen: false, treeSel: null, treePaused: false, tv: { x: 0, y: 0, s: 1 }, tvInit: false, treeSeen: {},
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
     diff: 'normal', won: false, next: null, waveFrom: 1, prime: 0, report: null, hp0: 0, defNo: {},
-    cards: {}, draft: null, draftsDue: 0, nextDraft: DRAFT_EVERY, rerolls: 0, insRun: 0,
+    cards: {}, draft: null, draftsDue: 0, nextDraft: DRAFT_EVERY, rerolls: 0, insRun: 0, slotMenu: null,
     st: { hero: newSt(), arty: newSt(), wire: newSt(), claymore: newSt(), mg: newSt(), flame: newSt(), rockets: newSt() },
   };
 }
@@ -680,7 +689,7 @@ function launchWave(early) {
     G.waveFrom = G.wave; G.prime = 0; G.hp0 = G.hp; G.report = null;
     G.waveDmg = 0; G.depthSum = 0; G.depthN = 0; G.waveCount = 0; G.killed = 0;
     statSources().forEach(s => { s.st.wd = 0; s.st.wk = 0; });
-    G.placing = null; G.selected = null;
+    G.placing = null; G.selected = null; G.slotMenu = null;
     G.defs.forEach(d => { d.cd = 0; });
     G.ms.clayCd = 0;
   }
@@ -1340,6 +1349,46 @@ function addDef(type, c, r, lv, spent) {
   G.defs.push(d); G.defMap.set(c + ',' + r, d);
   return d;
 }
+// Menu de construction : un appui sur un emplacement libre propose directement les défenses possibles
+const SHORT_DEF = { mgnest: 'Mitrailleuse', sniper: "Tireur d'élite", mortar: 'Mortier', flamer: 'Lance-flammes', wire: 'Barbelés', mine: 'Mine', ditch: 'Fossé' };
+function openSlotMenu(c, r) {
+  const k = c + ',' + r;
+  G.slotMenu = { c, r, kind: SLOT_SET.has(k) ? 'side' : 'path' };
+  G.selected = null; G.placing = null;
+  renderAll();
+}
+function buildAt(type, c, r) {
+  if (!G.unlocked[type] || !canPlace(type, c, r)) return false;
+  const cost = placeCost(type);
+  if (!spend(cost)) return false;
+  addDef(type, c, r, 0, cost); SND.play('click');
+  toast(`${DEF[type].levels[0].n} en place.`, 1300);
+  if (G.mode === 'build') saveGame();
+  return true;
+}
+function renderSlotMenu() {
+  const m = $('slotMenu'), S = G.slotMenu;
+  if (!S || G.treeOpen || !(G.mode === 'build' || G.mode === 'wave')) { m.classList.add('hide'); m.innerHTML = ''; return; }
+  const types = DEF_ORDER.filter(t => DEF[t].place === S.kind), avail = types.filter(t => G.unlocked[t]);
+  const locked = types.length - avail.length, money = Math.floor(G.money);
+  let h = avail.map(t => { const c = placeCost(t); return `<button data-act="build" data-type="${t}" data-cost="${c}" ${money < c ? 'disabled' : ''}><img src="${icon(t)}" alt="">${SHORT_DEF[t]}<span class="p">${fmt(c)}</span></button>`; }).join('');
+  if (!avail.length) h = `<button class="sme" data-act="openTree">Aucun ${S.kind === 'side' ? 'type de tour' : 'piège'} débloqué. Ouvrir l'arbre</button>`;
+  else if (locked) h += `<button data-act="openTree" style="justify-content:center"><span style="font-size:11px">${locked} à débloquer</span><span class="p" style="font-weight:400">Arbre</span></button>`;
+  m.innerHTML = h + '<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button>';
+  m.classList.remove('hide');
+  placeSlotMenu();
+}
+function placeSlotMenu() {
+  const m = $('slotMenu'), S = G && G.slotMenu;
+  if (!S || m.classList.contains('hide')) return;
+  const sc = VIEW.sc, x = VIEW.bx + (S.c * T + T / 2) * sc;
+  const yTop = VIEW.by + (S.r * T * K + TOP) * sc, yBot = VIEW.by + ((S.r + 1) * T * K + TOP) * sc;
+  const st = stage.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
+  let top = yTop - mh - 10;
+  if (top < 6) top = yBot + 10;
+  m.style.left = clamp(x - mw / 2, 6, Math.max(6, st.width - mw - 6)) + 'px';
+  m.style.top = clamp(top, 6, Math.max(6, st.height - mh - 6)) + 'px';
+}
 function canPlace(type, c, r) {
   if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return false;
   if (c === BC.c && r === BC.r) return false;
@@ -1352,7 +1401,7 @@ function spend(n) { if (G.money < n) { toast('Pas assez d\'argent.'); return fal
 
 function openTree(sel) {
   if (G.mode === 'wave' && !G.paused) { G.paused = true; G.treePaused = true; }
-  G.treeOpen = true; G.treeSel = sel || null; G.placing = null;
+  G.treeOpen = true; G.treeSel = sel || null; G.placing = null; G.slotMenu = null;
   renderAll();
   requestAnimationFrame(() => { if (sel) treeCenter(sel); else if (!G.tvInit) treeCenter(ROOT); });
 }
@@ -1374,10 +1423,12 @@ function act(a, ds) {
     case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv >= 1 && lv < 3 && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
     case 'repair': { const k = repairRate(), miss = bunkerMax() - G.hp, cost = Math.ceil(miss / k), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * k); } break; }
     case 'card': pickCard(ds.id); return;
+    case 'build': { const S = G.slotMenu; if (S && buildAt(ds.type, S.c, S.r)) G.slotMenu = null; break; }
+    case 'closeSlot': G.slotMenu = null; break;
     case 'reroll': if (G.draft && G.rerolls > 0) { G.rerolls--; makeDraft(true); saveGame(); } return;
     case 'hq': showOverlay('hq'); return;
     case 'perk': { const P = PERKS[ds.id], r = perk(ds.id); if (P && r < P.cost.length && META.ins >= P.cost[r]) { META.ins -= P.cost[r]; META.perks[ds.id] = r + 1; saveMeta(); } showOverlay('hq'); return; }
-    case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; if (G.placing) G.panelOpen = false; break;
+    case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; G.slotMenu = null; if (G.placing) G.panelOpen = false; break;
     case 'stopPlace': G.placing = null; G.tab = 'construire'; G.panelOpen = true; break;
     case 'sellDef': { const d = G.selected; if (d) { G.money += Math.floor(d.spent * 0.6); G.defs = G.defs.filter(x => x !== d); G.defMap.delete(d.c + ',' + d.r); G.selected = null; } break; }
     case 'closeSel': G.selected = null; break;
@@ -1413,6 +1464,11 @@ function onTap(wx, wy, sx, sy) {
   if (G.mode !== 'build' && G.mode !== 'wave') return;
   const c = Math.floor(wx / T), r = Math.floor(wy / T), k = c + ',' + r;
   if (G.aim === 'arty' && G.mode === 'wave') { artyStrike(wx, wy); renderAll(); return; }
+  if (G.slotMenu) {
+    const same = G.slotMenu.c === c && G.slotMenu.r === r;
+    G.slotMenu = null; renderSlotMenu();
+    if (same) return;
+  }
   if (G.placing) {
     if (G.defMap.has(k)) { G.placing = null; G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
     if (canPlace(G.placing, c, r)) {
@@ -1433,6 +1489,7 @@ function onTap(wx, wy, sx, sy) {
   if (bestZ) { G.focus = bestZ; return; }
   if (G.defMap.has(k)) { G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
   if (!G.defMap.has(k)) { const t = G.defs.find(d => DEF[d.type].place === 'side' && Math.abs(sx - d.x) < 15 && sy < PY(d.y) + 6 && sy > PY(d.y, d.type === 'sniper' ? 50 : 26)); if (t) { G.selected = t; G.tab = 'construire'; G.panelOpen = true; renderAll(); return; } }
+  if (!G.defMap.has(k) && (SLOT_SET.has(k) || TRAP_SET.has(k))) { openSlotMenu(c, r); return; }
   if (Math.abs(sx - BX) < 26 && sy < PY(BY + 24) && sy > PY(BY - 24, roofH() + 22)) { G.tab = 'construire'; G.selected = null; G.panelOpen = true; renderAll(); return; }
   if (G.selected) { G.selected = null; renderAll(); }
 }
@@ -1574,7 +1631,7 @@ function panelBuild() {
   h += `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div><div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}. Évolutions : arbre, branche Fortification.</div></div>` +
     (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
   const freeT = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length, freeP = TRAP_SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
-  h += `<div class="sect">Poser une défense</div><div class="hint">Tours : ${freeT} emplacement${freeT > 1 ? 's' : ''} libre${freeT > 1 ? 's' : ''} sur ${SLOTS.length}. Pièges : ${freeP} emplacement${freeP > 1 ? 's' : ''} libre${freeP > 1 ? 's' : ''} sur ${TRAP_SLOTS.length}, peints sur la route. Touchez une défense posée pour l'améliorer.</div>`;
+  h += `<div class="sect">Poser une défense</div><div class="hint">Le plus simple : touchez un emplacement libre sur la carte. Tours : ${freeT} emplacement${freeT > 1 ? 's' : ''} libre${freeT > 1 ? 's' : ''} sur ${SLOTS.length}. Pièges : ${freeP} emplacement${freeP > 1 ? 's' : ''} libre${freeP > 1 ? 's' : ''} sur ${TRAP_SLOTS.length}, peints sur la route. Touchez une défense posée pour l'améliorer.</div>`;
   const avail = DEF_ORDER.filter(t => G.unlocked[t]);
   if (!avail.length) {
     h += `<div class="card"><div class="row"><div>Aucune défense débloquée.<div class="note">Premier choix dans l'arbre : le nid de mitrailleuse.</div></div><button class="btn buy" data-act="openTree">Ouvrir l'arbre</button></div></div>`;
@@ -1621,7 +1678,7 @@ function refreshAfford(force) {
   const m = Math.floor(G.money);
   if (!force && m === G.lastMoney) return;
   G.lastMoney = m;
-  document.querySelectorAll('#panel [data-cost], #treeSheet [data-cost]').forEach(b => { b.disabled = m < +b.dataset.cost; });
+  document.querySelectorAll('#panel [data-cost], #treeSheet [data-cost], #slotMenu [data-cost]').forEach(b => { b.disabled = m < +b.dataset.cost; });
   if (G.treeOpen) $('treeMoney').textContent = fmt(G.money);
 }
 function renderWeaponBar() {
@@ -1648,7 +1705,7 @@ function renderButtons() {
   $('btnSound').classList.toggle('on', SND.on);
   $('weaponBar').classList.toggle('hide', G.panelOpen || !(G.mode === 'build' || G.mode === 'wave'));
 }
-function renderAll() { renderBonusBar(true); renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
+function renderAll() { renderSlotMenu(); renderBonusBar(true); renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
 
 let hudCache = '';
 function hud(force) {
@@ -1905,6 +1962,7 @@ function fit() {
     lightDirty = true;
   }
   VIEW = { sc, dpr, bx, by };
+  placeSlotMenu();
 }
 const groundT = () => ctx.setTransform(VK, 0, 0, VK * K, OX, OY + TOP * VK);
 const screenT = () => ctx.setTransform(VK, 0, 0, VK, OX, OY);
@@ -2472,7 +2530,8 @@ function draw() {
     }
   }
   const showRange = (x, y, r, col) => { ctx.strokeStyle = col; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); };
-  if (G.selected) { const L = DEF[G.selected.type].levels[G.selected.lv]; if (L.range) showRange(G.selected.x, G.selected.y, L.range, 'rgba(214,184,92,0.8)'); ctx.strokeStyle = '#d6b85c'; ctx.lineWidth = 1.6; ctx.strokeRect(G.selected.c * T + 1, G.selected.r * T + 1, T - 2, T - 2); }
+  if (G.slotMenu) { const a = 0.55 + 0.45 * Math.sin(performance.now() / 160); ctx.strokeStyle = `rgba(214,184,92,${a})`; ctx.lineWidth = 2; ctx.setLineDash([5, 3]); ctx.strokeRect(G.slotMenu.c * T + 1.5, G.slotMenu.r * T + 1.5, T - 3, T - 3); ctx.setLineDash([]); }
+  if (G.selected) { const L = effL(G.selected.type, G.selected.lv); if (L.range) showRange(G.selected.x, G.selected.y, L.range, 'rgba(214,184,92,0.8)'); ctx.strokeStyle = '#d6b85c'; ctx.lineWidth = 1.6; ctx.strokeRect(G.selected.c * T + 1, G.selected.r * T + 1, T - 2, T - 2); }
   if (G.mode === 'build' && G.panelOpen && !G.selected && !G.placing) showRange(BX, BY, ws(G.equipped).range, 'rgba(214,184,92,0.45)');
   screenT();
   if (G.focus && !G.focus.dead) {
@@ -2515,6 +2574,7 @@ cv.addEventListener('pointerdown', e => {
 panel.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
 $('weaponBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('placeBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
+$('slotMenu').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
 $('bonusBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('overlay').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
@@ -2545,7 +2605,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, openSlotMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
 };
 })();
 </script>
