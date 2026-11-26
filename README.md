@@ -1,6 +1,6 @@
 # Dernier Bastion
 
-Tower defense post-apocalyptique pour téléphone : un homme seul tient un bastion contre des vagues de zombies.
+Tower defense post-apocalyptique pour téléphone, en vue 3/4 de nuit : un homme seul tient un bastion contre des hordes de zombies. La tour centrale évolue des sacs de sable jusqu'au bastion blindé.
 
 **Jouer :** https://renanmoreau2-create.github.io/jeu-renan/
 

@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.2)
+# DERNIER BASTION — document de conception (V1.3)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -72,7 +72,35 @@ Grille de 9 × 13 cases, bunker au centre.
 
 **Limite assumée.** Avec l'argent comme seule monnaie, une très longue partie finit par tout débloquer. Les choix pèsent surtout en début et en milieu de partie. Si c'est gênant, la parade est d'ajouter des embranchements exclusifs, où choisir une branche ferme l'autre.
 
-**Affichage.** L'arbre s'ouvre en plein écran depuis l'onglet « Arbre ». Il se présente en branches indentées, lisibles sur téléphone : nœuds acquis en kaki, disponibles en surbrillance, verrouillés en grisé avec leurs prérequis. Ouvrir l'arbre pendant une vague met le jeu en pause. L'onglet « Construire » sert à poser les défenses débloquées, à changer d'arme et à réparer le bunker.
+**Affichage (V1.3).** L'écran « Améliorations » est un graphe que l'on fait glisser et que l'on pince pour zoomer. Il part d'un point central, et chaque élément y est représenté par une icône dessinée dans le jeu.
+- **Au départ**, seul le point central est visible : le nid de mitrailleuse.
+- **Révélation progressive** : seuls les éléments suivants apparaissent, en grisé avec leur prix. Tout le reste reste caché jusqu'à ce que son parent soit acquis, et les nouveaux éléments apparaissent avec une courte animation.
+- **États** : un élément acquis est en couleur avec un cadre kaki. Un élément bloqué par un croisement porte un cadenas.
+- **Fiche détail** : toucher un élément l'ouvre en bas de l'écran. On y débloque l'élément ou on l'améliore.
+
+Ouvrir l'arbre pendant une vague met le jeu en pause. L'onglet « Construire » sert à poser les défenses débloquées, à changer d'arme et à réparer le bunker.
+
+## 3 bis. Rendu (V1.3) : vue 3/4 de nuit, en portrait
+
+- **Vue** : le sol est légèrement écrasé verticalement pour donner l'inclinaison de caméra. Tours, lampadaires, épaves et zombies sont dessinés debout et triés en profondeur. La carte remplit l'écran, et les routes se prolongent au-delà des bords.
+- **Nuit** : un voile sombre, percé par les lampadaires le long des routes et par la lueur autour du bastion. Les tirs, explosions et flammes éclairent la scène en temps réel.
+- **Routes** : asphalte avec bordures et ligne médiane, virages conservés. Un portail grillagé à chaque entrée : fermé avec un feu rouge tant que la route n'est pas ouverte, ouvert ensuite.
+- **Tour centrale**, qui évolue avec la branche Fortification :
+
+| Stade | Aspect | Position de l'homme |
+|---|---|---|
+| 1 | Anneau de sacs de sable | Il est debout derrière |
+| 2 | Double muret | Il est debout dessus |
+| 3 | Bastion HESCO | Il est sur les gabions |
+| 4 | Casemate béton à meurtrière | Il est sur le toit |
+| 5 | Bastion blindé sur plusieurs étages, avec fenêtres éclairées ou barricadées | Il est sur le toit |
+
+  Les modules sont visibles sur la tour : mitrailleuse 12,7 et lance-roquettes sur le toit, lance-flammes en façade, Claymore au pied, couronne de barbelés au sol.
+- **Lisibilité** :
+  - les zombies cachés derrière la tour apparaissent en silhouette translucide ;
+  - les barres de vie ne s'affichent que pour les gros zombies, sauf quand la horde est clairsemée ;
+  - au-delà de 130 zombies, leur dessin est simplifié.
+- **Performance mesurée** : environ 40 images/s avec 180 zombies dans un navigateur sans accélération graphique. Sur un téléphone, avec le processeur graphique, le rendu devrait être plus fluide.
 
 ## 4. L'homme et ses armes (11 armes, toutes portables par un fantassin)
 
