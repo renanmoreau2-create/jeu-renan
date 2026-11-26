@@ -156,6 +156,15 @@
   .sm button:disabled{opacity:.45}
   .sm .smx{width:30px;justify-content:center;font-size:18px;color:var(--mute)}
   .sm .sme{width:auto;max-width:210px;padding:6px 10px;font-size:12px;text-align:left}
+  .sm.col{flex-direction:column;gap:5px}
+  .sm .smt{font-size:11.5px;color:var(--txt);padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
+  .sm .smt span{color:var(--mute);margin-left:6px}
+  .sm .smr{display:flex;gap:6px}
+  .sm button.pick{border-color:var(--khaki);background:#2f2b1a;box-shadow:0 0 0 1px var(--khaki) inset}
+  .sm button.pick .p{color:#fff2c4}
+  .sm button .l{font-size:11.5px;font-weight:600}
+  .sm button .n{font-size:10px;color:var(--mute)}
+  .sm .smr button{justify-content:center;min-height:58px}
   .dcard{display:block;width:100%;text-align:left;margin-top:10px;padding:12px 12px 12px 14px;border-radius:10px;background:#1c2124;border:1px solid var(--line);border-left:5px solid var(--c);color:var(--txt)}
   .dcard .dk{font-size:11px;color:var(--c);text-transform:uppercase;letter-spacing:.06em}
   .dcard b{display:block;font-size:16px;margin:2px 0 3px}
@@ -1351,11 +1360,35 @@ function addDef(type, c, r, lv, spent) {
 }
 // Menu de construction : un appui sur un emplacement libre propose directement les défenses possibles
 const SHORT_DEF = { mgnest: 'Mitrailleuse', sniper: "Tireur d'élite", mortar: 'Mortier', flamer: 'Lance-flammes', wire: 'Barbelés', mine: 'Mine', ditch: 'Fossé' };
-function openSlotMenu(c, r) {
+function openSlotMenu(c, r, prev) {
   const k = c + ',' + r;
-  G.slotMenu = { c, r, kind: SLOT_SET.has(k) ? 'side' : 'path' };
+  if (prev && !prev.def && prev.c === c && prev.r === r) { renderAll(); return; }
+  G.slotMenu = { c, r, kind: SLOT_SET.has(k) ? 'side' : 'path', pick: null };
   G.selected = null; G.placing = null;
   renderAll();
+}
+// Menu d'une défense posée : améliorer, priorité de tir, vendre, détails (sur la carte)
+function openDefMenu(d, prev) {
+  if (prev && prev.def && prev.c === d.c && prev.r === d.r) { renderAll(); return; }
+  G.selected = d; G.placing = null;
+  G.slotMenu = { c: d.c, r: d.r, kind: DEF[d.type].place, def: true, pick: null };
+  renderAll();
+}
+function sellSelected() {
+  const d = G.selected; if (!d) return;
+  G.money += Math.floor(d.spent * 0.6); G.defs = G.defs.filter(x => x !== d); G.defMap.delete(d.c + ',' + d.r); G.selected = null;
+  toast(`Défense vendue : +${fmt(d.spent * 0.6)}`, 1300);
+}
+function defMenuHtml(S, money) {
+  const d = G.selected, D = DEF[d.type], N = D.levels[d.lv + 1], side = D.place === 'side';
+  let up;
+  if (!N) up = `<button disabled><span class="l">Niveau</span><span class="p">max</span></button>`;
+  else if (G.defTech[d.type] > d.lv) { const c = N.cost; up = `<button class="${S.pick === 'up' ? 'pick' : ''}" data-act="dUp" data-cost="${c}" ${money < c ? 'disabled' : ''}><span class="l">${S.pick === 'up' ? 'Confirmer' : 'Améliorer'}</span><span class="n">niv. ${d.lv + 2}</span><span class="p">${fmt(c)}</span></button>`; }
+  else up = `<button data-act="openNode" data-id="${d.type}${d.lv + 2}"><span class="l">Niv. ${d.lv + 2}</span><span class="n">à débloquer</span><span class="p">Arbre</span></button>`;
+  const tg = side ? `<button data-act="dTgt"><span class="l">Cible</span><span class="n">touchez pour changer</span><span class="p">${TGT[d.tgt]}</span></button>` : '';
+  const sell = `<button class="${S.pick === 'sell' ? 'pick' : ''}" data-act="dSell"><span class="l">${S.pick === 'sell' ? 'Confirmer' : 'Vendre'}</span><span class="p">+${fmt(d.spent * 0.6)}</span></button>`;
+  const info = `<button data-act="dInfo"><span class="l">Détails</span><span class="n">bilan, stats</span></button>`;
+  return `<div class="smt"><b>${defLabel(d)}</b> · niv. ${d.lv + 1} · ${D.levels[d.lv].n}<span>${fmt(d.st.kills)} élim.</span></div><div class="smr">${up}${tg}${sell}${info}<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button></div>`;
 }
 function buildAt(type, c, r) {
   if (!G.unlocked[type] || !canPlace(type, c, r)) return false;
@@ -1369,9 +1402,16 @@ function buildAt(type, c, r) {
 function renderSlotMenu() {
   const m = $('slotMenu'), S = G.slotMenu;
   if (!S || G.treeOpen || !(G.mode === 'build' || G.mode === 'wave')) { m.classList.add('hide'); m.innerHTML = ''; return; }
+  const money = Math.floor(G.money);
+  if (S.def) {
+    if (!G.selected) { G.slotMenu = null; m.classList.add('hide'); m.innerHTML = ''; return; }
+    m.innerHTML = defMenuHtml(S, money); m.classList.add('col'); m.classList.remove('hide');
+    placeSlotMenu(); return;
+  }
+  m.classList.remove('col');
   const types = DEF_ORDER.filter(t => DEF[t].place === S.kind), avail = types.filter(t => G.unlocked[t]);
-  const locked = types.length - avail.length, money = Math.floor(G.money);
-  let h = avail.map(t => { const c = placeCost(t); return `<button data-act="build" data-type="${t}" data-cost="${c}" ${money < c ? 'disabled' : ''}><img src="${icon(t)}" alt="">${SHORT_DEF[t]}<span class="p">${fmt(c)}</span></button>`; }).join('');
+  const locked = types.length - avail.length;
+  let h = avail.map(t => { const c = placeCost(t), pk = S.pick === t; return `<button class="${pk ? 'pick' : ''}" data-act="build" data-type="${t}" data-cost="${c}" ${money < c ? 'disabled' : ''}><img src="${icon(t)}" alt="">${SHORT_DEF[t]}<span class="p">${pk ? 'Confirmer' : fmt(c)}</span></button>`; }).join('');
   if (!avail.length) h = `<button class="sme" data-act="openTree">Aucun ${S.kind === 'side' ? 'type de tour' : 'piège'} débloqué. Ouvrir l'arbre</button>`;
   else if (locked) h += `<button data-act="openTree" style="justify-content:center"><span style="font-size:11px">${locked} à débloquer</span><span class="p" style="font-weight:400">Arbre</span></button>`;
   m.innerHTML = h + '<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button>';
@@ -1382,7 +1422,8 @@ function placeSlotMenu() {
   const m = $('slotMenu'), S = G && G.slotMenu;
   if (!S || m.classList.contains('hide')) return;
   const sc = VIEW.sc, x = VIEW.bx + (S.c * T + T / 2) * sc;
-  const yTop = VIEW.by + (S.r * T * K + TOP) * sc, yBot = VIEW.by + ((S.r + 1) * T * K + TOP) * sc;
+  const lift = S.def && S.kind === 'side' && G.selected ? (G.selected.type === 'sniper' ? 50 : 26) : 0;
+  const yTop = VIEW.by + (S.r * T * K + TOP - lift) * sc, yBot = VIEW.by + ((S.r + 1) * T * K + TOP) * sc;
   const st = stage.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
   let top = yTop - mh - 10;
   if (top < 6) top = yBot + 10;
@@ -1423,15 +1464,19 @@ function act(a, ds) {
     case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv >= 1 && lv < 3 && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
     case 'repair': { const k = repairRate(), miss = bunkerMax() - G.hp, cost = Math.ceil(miss / k), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * k); } break; }
     case 'card': pickCard(ds.id); return;
-    case 'build': { const S = G.slotMenu; if (S && buildAt(ds.type, S.c, S.r)) G.slotMenu = null; break; }
-    case 'closeSlot': G.slotMenu = null; break;
+    case 'build': { const S = G.slotMenu; if (!S || S.def) break; if (S.pick !== ds.type) { S.pick = ds.type; break; } if (buildAt(ds.type, S.c, S.r)) G.slotMenu = null; break; }
+    case 'closeSlot': if (G.slotMenu && G.slotMenu.def) G.selected = null; G.slotMenu = null; break;
+    case 'dUp': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'up') { S.pick = 'up'; break; } upgradeInst(G.selected); S.pick = null; break; }
+    case 'dSell': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'sell') { S.pick = 'sell'; break; } sellSelected(); G.slotMenu = null; break; }
+    case 'dTgt': { const d = G.selected; if (d && G.slotMenu) { const ks = Object.keys(TGT); d.tgt = ks[(ks.indexOf(d.tgt) + 1) % ks.length]; G.slotMenu.pick = null; } break; }
+    case 'dInfo': G.slotMenu = null; G.tab = 'construire'; G.panelOpen = true; break;
     case 'reroll': if (G.draft && G.rerolls > 0) { G.rerolls--; makeDraft(true); saveGame(); } return;
     case 'hq': showOverlay('hq'); return;
     case 'perk': { const P = PERKS[ds.id], r = perk(ds.id); if (P && r < P.cost.length && META.ins >= P.cost[r]) { META.ins -= P.cost[r]; META.perks[ds.id] = r + 1; saveMeta(); } showOverlay('hq'); return; }
     case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; G.slotMenu = null; if (G.placing) G.panelOpen = false; break;
     case 'stopPlace': G.placing = null; G.tab = 'construire'; G.panelOpen = true; break;
-    case 'sellDef': { const d = G.selected; if (d) { G.money += Math.floor(d.spent * 0.6); G.defs = G.defs.filter(x => x !== d); G.defMap.delete(d.c + ',' + d.r); G.selected = null; } break; }
-    case 'closeSel': G.selected = null; break;
+    case 'sellDef': sellSelected(); G.slotMenu = null; break;
+    case 'closeSel': G.selected = null; if (G.slotMenu && G.slotMenu.def) G.slotMenu = null; break;
     case 'treeSel': G.treeSel = G.treeSel === ds.id ? null : ds.id; break;
     case 'openTree': openTree(null); return;
     case 'openNode': openTree(ds.id); return;
@@ -1443,7 +1488,7 @@ function act(a, ds) {
     case 'back': showOverlay(G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : G.draft ? 'draft' : 'victory'); return;
     case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); if (G.draft) showOverlay('draft'); return;
     case 'tgt': if (G.selected && TGT[ds.m]) G.selected.tgt = ds.m; break;
-    case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.panelOpen = true; } break; }
+    case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.panelOpen = true; G.slotMenu = null; } break; }
     case 'closeReport': G.report = null; break;
     case 'continue': { const s = loadSave(); newGame(s); return; }
   }
@@ -1464,10 +1509,10 @@ function onTap(wx, wy, sx, sy) {
   if (G.mode !== 'build' && G.mode !== 'wave') return;
   const c = Math.floor(wx / T), r = Math.floor(wy / T), k = c + ',' + r;
   if (G.aim === 'arty' && G.mode === 'wave') { artyStrike(wx, wy); renderAll(); return; }
-  if (G.slotMenu) {
-    const same = G.slotMenu.c === c && G.slotMenu.r === r;
+  const prev = G.slotMenu;
+  if (prev) {
+    if (prev.def) G.selected = null;
     G.slotMenu = null; renderSlotMenu();
-    if (same) return;
   }
   if (G.placing) {
     if (G.defMap.has(k)) { G.placing = null; G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
@@ -1486,12 +1531,12 @@ function onTap(wx, wy, sx, sy) {
   // zombie sous le doigt : cible prioritaire
   let bestZ = null, bd = 22 * 22;
   for (const z of G.zombies) { if (z.dead) continue; const d2 = (z.x - sx) ** 2 + (PY(z.y, z.r * 1.3) - sy) ** 2; if (d2 < bd) { bd = d2; bestZ = z; } }
-  if (bestZ) { G.focus = bestZ; return; }
-  if (G.defMap.has(k)) { G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
-  if (!G.defMap.has(k)) { const t = G.defs.find(d => DEF[d.type].place === 'side' && Math.abs(sx - d.x) < 15 && sy < PY(d.y) + 6 && sy > PY(d.y, d.type === 'sniper' ? 50 : 26)); if (t) { G.selected = t; G.tab = 'construire'; G.panelOpen = true; renderAll(); return; } }
-  if (!G.defMap.has(k) && (SLOT_SET.has(k) || TRAP_SET.has(k))) { openSlotMenu(c, r); return; }
+  if (bestZ) { G.focus = bestZ; if (prev) renderAll(); return; }
+  if (G.defMap.has(k)) { openDefMenu(G.defMap.get(k), prev); return; }
+  if (!G.defMap.has(k)) { const t = G.defs.find(d => DEF[d.type].place === 'side' && Math.abs(sx - d.x) < 15 && sy < PY(d.y) + 6 && sy > PY(d.y, d.type === 'sniper' ? 50 : 26)); if (t) { openDefMenu(t, prev); return; } }
+  if (!G.defMap.has(k) && (SLOT_SET.has(k) || TRAP_SET.has(k))) { openSlotMenu(c, r, prev); return; }
   if (Math.abs(sx - BX) < 26 && sy < PY(BY + 24) && sy > PY(BY - 24, roofH() + 22)) { G.tab = 'construire'; G.selected = null; G.panelOpen = true; renderAll(); return; }
-  if (G.selected) { G.selected = null; renderAll(); }
+  if (G.selected || prev) { G.selected = null; renderAll(); }
 }
 
 /* =========================================================
@@ -1631,7 +1676,7 @@ function panelBuild() {
   h += `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div><div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}. Évolutions : arbre, branche Fortification.</div></div>` +
     (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
   const freeT = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length, freeP = TRAP_SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
-  h += `<div class="sect">Poser une défense</div><div class="hint">Le plus simple : touchez un emplacement libre sur la carte. Tours : ${freeT} emplacement${freeT > 1 ? 's' : ''} libre${freeT > 1 ? 's' : ''} sur ${SLOTS.length}. Pièges : ${freeP} emplacement${freeP > 1 ? 's' : ''} libre${freeP > 1 ? 's' : ''} sur ${TRAP_SLOTS.length}, peints sur la route. Touchez une défense posée pour l'améliorer.</div>`;
+  h += `<div class="sect">Poser une défense</div><div class="hint">Le plus simple : touchez un emplacement libre sur la carte, puis touchez deux fois la défense voulue (la première montre sa portée). Touchez une défense posée pour l'améliorer ou la vendre. Tours : ${freeT} emplacement${freeT > 1 ? 's' : ''} libre${freeT > 1 ? 's' : ''} sur ${SLOTS.length}. Pièges : ${freeP} emplacement${freeP > 1 ? 's' : ''} libre${freeP > 1 ? 's' : ''} sur ${TRAP_SLOTS.length}, peints sur la route.</div>`;
   const avail = DEF_ORDER.filter(t => G.unlocked[t]);
   if (!avail.length) {
     h += `<div class="card"><div class="row"><div>Aucune défense débloquée.<div class="note">Premier choix dans l'arbre : le nid de mitrailleuse.</div></div><button class="btn buy" data-act="openTree">Ouvrir l'arbre</button></div></div>`;
@@ -2530,7 +2575,11 @@ function draw() {
     }
   }
   const showRange = (x, y, r, col) => { ctx.strokeStyle = col; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); };
-  if (G.slotMenu) { const a = 0.55 + 0.45 * Math.sin(performance.now() / 160); ctx.strokeStyle = `rgba(214,184,92,${a})`; ctx.lineWidth = 2; ctx.setLineDash([5, 3]); ctx.strokeRect(G.slotMenu.c * T + 1.5, G.slotMenu.r * T + 1.5, T - 3, T - 3); ctx.setLineDash([]); }
+  if (G.slotMenu) { const a = 0.55 + 0.45 * Math.sin(performance.now() / 160); ctx.strokeStyle = `rgba(214,184,92,${a})`; ctx.lineWidth = 2; ctx.setLineDash([5, 3]); ctx.strokeRect(G.slotMenu.c * T + 1.5, G.slotMenu.r * T + 1.5, T - 3, T - 3); ctx.setLineDash([]);
+    const S = G.slotMenu, x = S.c * T + T / 2, y = S.r * T + T / 2;
+    if (!S.def && S.pick) { const L = effL(S.pick, 0); if (L.range) showRange(x, y, L.range, 'rgba(214,184,92,0.95)'); if (L.min) showRange(x, y, L.min, 'rgba(227,160,143,0.8)'); if (S.pick === 'mine') showRange(x, y, L.r, 'rgba(255,170,80,0.9)'); }
+    if (S.def && S.pick === 'up' && G.selected && DEF[G.selected.type].levels[G.selected.lv + 1]) { const L2 = effL(G.selected.type, G.selected.lv + 1); if (L2.range) showRange(G.selected.x, G.selected.y, L2.range, 'rgba(140,220,140,0.95)'); if (G.selected.type === 'mine') showRange(G.selected.x, G.selected.y, L2.r, 'rgba(140,220,140,0.95)'); }
+  }
   if (G.selected) { const L = effL(G.selected.type, G.selected.lv); if (L.range) showRange(G.selected.x, G.selected.y, L.range, 'rgba(214,184,92,0.8)'); ctx.strokeStyle = '#d6b85c'; ctx.lineWidth = 1.6; ctx.strokeRect(G.selected.c * T + 1, G.selected.r * T + 1, T - 2, T - 2); }
   if (G.mode === 'build' && G.panelOpen && !G.selected && !G.placing) showRange(BX, BY, ws(G.equipped).range, 'rgba(214,184,92,0.45)');
   screenT();
@@ -2605,7 +2654,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, openSlotMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, openSlotMenu, openDefMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
 };
 })();
 </script>

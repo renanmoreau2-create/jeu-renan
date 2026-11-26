@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.7)
+# DERNIER BASTION — document de conception (V1.8)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,16 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 sexies. Changement V1.8 : confirmation avec portée, menu des défenses posées
+
+- **Construire en deux appuis** (Kingdom Rush) : le premier appui sur une défense du menu affiche sa portée sur la carte, le second construit. Le mortier montre aussi sa portée minimale (cercle rouge), la mine son rayon d'explosion.
+- **Menu d'une défense posée**, sur la carte, au-dessus de sa silhouette :
+  - **Améliorer** : en deux appuis. Le premier montre la portée du niveau suivant en vert. Si l'option n'est pas débloquée, le bouton mène au nœud de l'arbre ;
+  - **Cible** : chaque appui passe à la priorité suivante (Premier, Plus fort, Plus proche, Blindé) ;
+  - **Vendre** : en deux appuis, pour 60 % de ce qui a été investi ;
+  - **Détails** : ouvre la fiche complète dans le panneau (statistiques, bilan).
+- Toucher la même défense referme le menu. Le panneau du bas ne s'ouvre plus tout seul quand on touche une défense.
 
 ## 2 quinquies. Changement V1.7 : construction directe sur la carte
 
