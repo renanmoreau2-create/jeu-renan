@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.3)
+# DERNIER BASTION — document de conception (V1.4)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -32,6 +32,48 @@ Grille de 9 × 13 cases, bunker au centre.
 - Les **pièges** (barbelés, mines, fossés) se posent n'importe où **sur** le chemin.
 - Les **tours** se posent **uniquement sur 10 emplacements balisés** (plateformes en béton) : 4 sur le chemin Nord, 3 sur le Sud, 2 sur l'Est et 1 au pied du bunker. Placer une tour devient un choix tactique : quel type sur quel emplacement, et lequel garder libre pour plus tard.
 - Le chemin Est est volontairement court : c'est une brèche de fin de partie qui oblige à réorganiser la défense.
+
+## 2 bis. Changements V1.4 (retours de Renan après une partie jusqu'à la vague 40)
+
+**Emplacements limités pour les pièges aussi.** Les pièges ne se posent plus que sur 13 cases peintes sur la route, aux virages et aux abords du bastion. Les tours gardent leurs 10 emplacements balisés.
+
+**Améliorations une à une.** L'arbre débloque les options : chaque défense a deux nœuds, niveau II et niveau III (par exemple Double MAG 58, puis M2 Browning 12,7). Ensuite, chaque défense posée s'améliore individuellement : on la touche sur la carte, puis « Améliorer celle-ci ». On peut ainsi ne faire évoluer que la mitrailleuse la mieux placée. Les prérequis qui demandaient un niveau de nid (Minimi, mitrailleuse 12,7 du bunker) pointent désormais vers ces nœuds d'option.
+
+**Armes de l'homme simplifiées.** Chaque arme a 3 améliorations uniques, au lieu de 3 × 5 :
+
+| Amélioration | Effet |
+|---|---|
+| Cadence | +50 % de tirs par seconde |
+| Puissance | +80 % de dégâts |
+| Zone | balles : traversent 2 cibles de plus ; fusil à pompe : +3 plombs ; explosifs : rayon +40 % ; lance-flammes : cône +35 % |
+
+**Bonus à recharge.** Ils se débloquent dans l'arbre, ont 3 rangs chacun et se déclenchent pendant une vague avec les boutons ronds à droite de la carte.
+
+| Bonus | Branche de l'arbre | Effet | Rang 1 | Rang 2 | Rang 3 |
+|---|---|---|---|---|---|
+| Super tir | Tir, sous le Glock | Multiplie les dégâts de l'arme de l'homme | ×4 pendant 3 s, recharge 180 s | ×5 pendant 4 s | ×6 pendant 5 s, recharge 120 s |
+| Frappe d'artillerie | Appui, sous le mortier | On touche une zone, des obus y tombent | 6 obus | 9 obus | 12 obus |
+| Réparation d'urgence | Fortification, sous le double muret | Rend une part des PV du bastion | 30 % | 45 % | 60 % |
+
+**Directeur de vagues** (même principe que l'« AI Director » de Left 4 Dead). Il remplace la courbe fixe qui rendait le jeu trop facile puis infranchissable vers la vague 40.
+
+1. **Puissance de feu** : estimée au début de chaque vague. On compte la meilleure arme de l'homme, plus toutes les tours, pièges et modules posés. Elle est affichée dans l'onglet Construire.
+2. **Budget de la horde** : le total de PV de la horde est proportionnel à la puissance de feu (exposant 0,9), avec une lente montée dans le temps (+5 % par vague). Ce budget est réparti entre les zombies. Plus de zombies, c'est donc plus de zombies chacun moins résistants : l'effet horde est conservé, sans mur.
+3. **Mesure après la vague** : le directeur regarde jusqu'où les zombies sont arrivés avant de mourir, et les dégâts subis par le bastion. Son objectif est que les zombies parcourent environ 60 % de la route avant de mourir, et que le bastion encaisse quelques dégâts réguliers.
+   - **Défense trop confortable** : la horde suivante grossit, de 12 % au plus par vague.
+   - **Trop de casse** : elle diminue franchement.
+4. **Pas de partie infinie** : le répit ne descend jamais sous 80 % de la pression maximale déjà atteinte. La menace finit toujours par gagner, progressivement.
+
+**Pourquoi pas un suivi total de la puissance de feu ?** Si la menace suivait la puissance à 100 %, chaque achat serait annulé aussitôt et la progression perdrait son sens. C'est pourquoi l'exposant est inférieur à 1 et la correction est bornée.
+
+**Autres ajustements :**
+- **Abomination allégée** (1 200 PV de base, 40 dégâts) : en simulation, chaque boss était un mur soudain.
+- **Sauvegarde v4** : les anciennes sauvegardes ne sont pas reprises.
+
+**Calibrage V1.4.** Trois profils de joueur automatique : équilibré, armes d'abord, génie d'abord. Les bonus sont utilisés automatiquement.
+- **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
+- **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
+- **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
 
 ## 3. L'arbre d'évolution unique (V1.2)
 

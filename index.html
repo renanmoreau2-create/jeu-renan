@@ -88,6 +88,15 @@
   .bcard:disabled{opacity:.45}
   .hint{font-size:12px;color:var(--mute);margin:2px 2px 8px}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
+  #bonusBar{position:absolute;right:8px;bottom:64px;display:flex;flex-direction:column;gap:10px;z-index:3}
+  .bbtn{position:relative;width:54px;height:54px;border-radius:50%;background:#15181a;border:2px solid #4c5357;padding:0;overflow:visible}
+  .bbtn img{width:40px;height:40px;margin-top:5px;border-radius:50%}
+  .bbtn:after{content:"";position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(rgba(0,0,0,.72) var(--p), transparent 0);pointer-events:none}
+  .bbtn.ready{border-color:var(--khaki);box-shadow:0 0 12px rgba(214,184,92,.55)}
+  .bbtn.aim{border-color:#ff5a3a;box-shadow:0 0 14px rgba(255,90,58,.8)}
+  .bbtn.active{border-color:#ff7a3a;box-shadow:0 0 18px rgba(255,122,58,.9)}
+  .bcd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;text-shadow:0 1px 3px #000;z-index:1;pointer-events:none}
+  .blb{position:absolute;right:60px;top:50%;transform:translateY(-50%);font-size:10px;white-space:nowrap;color:#d8d2c0;text-shadow:0 1px 2px #000;pointer-events:none}
   /* Arbre en graphe */
   #tree{position:fixed;inset:0;z-index:8;background:radial-gradient(ellipse at 50% 42%,#1b1e21 0%,#0b0c0d 75%);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
   #tree.hide{display:none}
@@ -111,6 +120,7 @@
   .glab{position:absolute;top:61px;left:50%;width:92px;margin-left:-46px;text-align:center;font-size:10px;line-height:1.15;color:#c9c4b4;pointer-events:none;text-shadow:0 1px 2px #000}
   .gcost{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--khaki);white-space:nowrap;text-shadow:0 1px 2px #000}
   .glv{position:absolute;right:2px;bottom:1px;font-size:9px;color:var(--khaki)}
+  .grom{position:absolute;left:2px;bottom:0;font-family:Georgia,serif;font-weight:700;font-size:12px;color:#e8d18a;text-shadow:0 1px 2px #000}
   .glk{position:absolute;right:-7px;top:-7px;width:16px;height:16px;border-radius:50%;background:#2a2f33 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4' y='7' width='8' height='6' fill='%23aaa'/%3E%3Cpath d='M5.5 7V5.5a2.5 2.5 0 0 1 5 0V7' stroke='%23aaa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") center/12px no-repeat;border:1px solid #555}
   .tzoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:2}
   .thint{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:11px;color:var(--mute);pointer-events:none}
@@ -149,6 +159,7 @@
   <div id="stage">
     <canvas id="cv"></canvas>
     <div id="toast"></div>
+    <div id="bonusBar"></div>
     <div id="placeBar"><span id="placeTxt"></span><button class="btn" data-act="stopPlace">Terminer</button></div>
   </div>
   <div id="weaponBar"></div>
@@ -179,7 +190,7 @@
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
 const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
-const SKEY = 'dernierBastion.save.v3', BKEY = 'dernierBastion.best';
+const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best';
 
 const PATHS_DEF = [
   { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
@@ -190,6 +201,9 @@ const PATHS_DEF = [
 // Emplacements de tours : les seules cases où une tour peut être posée
 const SLOTS = [[1,1],[4,2],[6,3],[3,5],[5,5],[3,7],[2,10],[5,10],[7,10],[8,8]];
 const SLOT_SET = new Set(SLOTS.map(([c, r]) => c + ',' + r));
+// Emplacements de pièges : cases peintes sur la route (virages et abords du bastion)
+const TRAP_SLOTS = [[2,1],[5,1],[7,3],[5,4],[4,5],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]];
+const TRAP_SET = new Set(TRAP_SLOTS.map(([c, r]) => c + ',' + r));
 
 // Armes de l'homme (ordre de progression)
 const WEAPONS = [
@@ -240,6 +254,14 @@ const MODULES = {
 };
 const MOD_ORDER = ['wire','claymore','mg','flame','rockets'];
 
+// Bonus à recharge (débloqués dans l'arbre, 3 rangs)
+const BONUS = {
+  superTir: { name:'Super tir', levels:[ { cost:500, mult:4, dur:3, cd:180 }, { cost:1400, mult:5, dur:4, cd:150 }, { cost:3200, mult:6, dur:5, cd:120 } ] },
+  arty:     { name:"Frappe d'artillerie", levels:[ { cost:1200, shells:6, dmg:5, cd:150 }, { cost:2600, shells:9, dmg:6, cd:130 }, { cost:5000, shells:12, dmg:7, cd:110 } ] },
+  repair:   { name:"Réparation d'urgence", levels:[ { cost:700, pct:0.3, cd:180 }, { cost:1600, pct:0.45, cd:150 }, { cost:3400, pct:0.6, cd:120 } ] },
+};
+const BONUS_ORDER = ['superTir', 'arty', 'repair'];
+
 // Défenses de chemin. place: 'path' (piège sur le chemin) ou 'side' (tour à côté)
 const DEF = {
   wire:  { name:'Barbelés', place:'path', levels:[
@@ -283,7 +305,7 @@ const ZT = {
   spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:10,  r:7,  color:'#6fae4a', from:9,  w:2, spit:12, spitRange:100, spitCd:2 },
   screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:11,  r:7,  color:'#cfc6b2', from:11, w:1.5, aura:70 },
   brute:   { name:'Brute',      hp:700,  speed:13, dmg:22, armor:3, reward:60,  r:14, color:'#7a3d2c', from:12, w:0.6 },
-  boss:    { name:'Abomination',hp:2400, speed:9,  dmg:60, armor:8, reward:400, r:22, color:'#3f2643', from:999, w:0, boss:true },
+  boss:    { name:'Abomination',hp:1200, speed:9,  dmg:40, armor:8, reward:400, r:22, color:'#3f2643', from:999, w:0, boss:true },
 };
 
 const ZTIP = {
@@ -355,7 +377,9 @@ function freshState() {
     zombies: [], projs: [], tracers: [], booms: [], parts: [], texts: [],
     queue: [], spawnT: 0, waveCount: 0, killed: 0,
     speed: 1, paused: false, tab: 'construire', panelOpen: true, placing: null, selected: null, focus: null,
-    unlocked: {}, defLv: { wire: 0, mine: 0, ditch: 0, mgnest: 0, sniper: 0, mortar: 0, flamer: 0 }, treeOpen: false, treeSel: null, treePaused: false, tv: { x: 0, y: 0, s: 1 }, tvInit: false, treeSeen: {},
+    unlocked: {}, defTech: { wire: 0, mine: 0, ditch: 0, mgnest: 0, sniper: 0, mortar: 0, flamer: 0 },
+    bonus: { superTir: 0, arty: 0, repair: 0 }, bcd: { superTir: 0, arty: 0, repair: 0 }, superT: 0, superMult: 1, aim: null,
+    pressure: 1, hpScale: 1, power: 0, waveDmg: 0, budget: 0, depthSum: 0, depthN: 0, lastDepth: 0, pMax: 1, treeOpen: false, treeSel: null, treePaused: false, tv: { x: 0, y: 0, s: 1 }, tvInit: false, treeSeen: {},
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
   };
 }
@@ -414,17 +438,64 @@ const SND = {
    ========================================================= */
 function ws(id) {
   const b = WBY[id], u = G.weapons[id].up, s = { ...b };
-  s.rate = b.rate * (1 + 0.18 * u[0]);
-  s.dmg = b.dmg * (1 + 0.25 * u[1]);
-  const z = u[2];
-  if (b.kind === 'bullet') s.pierce = b.pierce + z;
-  else if (b.kind === 'shotgun') s.pellets = b.pellets + z;
-  else if (b.kind === 'explosive') s.radius = b.radius * (1 + 0.15 * z);
-  else if (b.kind === 'flame') { s.cone = b.cone * (1 + 0.12 * z); s.range = b.range * (1 + 0.06 * z); }
+  s.rate = b.rate * (1 + 0.5 * u[0]);
+  s.dmg = b.dmg * (1 + 0.8 * u[1]);
+  if (u[2]) {
+    if (b.kind === 'bullet') s.pierce = b.pierce + 2;
+    else if (b.kind === 'shotgun') s.pellets = b.pellets + 3;
+    else if (b.kind === 'explosive') s.radius = b.radius * 1.4;
+    else if (b.kind === 'flame') { s.cone = b.cone * 1.35; s.range = b.range * 1.15; }
+  }
+  if (G.superT > 0) s.dmg *= G.superMult;
   return s;
 }
 const zoneLabel = w => ({ bullet:'Perforation', shotgun:'Plombs', explosive:'Rayon', flame:'Cône' })[w.kind];
-const upCost = (w, lvl) => Math.round((60 + w.cost * 0.3) * Math.pow(1.55, lvl));
+const zoneDesc = w => ({ bullet:'traverse 2 cibles de plus', shotgun:'+3 plombs', explosive:'rayon +40 %', flame:'cône +35 %, portée +15 %' })[w.kind];
+const UPG_DESC = ['+50 % de tirs par seconde', '+80 % de dégâts'];
+const upCost = (w, b) => Math.round((90 + w.cost * 0.45) * [1, 1.3, 1.6][b]);
+
+/* =========================================================
+   DIRECTEUR DE VAGUES : résistance des zombies liée à la puissance de feu
+   ========================================================= */
+function weaponPower(s) {
+  const base = s.dmg * s.rate;
+  return s.kind === 'bullet' ? base * (1 + 0.35 * (s.pierce - 1)) : s.kind === 'shotgun' ? base * s.pellets * 0.55 : s.kind === 'explosive' ? base * (1 + s.radius / 25) : base * (1 + s.cone * 4);
+}
+function firepower() {
+  let best = 0;
+  const sT = G.superT; G.superT = 0;
+  WEAPONS.forEach(w => { if (G.weapons[w.id].owned) best = Math.max(best, weaponPower(ws(w.id))); });
+  G.superT = sT;
+  let P = best;
+  G.defs.forEach(d => {
+    const L = DEF[d.type].levels[d.lv];
+    switch (d.type) {
+      case 'mgnest': P += L.dmg * L.rate; break;
+      case 'sniper': P += L.dmg * L.rate * (1 + 0.35 * (L.pierce - 1)); break;
+      case 'mortar': P += L.dmg * L.rate * (1 + L.r / 25); break;
+      case 'flamer': P += L.dps * 2.8; break;
+      case 'wire': P += L.dps * 2 + L.slow * 25; break;
+      case 'mine': P += L.dmg / L.cd * (1 + L.r / 25); break;
+      case 'ditch': P += L.dps * 2 + L.slow * 30; break;
+    }
+  });
+  const M = G.mods, ml = id => MODULES[id].levels[M[id] - 1];
+  if (M.wire) P += ml('wire').dps * 3 + ml('wire').slow * 30;
+  if (M.claymore) P += ml('claymore').dmg / ml('claymore').cd * 5;
+  if (M.mg) P += ml('mg').dmg * ml('mg').rate;
+  if (M.flame) P += ml('flame').dps * 2.8;
+  if (M.rockets) { const L = ml('rockets'); P += L.n * L.dmg / L.cd * (1 + L.radius / 25); }
+  return Math.round(P);
+}
+// Budget de PV de la horde proportionnel à la puissance de feu (exposant beta < 1 :
+// investir rend toujours plus fort), plus une lente montée dans le temps (gamma)
+// et la pression ajustée selon les résultats de la vague précédente.
+const DIR = { K: 14, beta: 0.9, gamma: 0.05, gain: 1.2, target: 0.62 };
+function hordeBudget(w) {
+  const P = firepower();
+  G.power = P;
+  return DIR.K * Math.pow(Math.max(P, 25), DIR.beta) * (1 + DIR.gamma * (w - 1)) * G.pressure;
+}
 const bunkerMax = () => BUNKER_LV[G.bunkerLv].hp;
 const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor;
 
@@ -467,6 +538,8 @@ function startWave() {
   if (G.mode !== 'build') return;
   G.wave++;
   G.queue = buildWave(G.wave);
+  const baseSum = G.queue.reduce((a, it) => a + ZT[it.type].hp, 0);
+  G.budget = hordeBudget(G.wave); G.hpScale = G.budget / Math.max(1, baseSum); G.waveDmg = 0; G.depthSum = 0; G.depthN = 0;
   G.waveCount = G.queue.length; G.killed = 0; G.spawnT = 0.5;
   G.mode = 'wave'; G.placing = null; G.selected = null;
   G.defs.forEach(d => { d.cd = 0; });
@@ -484,6 +557,18 @@ function startWave() {
 function endWave() {
   const bonus = 50 + 15 * G.wave;
   G.money += bonus;
+  // le directeur mesure jusqu'où les zombies sont arrivés avant de mourir et ajuste la horde suivante
+  const lost = G.waveDmg / bunkerMax(), depth = G.depthN ? G.depthSum / G.depthN : 0.5;
+  // objectif : quelques dégâts réguliers (3 à 15 % par vague) plutôt que zéro puis l'effondrement
+  let f;
+  if (lost > 0.3) f = 0.75;
+  else if (lost > 0.15) f = 0.9;
+  else if (lost > 0.03) f = 1.0;
+  else f = clamp(Math.exp(DIR.gain * (DIR.target - depth)), 0.97, 1.12);
+  // le répit ne descend jamais sous 80 % de la pression maximale déjà atteinte : la menace finit toujours par gagner
+  G.pMax = Math.max(G.pMax || 1, G.pressure);
+  G.pressure = clamp(Math.max(G.pressure * f, G.pMax * 0.8), 0.3, 80); G.lastDepth = depth;
+  G.superT = 0; G.aim = null;
   G.mode = 'build';
   G.focus = null;
   G.projs = [];
@@ -502,7 +587,7 @@ function spawnZombie(type, pi) {
   const Z = ZT[type], w = G.wave, p = PATHS[pi];
   const z = {
     type, path: p, d: 0, off: (rand() - 0.5) * 22,
-    hp: Z.hp * hpMult(w), maxHp: Z.hp * hpMult(w), armor: Z.boss ? Math.min(8, 2 + Math.floor(w / 5)) : Z.armor,
+    hp: Z.hp * G.hpScale, maxHp: Z.hp * G.hpScale, armor: Z.boss ? Math.min(8, 2 + Math.floor(w / 5)) : Z.armor,
     speed: Z.speed * (0.9 + rand() * 0.2), dmg: Z.dmg * dmgMult(w),
     reward: Math.round(Z.reward * rewMult(w)), r: Z.r, atkT: 0.6, walk: rand() * 10,
     burnT: 0, burnDps: 0, hitT: 0, dead: false, x: 0, y: 0, ang: 0, atBase: false,
@@ -523,6 +608,7 @@ function setBurn(z, dps, t) { z.burnDps = Math.max(z.burnDps, dps); z.burnT = t 
 function kill(z, reward) {
   if (z.dead) return;
   z.dead = true;
+  if (!z.counted) { z.counted = true; G.depthSum += Math.min(1, z.d / z.path.total); G.depthN++; }
   if (reward) { G.money += z.reward; if (z.reward >= 100) floatText(z.x, z.y - 10, '+' + fmt(z.reward)); }
   G.killed++;
   if (G.focus === z) G.focus = null;
@@ -530,13 +616,13 @@ function kill(z, reward) {
   blood(z.x, z.y, z.r, z.type === 'bloater' || z.type === 'spitter');
   if (Z.boom && reward) {
     // un bouffi abattu explose au milieu des siens
-    explode(z.x, z.y, 48, 50 * hpMult(G.wave), 0.5, 0, true);
+    explode(z.x, z.y, 48, 50 * G.hpScale, 0.5, 0, true);
   }
 }
 
 function bunkerHit(dmg) {
   const eff = Math.max(dmg * 0.2, dmg - bunkerArmor());
-  G.hp -= eff; G.shake = Math.min(6, G.shake + 1.2);
+  G.hp -= eff; G.waveDmg += eff; G.shake = Math.min(6, G.shake + 1.2);
   SND.play('thud');
   if (G.hp <= 0) { G.hp = 0; gameOver(); }
 }
@@ -588,6 +674,7 @@ function updateZombies(dt) {
       z.atBase = false;
     } else {
       z.atBase = true;
+      if (!z.counted) { z.counted = true; G.depthSum += 1; G.depthN++; }
       z.ang = Math.atan2(BY - z.y, BX - z.x);
       z.atkT -= dt;
       if (z.atkT <= 0) {
@@ -691,7 +778,7 @@ function fireWeapon(s, t) {
   const a = G.heroAng;
   G.flash = 0.05;
   if (s.kind === 'bullet') {
-    hitscan(BX, BY, a, s.range, s.dmg, s.pierce, s.ap, s.id === 'hecate' ? '#fff2c4' : '#ffd98a', s.id === 'hecate' ? 2.2 : 1.2, heroH());
+    hitscan(BX, BY, a, s.range, s.dmg, s.pierce, s.ap, G.superT > 0 ? '#ff6a3a' : s.id === 'hecate' ? '#fff2c4' : '#ffd98a', (s.id === 'hecate' ? 2.2 : 1.2) + (G.superT > 0 ? 1 : 0), heroH());
   } else if (s.kind === 'shotgun') {
     for (let i = 0; i < s.pellets; i++) hitscan(BX, BY, a + (rand() - 0.5) * s.spread, s.range * (0.85 + rand() * 0.15), s.dmg, 1, s.ap, '#ffcf80', 1, heroH());
   } else if (s.kind === 'explosive') {
@@ -842,6 +929,8 @@ function updateFx(dt) {
    ========================================================= */
 function update(dt) {
   G.time += dt;
+  BONUS_ORDER.forEach(id => { if (G.bcd[id] > 0) G.bcd[id] = Math.max(0, G.bcd[id] - dt); });
+  if (G.superT > 0) G.superT -= dt;
   G.spawnT -= dt;
   while (G.queue.length && G.spawnT <= 0) { const it = G.queue.shift(); spawnZombie(it.type, it.path); G.spawnT += it.gap; }
   updateZombies(dt); if (G.mode !== 'wave') return;
@@ -852,6 +941,23 @@ function update(dt) {
   if (G.focus && G.focus.dead) G.focus = null;
   if (G.zombies.some(z => z.dead)) G.zombies = G.zombies.filter(z => !z.dead);
   if (!G.queue.length && !G.zombies.length) endWave();
+}
+
+function useBonus(id) {
+  if (G.mode !== 'wave' || !G.bonus[id] || G.bcd[id] > 0) return;
+  const L = BONUS[id].levels[G.bonus[id] - 1];
+  if (id === 'arty') { G.aim = G.aim === 'arty' ? null : 'arty'; if (G.aim) toast('Touchez la zone à pilonner.', 2200); return; }
+  if (id === 'superTir') { G.superT = L.dur; G.superMult = L.mult; toast(`Super tir : dégâts x${L.mult}`, 1300); SND.play('horn'); }
+  if (id === 'repair') { const add = bunkerMax() * L.pct; G.hp = Math.min(bunkerMax(), G.hp + add); floatText(BX, BY - 20, '+' + fmt(add) + ' PV'); SND.play('click'); }
+  G.bcd[id] = L.cd;
+}
+function artyStrike(x, y) {
+  const L = BONUS.arty.levels[G.bonus.arty - 1];
+  for (let i = 0; i < L.shells; i++) {
+    const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 46, tx = x + Math.cos(a) * r, ty = y + Math.sin(a) * r;
+    G.projs.push({ type: 'shell', sx: tx, sy: ty, tx, ty, t: -0.4 - i * 0.14, dur: 0.7, dmg: L.dmg * 30 * G.hpScale, r: 36, ap: 0.5, burn: 0, h0: 240, h1: 0 });
+  }
+  G.bcd.arty = L.cd; G.aim = null; SND.play('horn');
 }
 
 function gameOver() {
@@ -891,10 +997,12 @@ const TREE = [
   { id:'hk416',   kind:'weapon', ref:'hk416',   lane:'tir',   parent:'mp5' },
   { id:'scar',    kind:'weapon', ref:'scar',    lane:'tir',   parent:'hk416' },
   { id:'hecate',  kind:'weapon', ref:'hecate',  lane:'tir',   parent:'scar',    req:[['sniper', 1]] },
-  { id:'minimi',  kind:'weapon', ref:'minimi',  lane:'tir',   parent:'hk416',   req:[['mgnest', 2]] },
+  { id:'minimi',  kind:'weapon', ref:'minimi',  lane:'tir',   parent:'hk416',   req:[['mgnest2', 1]] },
+  { id:'superTir',kind:'bonus',  ref:'superTir',lane:'tir',   parent:'glock' },
   // Appui
   { id:'sniper',  kind:'def',    ref:'sniper',  lane:'appui', parent:'mgnest' },
   { id:'mortar',  kind:'def',    ref:'mortar',  lane:'appui', parent:'sniper',  req:[['mine', 1]] },
+  { id:'arty',    kind:'bonus',  ref:'arty',    lane:'appui', parent:'mortar' },
   { id:'flamer',  kind:'def',    ref:'flamer',  lane:'genie', parent:'ditch' },
   // Génie
   { id:'wire',    kind:'def',    ref:'wire',    lane:'genie', parent:'mgnest' },
@@ -905,20 +1013,29 @@ const TREE = [
   { id:'mWire',   kind:'module', ref:'wire',    lane:'fort',  parent:'muret',   req:[['wire', 1]] },
   { id:'hesco',   kind:'bunker', ref:2,         lane:'fort',  parent:'muret' },
   { id:'mClay',   kind:'module', ref:'claymore',lane:'fort',  parent:'hesco',   req:[['mine', 1]] },
-  { id:'mMg',     kind:'module', ref:'mg',      lane:'fort',  parent:'hesco',   req:[['mgnest', 3]] },
+  { id:'mMg',     kind:'module', ref:'mg',      lane:'fort',  parent:'hesco',   req:[['mgnest3', 1]] },
+  { id:'repair',  kind:'bonus',  ref:'repair',  lane:'fort',  parent:'muret' },
   { id:'casemate',kind:'bunker', ref:3,         lane:'fort',  parent:'hesco' },
   { id:'mFlame',  kind:'module', ref:'flame',   lane:'fort',  parent:'casemate',req:[['flamer', 1]] },
   { id:'blinde',  kind:'bunker', ref:4,         lane:'fort',  parent:'casemate' },
   { id:'mRock',   kind:'module', ref:'rockets', lane:'fort',  parent:'blinde' },
 ];
+// Options de niveau 2 et 3 de chaque défense : nœuds de l'arbre
+['mgnest', 'sniper', 'mortar', 'flamer', 'wire', 'mine', 'ditch'].forEach(t => {
+  const lane = { mgnest: 'appui', sniper: 'appui', mortar: 'appui', flamer: 'genie', wire: 'genie', mine: 'genie', ditch: 'genie' }[t];
+  TREE.push({ id: t + '2', kind: 'tech', ref: t, lv: 1, lane, parent: t });
+  TREE.push({ id: t + '3', kind: 'tech', ref: t, lv: 2, lane, parent: t + '2' });
+});
 const NODE = Object.fromEntries(TREE.map(n => [n.id, n]));
 
-function nodeName(n) { return n.kind === 'weapon' ? WBY[n.ref].name : n.kind === 'def' ? DEF[n.ref].name : n.kind === 'bunker' ? BUNKER_LV[n.ref].name : MODULES[n.ref].name; }
+function nodeName(n) { return n.kind === 'weapon' ? WBY[n.ref].name : n.kind === 'def' ? DEF[n.ref].name : n.kind === 'tech' ? DEF[n.ref].levels[n.lv].n : n.kind === 'bonus' ? BONUS[n.ref].name : n.kind === 'bunker' ? BUNKER_LV[n.ref].name : MODULES[n.ref].name; }
 function shortName(n) { return n.kind === 'weapon' ? WBY[n.ref].short : nodeName(n); }
-function nodeCost(n) { return n.kind === 'weapon' ? WBY[n.ref].cost : n.kind === 'def' ? UNLOCK_COST[n.ref] : n.kind === 'bunker' ? BUNKER_LV[n.ref].cost : MODULES[n.ref].levels[0].cost; }
+function nodeCost(n) { return n.kind === 'weapon' ? WBY[n.ref].cost : n.kind === 'def' ? UNLOCK_COST[n.ref] : n.kind === 'tech' ? Math.round(DEF[n.ref].levels[n.lv].cost * 1.5) : n.kind === 'bonus' ? BONUS[n.ref].levels[0].cost : n.kind === 'bunker' ? BUNKER_LV[n.ref].cost : MODULES[n.ref].levels[0].cost; }
 function nodeLevel(n) {
   switch (n.kind) {
-    case 'def': return G.unlocked[n.ref] ? G.defLv[n.ref] + 1 : 0;
+    case 'def': return G.unlocked[n.ref] ? 1 : 0;
+    case 'tech': return G.unlocked[n.ref] && G.defTech[n.ref] >= n.lv ? 1 : 0;
+    case 'bonus': return G.bonus[n.ref];
     case 'weapon': return G.weapons[n.ref].owned ? 1 : 0;
     case 'bunker': return G.bunkerLv >= n.ref ? 1 : 0;
     default: return G.mods[n.ref];
@@ -936,28 +1053,28 @@ function reqText(n) {
   if (n.id !== ROOT && !rootOwned()) return 'Nid de mitrailleuse';
   return nodeReqs(n).filter(([id, lv]) => nodeLevel(NODE[id]) < lv).map(([id, lv]) => shortName(NODE[id]) + (lv > 1 ? ' niv. ' + lv : '')).join(' + ');
 }
-const defUpCost = (type, toLv) => Math.round(DEF[type].levels[toLv].cost * 2);
-const placeCost = type => Math.round(DEF[type].levels[0].cost * (1 + 0.5 * G.defLv[type]));
+const placeCost = type => DEF[type].levels[0].cost;
 
 function buyNode(id) {
   const n = NODE[id];
   if (!n || !nodeAvailable(n)) return false;
   if (!spend(nodeCost(n))) return false;
   if (n.kind === 'weapon') { G.weapons[n.ref].owned = true; G.equipped = n.ref; }
-  else if (n.kind === 'def') { G.unlocked[n.ref] = true; G.defLv[n.ref] = 0; }
+  else if (n.kind === 'def') { G.unlocked[n.ref] = true; G.defTech[n.ref] = 0; }
+  else if (n.kind === 'tech') { G.defTech[n.ref] = Math.max(G.defTech[n.ref], n.lv); }
+  else if (n.kind === 'bonus') { G.bonus[n.ref] = 1; }
   else if (n.kind === 'bunker') { const old = bunkerMax(); G.bunkerLv = n.ref; G.hp += bunkerMax() - old; }
   else G.mods[n.ref] = 1;
   const opened = TREE.filter(x => nodeAvailable(x) && nodeReqs(x).some(([p]) => p === id));
   toast(`${nodeName(n)} débloqué.` + (opened.length ? ` Ouvre : ${opened.map(shortName).join(', ')}.` : ''), 3200);
   return true;
 }
-function upgradeDef(type) {
-  const lv = G.defLv[type];
-  if (!G.unlocked[type] || lv >= 2) return false;
-  if (!spend(defUpCost(type, lv + 1))) return false;
-  G.defLv[type] = lv + 1;
-  G.defs.forEach(d => { if (d.type === type) d.lv = lv + 1; });
-  toast(`${DEF[type].levels[lv + 1].n} : toutes les défenses de ce type sont améliorées.`, 2800);
+function upgradeInst(d) {
+  if (!d || d.lv >= 2 || d.lv >= G.defTech[d.type]) return false;
+  const c = DEF[d.type].levels[d.lv + 1].cost;
+  if (!spend(c)) return false;
+  d.lv++; d.spent += c;
+  toast(`${DEF[d.type].levels[d.lv].n} : cette défense est améliorée.`, 2000);
   return true;
 }
 
@@ -969,12 +1086,12 @@ function saveBest() { try { localStorage.setItem(BKEY, String(G.best)); } catch 
 function saveGame() {
   if (G.mode !== 'build') return;
   try {
-    localStorage.setItem(SKEY, JSON.stringify({ v:3, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
-      weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defLv:G.defLv,
-      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, spent:d.spent })) }));
+    localStorage.setItem(SKEY, JSON.stringify({ v:4, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
+      weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure, pMax:G.pMax,
+      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent })) }));
   } catch (e) {}
 }
-function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v === 3 ? d : null; } catch (e) { return null; } }
+function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v === 4 ? d : null; } catch (e) { return null; } }
 
 function newGame(fromSave) {
   G = freshState();
@@ -984,8 +1101,8 @@ function newGame(fromSave) {
     G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods);
     WEAPONS.forEach(w => { if (d.weapons[w.id]) G.weapons[w.id] = d.weapons[w.id]; });
     G.equipped = G.weapons[d.equipped] && G.weapons[d.equipped].owned ? d.equipped : 'glock';
-    G.unlocked = d.unlocked || {}; G.defLv = Object.assign(G.defLv, d.defLv || {});
-    d.defs.forEach(x => { if (G.unlocked[x.type]) addDef(x.type, x.c, x.r, G.defLv[x.type], x.spent); });
+    G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {}); G.pressure = d.pressure || 1; G.pMax = d.pMax || G.pressure;
+    d.defs.forEach(x => { if (G.unlocked[x.type]) addDef(x.type, x.c, x.r, x.lv || 0, x.spent); });
   }
   G.mode = 'build'; G.panelOpen = true;
   hideOverlay();
@@ -997,7 +1114,7 @@ function newGame(fromSave) {
    ACTIONS JOUEUR
    ========================================================= */
 function addDef(type, c, r, lv, spent) {
-  const L = lv === undefined ? (G.defLv[type] || 0) : lv;
+  const L = lv || 0;
   const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: L, spent: spent || placeCost(type), cd: 0, ang: -Math.PI / 2, flash: 0, on: 0 };
   G.defs.push(d); G.defMap.set(c + ',' + r, d);
   return d;
@@ -1008,7 +1125,7 @@ function canPlace(type, c, r) {
   const k = c + ',' + r;
   if (G.defMap.has(k)) return false;
   const onPath = PATH_CELLS.has(k);
-  return DEF[type].place === 'path' ? onPath : SLOT_SET.has(k);
+  return DEF[type].place === 'path' ? TRAP_SET.has(k) : SLOT_SET.has(k);
 }
 function spend(n) { if (G.money < n) { toast('Pas assez d\'argent.'); return false; } G.money -= n; return true; }
 
@@ -1029,8 +1146,10 @@ function act(a, ds) {
   switch (a) {
     case 'equip': if (G.weapons[ds.id].owned) { G.equipped = ds.id; G.heroCd = Math.min(G.heroCd, 0.2); } break;
     case 'node': buyNode(ds.id); break;
-    case 'upW': { const w = WBY[ds.id], b = +ds.b, st = G.weapons[w.id]; if (rootOwned() && st.owned && st.up[b] < 5 && spend(upCost(w, st.up[b]))) st.up[b]++; break; }
-    case 'defUp': upgradeDef(ds.type); break;
+    case 'upW': { const w = WBY[ds.id], b = +ds.b, st = G.weapons[w.id]; if (rootOwned() && st.owned && !st.up[b] && spend(upCost(w, b))) st.up[b] = 1; break; }
+    case 'upInst': upgradeInst(G.selected); break;
+    case 'upB': { const lv = G.bonus[ds.id]; if (lv >= 1 && lv < 3 && spend(BONUS[ds.id].levels[lv].cost)) G.bonus[ds.id]++; break; }
+    case 'useBonus': useBonus(ds.id); renderBonusBar(true); return;
     case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv >= 1 && lv < 3 && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
     case 'repair': { const miss = bunkerMax() - G.hp, cost = Math.ceil(miss / 2), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * 2); } break; }
     case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; if (G.placing) G.panelOpen = false; break;
@@ -1062,17 +1181,18 @@ function onTap(wx, wy, sx, sy) {
   SND.init();
   if (G.mode !== 'build' && G.mode !== 'wave') return;
   const c = Math.floor(wx / T), r = Math.floor(wy / T), k = c + ',' + r;
+  if (G.aim === 'arty' && G.mode === 'wave') { artyStrike(wx, wy); renderAll(); return; }
   if (G.placing) {
     if (G.defMap.has(k)) { G.placing = null; G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
     if (canPlace(G.placing, c, r)) {
       const cost = placeCost(G.placing);
       if (spend(cost)) {
-        addDef(G.placing, c, r, G.defLv[G.placing], cost); SND.play('click');
+        addDef(G.placing, c, r, 0, cost); SND.play('click');
         if (G.money < placeCost(G.placing)) { G.placing = null; G.panelOpen = G.mode === 'build'; toast('Fonds épuisés pour cette défense.', 1500); }
         if (G.mode === 'build') saveGame();
       }
     } else {
-      toast(DEF[G.placing].place === 'path' ? 'Un piège se pose sur le chemin.' : 'Une tour se pose uniquement sur un emplacement balisé.', 1400);
+      toast(DEF[G.placing].place === 'path' ? 'Un piège se pose uniquement sur un emplacement peint sur la route.' : 'Une tour se pose uniquement sur un emplacement balisé.', 1600);
     }
     renderAll(); return;
   }
@@ -1137,6 +1257,11 @@ function defDesc(type, L) {
 function lvRows(levels, lv, own, desc) {
   return levels.map((L, i) => `<div class="lvrow ${own && i === lv - 1 ? 'cur' : own && i < lv ? 'done' : ''}"><b>Niv. ${i + 1}${L.n ? ' · ' + L.n : ''}</b><div class="note">${desc(L)}</div></div>`).join('');
 }
+function bonusDesc(id, L) {
+  if (id === 'superTir') return `Dégâts de l'arme de l'homme x${L.mult} pendant ${L.dur} s · recharge ${L.cd} s`;
+  if (id === 'arty') return `${L.shells} obus sur la zone que vous touchez · recharge ${L.cd} s`;
+  return `Rend ${Math.round(L.pct * 100)} % des PV du bastion · recharge ${L.cd} s`;
+}
 function treeDetail(n) {
   const lv = nodeLevel(n), own = lv > 0, av = nodeAvailable(n), gate = rootOwned();
   let h = '<div class="td">';
@@ -1145,20 +1270,24 @@ function treeDetail(n) {
     h += `<div class="note">${w.note}</div><div class="stats">${statLine(w, own ? ws(w.id) : w)}</div>`;
     if (own) {
       h += G.equipped === w.id ? '<div class="br"><span class="tag">Équipée</span></div>' : `<div class="br"><button class="btn" data-act="equip" data-id="${w.id}">Équiper</button></div>`;
-      h += ['Cadence', 'Puissance', 'Zone : ' + zoneLabel(w).toLowerCase()].map((lab, b) => {
-        const l = st.up[b];
-        return `<div class="br"><span class="bl">${lab}</span>${pips(l, 5)}` +
-          (l >= 5 ? '<span class="tag">Max</span>' : gate ? `<button class="btn buy" data-act="upW" data-id="${w.id}" data-b="${b}" data-cost="${upCost(w, l)}">+ ${fmt(upCost(w, l))}</button>` : '<span class="note">après le nid</span>') + '</div>';
+      h += ['Cadence', 'Puissance', 'Zone'].map((lab, b) => {
+        const done = !!st.up[b], desc = b < 2 ? UPG_DESC[b] : zoneDesc(w);
+        return `<div class="br"><span class="bl">${lab}</span><span class="note" style="flex:1">${desc}</span>` +
+          (done ? '<span class="tag">Acquis</span>' : gate ? `<button class="btn buy" data-act="upW" data-id="${w.id}" data-b="${b}" data-cost="${upCost(w, b)}">${fmt(upCost(w, b))}</button>` : '<span class="note">après le nid</span>') + '</div>';
       }).join('');
     }
   } else if (n.kind === 'def') {
     const D = DEF[n.ref];
-    h += `<div class="note">${D.place === 'path' ? 'Piège : se pose sur le chemin.' : 'Tour : se pose sur un emplacement balisé.'}</div>`;
-    h += lvRows(D.levels, lv, own, L => defDesc(n.ref, L));
-    if (own) {
-      h += `<div class="note" style="margin-top:6px">Coût de pose : ${fmt(placeCost(n.ref))} par unité. Améliorer s'applique à toutes celles déjà posées.</div>`;
-      if (lv < 3) h += `<div class="br"><button class="btn buy" data-act="defUp" data-type="${n.ref}" data-cost="${defUpCost(n.ref, lv)}">Niv. ${lv + 1} partout : ${fmt(defUpCost(n.ref, lv))}</button></div>`;
-    }
+    h += `<div class="note">${D.place === 'path' ? 'Piège : se pose sur un emplacement peint sur la route.' : 'Tour : se pose sur un emplacement balisé.'} Coût de pose : ${fmt(placeCost(n.ref))}.</div>`;
+    h += D.levels.map((L, i) => `<div class="lvrow ${i === 0 || (own && G.defTech[n.ref] >= i) ? 'cur' : ''}"><b>Niv. ${i + 1} · ${L.n}</b> ${i === 0 ? '' : (own && G.defTech[n.ref] >= i ? '<span class="note">débloqué</span>' : '<span class="note">option à débloquer dans l\'arbre</span>')}<div class="note">${defDesc(n.ref, L)}</div></div>`).join('');
+    if (own) h += `<div class="note" style="margin-top:6px">Chaque défense posée s'améliore une à une : touchez-la sur la carte, puis « Améliorer ».</div>`;
+  } else if (n.kind === 'tech') {
+    const D = DEF[n.ref], L = D.levels[n.lv];
+    h += `<div class="stats">${defDesc(n.ref, L)}</div><div class="note" style="margin-top:4px">Option de niveau ${n.lv + 1} pour : ${D.name}. Une fois débloquée, touchez une ${D.place === 'path' ? 'défense de ce type' : 'tour de ce type'} sur la carte pour la faire évoluer (${fmt(L.cost)} par défense).</div>`;
+  } else if (n.kind === 'bonus') {
+    const B = BONUS[n.ref];
+    h += `<div class="note">Bonus à déclencher pendant une vague, avec le bouton rond à droite de la carte.</div>` + lvRows(B.levels, lv, own, L => bonusDesc(n.ref, L));
+    if (own && lv < 3) h += `<div class="br"><button class="btn buy" data-act="upB" data-id="${n.ref}" data-cost="${B.levels[lv].cost}">Rang ${lv + 1} : ${fmt(B.levels[lv].cost)}</button></div>`;
   } else if (n.kind === 'bunker') {
     const L = BUNKER_LV[n.ref];
     h += `<div class="stats">${fmt(L.hp)} PV · armure ${L.armor}</div>`;
@@ -1177,26 +1306,31 @@ function panelBuild() {
   let h = '';
   const d = G.selected;
   if (d) {
-    const D = DEF[d.type], L = D.levels[d.lv];
-    h += `<div class="sect">${D.name} · niveau ${d.lv + 1}</div><div class="card sel"><b>${L.n}</b><div class="stats">${defDesc(d.type, L)}</div>` +
-      `<div class="note">L'amélioration se fait dans l'arbre et s'applique à toutes les défenses de ce type.</div>` +
-      `<div class="row" style="margin-top:8px"><button class="btn buy" data-act="openNode" data-id="${d.type}">Améliorer (arbre)</button>` +
-      `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div></div>`;
+    const D = DEF[d.type], L = D.levels[d.lv], N = D.levels[d.lv + 1];
+    h += `<div class="sect">${D.name} · niveau ${d.lv + 1}</div><div class="card sel"><b>${L.n}</b><div class="stats">${defDesc(d.type, L)}</div>`;
+    if (N) {
+      h += G.defTech[d.type] > d.lv
+        ? `<div class="br"><span style="flex:1;font-size:12px">Niv. ${d.lv + 2} · ${N.n} : ${defDesc(d.type, N)}</span></div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="upInst" data-cost="${N.cost}">Améliorer celle-ci : ${fmt(N.cost)}</button>`
+        : `<div class="note" style="margin-top:6px">Niveau ${d.lv + 2} (${N.n}) : option à débloquer dans l'arbre.</div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="openNode" data-id="${d.type}${d.lv + 2}">Voir dans l'arbre</button>`;
+    } else h += '<div class="row" style="margin-top:6px"><span class="tag">Niveau max</span>';
+    h += `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div></div>`;
   }
+  const budget = G.mode === 'wave' ? G.budget : hordeBudget(G.wave + 1);
+  h += `<div class="sect">Directeur de vagues</div><div class="card"><b>Puissance de feu : ${fmt(G.power)}</b><div class="note">Horde ${G.mode === 'wave' ? 'en cours' : 'prévue'} : environ ${fmt(budget)} PV au total. La horde grossit avec votre puissance de feu et s'ajuste selon la distance à laquelle vous arrêtez les zombies.</div></div>`;
   const ownedW = WEAPONS.filter(w => G.weapons[w.id].owned);
   h += `<div class="sect">Arme de l'homme</div><div class="chips">${ownedW.map(w => `<button class="wchip ${G.equipped === w.id ? 'eq' : ''}" data-act="equip" data-id="${w.id}">${w.short}</button>`).join('')}</div>`;
   const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / 2);
   h += `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div><div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}. Évolutions : arbre, branche Fortification.</div></div>` +
     (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
-  const freeSlots = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
-  h += `<div class="sect">Poser une défense</div><div class="hint">Pièges : n'importe où sur le chemin. Tours : uniquement sur les emplacements balisés (${freeSlots} libre${freeSlots > 1 ? 's' : ''} sur ${SLOTS.length}).</div>`;
+  const freeT = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length, freeP = TRAP_SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
+  h += `<div class="sect">Poser une défense</div><div class="hint">Tours : ${freeT} emplacement${freeT > 1 ? 's' : ''} libre${freeT > 1 ? 's' : ''} sur ${SLOTS.length}. Pièges : ${freeP} emplacement${freeP > 1 ? 's' : ''} libre${freeP > 1 ? 's' : ''} sur ${TRAP_SLOTS.length}, peints sur la route. Touchez une défense posée pour l'améliorer.</div>`;
   const avail = DEF_ORDER.filter(t => G.unlocked[t]);
   if (!avail.length) {
     h += `<div class="card"><div class="row"><div>Aucune défense débloquée.<div class="note">Premier choix dans l'arbre : le nid de mitrailleuse.</div></div><button class="btn buy" data-act="openTree">Ouvrir l'arbre</button></div></div>`;
   } else {
     h += '<div class="grid2">' + avail.map(type => {
-      const D = DEF[type], lv = G.defLv[type], c = placeCost(type);
-      return `<button class="bcard ${G.placing === type ? 'on' : ''}" data-act="place" data-type="${type}" data-cost="${c}"><img class="bico" src="${icon(type)}" alt=""><span class="k">${D.place === 'path' ? 'Piège' : 'Tour'} · niv. ${lv + 1}</span><b>${D.name}</b><span class="c">${fmt(c)}</span><div class="d">${D.levels[lv].n}</div></button>`;
+      const D = DEF[type], c = placeCost(type);
+      return `<button class="bcard ${G.placing === type ? 'on' : ''}" data-act="place" data-type="${type}" data-cost="${c}"><img class="bico" src="${icon(type)}" alt=""><span class="k">${D.place === 'path' ? 'Piège' : 'Tour'}</span><b>${D.name}</b><span class="c">${fmt(c)}</span><div class="d">Pose au niv. 1 · ${D.levels[0].n}</div></button>`;
     }).join('') + '</div>';
     const locked = DEF_ORDER.length - avail.length;
     if (locked) h += `<div class="hint" style="margin-top:8px">${locked} autre${locked > 1 ? 's' : ''} défense${locked > 1 ? 's' : ''} à débloquer dans l'arbre.</div>`;
@@ -1204,11 +1338,30 @@ function panelBuild() {
   return h;
 }
 
+/* ---------- Boutons de bonus (pendant la vague) ---------- */
+let bonusKey = '';
+function renderBonusBar(force) {
+  const bar = $('bonusBar');
+  const ownedB = BONUS_ORDER.filter(id => G.bonus[id]);
+  const show = ownedB.length && (G.mode === 'wave' || G.mode === 'build');
+  const key = show ? ownedB.map(id => id + Math.ceil(G.bcd[id]) + (G.aim === id ? 'a' : '')).join('|') + G.mode + (G.superT > 0 ? 's' : '') : '';
+  if (!force && key === bonusKey) return;
+  bonusKey = key;
+  if (!show) { bar.innerHTML = ''; return; }
+  bar.innerHTML = ownedB.map(id => {
+    const L = BONUS[id].levels[G.bonus[id] - 1], cd = G.bcd[id], ready = cd <= 0 && G.mode === 'wave';
+    const pct = cd > 0 ? Math.round(cd / L.cd * 100) : 0;
+    return `<button class="bbtn ${ready ? 'ready' : ''} ${G.aim === id ? 'aim' : ''} ${id === 'superTir' && G.superT > 0 ? 'active' : ''}" data-act="useBonus" data-id="${id}" style="--p:${pct}%">` +
+      `<img src="${icon(id)}" alt=""><span class="bcd">${cd > 0 ? Math.ceil(cd) : ''}</span><span class="blb">${BONUS[id].name}</span></button>`;
+  }).join('');
+}
+
 function renderPanel() {
   panel.classList.toggle('closed', !G.panelOpen);
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === 'arbre' ? G.treeOpen : G.panelOpen));
   if (!G.panelOpen) return;
-  const top = panel.scrollTop;
+  const top = G.selected && G.selected !== renderPanel.lastSel ? 0 : panel.scrollTop;
+  renderPanel.lastSel = G.selected;
   panel.innerHTML = panelBuild();
   panel.scrollTop = top;
   refreshAfford(true);
@@ -1233,7 +1386,7 @@ function renderWaveBtn() {
 function renderPlaceBar() {
   const pb = $('placeBar');
   pb.classList.toggle('show', !!G.placing);
-  if (G.placing) $('placeTxt').textContent = `${DEF[G.placing].name} (${fmt(placeCost(G.placing))}) : ${DEF[G.placing].place === 'path' ? 'touchez le chemin' : 'touchez un emplacement'}`;
+  if (G.placing) $('placeTxt').textContent = `${DEF[G.placing].name} (${fmt(placeCost(G.placing))}) : touchez un emplacement ${DEF[G.placing].place === 'path' ? 'sur la route' : 'balisé'}`;
 }
 function renderButtons() {
   $('btnSpeed').textContent = 'x' + G.speed; $('btnSpeed').classList.toggle('on', G.speed > 1);
@@ -1241,7 +1394,7 @@ function renderButtons() {
   $('btnSound').classList.toggle('on', SND.on);
   $('weaponBar').classList.toggle('hide', G.panelOpen || !(G.mode === 'build' || G.mode === 'wave'));
 }
-function renderAll() { renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
+function renderAll() { renderBonusBar(true); renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
 
 let hudCache = '';
 function hud(force) {
@@ -1256,6 +1409,7 @@ function hud(force) {
   if (G.mode === 'wave') $('btnWave').textContent = `Restants : ${G.queue.length + G.zombies.length}`;
   refreshAfford(false);
 }
+function hudFrame() { hud(false); renderBonusBar(false); }
 
 function showOverlay(kind) {
   const o = $('overlay'), save = loadSave(), best = G ? G.best : loadBest();
@@ -1316,6 +1470,9 @@ const ICON_DRAW = {
   mClay: g => { g.fillStyle = '#4f6236'; g.beginPath(); g.moveTo(18, 34); g.quadraticCurveTo(48, 22, 78, 34); g.lineTo(78, 62); g.quadraticCurveTo(48, 50, 18, 62); g.closePath(); g.fill(); icoLine(g, 26, 60, 20, 80, IM, 3); icoLine(g, 70, 60, 76, 80, IM, 3); icoRect(g, 44, 22, 8, 8, IM); },
   mMg: g => { icoLine(g, 40, 56, 24, 84, IM, 3); icoLine(g, 40, 56, 56, 84, IM, 3); icoLine(g, 40, 56, 40, 84, IM, 3); icoRect(g, 24, 40, 30, 16, IM); icoRect(g, 24, 40, 30, 3, IML); icoRect(g, 54, 45, 36, 5, IM); icoRect(g, 86, 43, 6, 9, IDK); icoRect(g, 14, 44, 10, 8, IDK); },
   mFlame: g => { icoRect(g, 10, 40, 34, 40, '#6f716c'); icoRect(g, 40, 52, 26, 8, IM); icoRect(g, 64, 50, 6, 12, IDK); icoFlame(g, 80, 56, 15); },
+  superTir: g => { g.strokeStyle = '#ff7a3a'; g.lineWidth = 4; g.beginPath(); g.arc(48, 48, 24, 0, Math.PI * 2); g.stroke(); icoLine(g, 48, 12, 48, 30, '#ff7a3a', 4); icoLine(g, 48, 66, 48, 84, '#ff7a3a', 4); icoLine(g, 12, 48, 30, 48, '#ff7a3a', 4); icoLine(g, 66, 48, 84, 48, '#ff7a3a', 4); icoFlame(g, 48, 48, 14); },
+  arty: g => { for (let i = 0; i < 3; i++) { const x = 26 + i * 22, y = 18 + i * 8; icoPoly(g, [[x - 5, y], [x + 5, y], [x + 5, y + 18], [x, y + 25], [x - 5, y + 18]], '#3e4448'); icoRect(g, x - 5, y + 4, 10, 3, '#c8a640'); } icoFlame(g, 48, 74, 20); g.fillStyle = '#2b2721'; g.beginPath(); g.ellipse(48, 84, 30, 6, 0, 0, Math.PI * 2); g.fill(); },
+  repair: g => { g.fillStyle = '#6f716c'; g.fillRect(16, 46, 46, 34); g.save(); g.translate(56, 40); g.rotate(-0.8); icoRect(g, -4, -26, 8, 40, '#a0a7ad'); g.strokeStyle = '#a0a7ad'; g.lineWidth = 7; g.beginPath(); g.arc(0, -28, 9, 0.4, Math.PI * 2 - 0.4); g.stroke(); g.restore(); icoRect(g, 64, 58, 22, 7, '#6f9a4a'); icoRect(g, 71.5, 50.5, 7, 22, '#6f9a4a'); },
   mRock: g => { icoRect(g, 16, 40, 46, 34, '#2f3d2f'); g.fillStyle = '#0f1210'; for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { g.beginPath(); g.arc(28 + c * 12, 52 + r * 12, 4, 0, Math.PI * 2); g.fill(); } g.save(); g.translate(72, 30); g.rotate(-0.6); icoRect(g, -9, -3, 18, 6, '#d8d2c0'); icoFlame(g, -12, 0, 7); g.restore(); },
 };
 function icon(id) {
@@ -1330,17 +1487,17 @@ function icon(id) {
    ARBRE EN GRAPHE : point central, révélation progressive
    ========================================================= */
 const GPOS = {
-  mgnest: [0, 0],
-  glock: [0, -1], mp5: [0, -2], benelli: [-0.9, -3], hk416: [0.9, -3], m32: [-1.5, -4], m2flame: [-0.45, -4], scar: [0.5, -4], minimi: [1.5, -4], carlg: [-1.5, -5], hecate: [0.5, -5], shmel: [-1, -6],
-  sniper: [1, 0], mortar: [2, 0],
-  wire: [0, 1], mine: [-0.6, 2], ditch: [0.6, 2], flamer: [0.6, 3],
-  muret: [-1, 0], hesco: [-2, 0], casemate: [-3, 0], blinde: [-4, 0], mWire: [-1.5, 0.9], mClay: [-2.5, 0.9], mMg: [-2.5, -0.9], mFlame: [-3.5, 0.9], mRock: [-5, 0],
+  mgnest: [0, 0], mgnest2: [1.1, -1.15], mgnest3: [1.9, -1.9],
+  glock: [0, -1], superTir: [-0.95, -1.55], mp5: [0, -2], benelli: [-0.9, -3], hk416: [0.9, -3], m32: [-1.5, -4], m2flame: [-0.45, -4], scar: [0.5, -4], minimi: [1.5, -4], carlg: [-1.5, -5], hecate: [0.5, -5], shmel: [-1, -6],
+  sniper: [1.15, 0], sniper2: [1.6, 0.95], sniper3: [2.45, 1.55], mortar: [2.3, 0], mortar2: [3.4, 0], mortar3: [4.5, 0], arty: [3.1, -0.95],
+  wire: [0, 1.1], wire2: [0, 2.25], wire3: [0, 3.4], mine: [-1.0, 2.1], mine2: [-1.9, 2.7], mine3: [-2.8, 3.1], ditch: [1.0, 2.1], ditch2: [2.0, 2.6], ditch3: [3.0, 2.9], flamer: [1.0, 3.25], flamer2: [1.0, 4.35], flamer3: [1.0, 5.45],
+  muret: [-1.15, 0], repair: [-1.7, -1.0], hesco: [-2.3, 0], casemate: [-3.45, 0], blinde: [-4.6, 0], mRock: [-5.75, 0], mWire: [-1.7, 1.0], mClay: [-2.85, 1.0], mMg: [-2.9, -1.0], mFlame: [-4.0, 1.0],
 };
 const GUX = 104, GUY = 112, GM = 80;
-const GLABEL = { mgnest: 'Nid de mitrailleuse', muret: 'Double muret', mWire: 'Couronne de barbelés', mClay: 'Claymore', mMg: 'Mitrailleuse 12,7', mFlame: 'Lance-flammes fixe', mRock: 'Roquettes auto', blinde: 'Bastion blindé', m2flame: 'Lance-flammes M2', flamer: 'Tour lance-flammes', hesco: 'Bastion HESCO', casemate: 'Casemate béton' };
+const GLABEL = { superTir: 'Super tir', arty: 'Frappe d\'artillerie', repair: 'Réparation d\'urgence', mgnest: 'Nid de mitrailleuse', muret: 'Double muret', mWire: 'Couronne de barbelés', mClay: 'Claymore', mMg: 'Mitrailleuse 12,7', mFlame: 'Lance-flammes fixe', mRock: 'Roquettes auto', blinde: 'Bastion blindé', m2flame: 'Lance-flammes M2', flamer: 'Tour lance-flammes', hesco: 'Bastion HESCO', casemate: 'Casemate béton' };
 const GMIN_X = Math.min(...Object.values(GPOS).map(p => p[0])), GMIN_Y = Math.min(...Object.values(GPOS).map(p => p[1]));
 const gpx = id => [(GPOS[id][0] - GMIN_X) * GUX + GM, (GPOS[id][1] - GMIN_Y) * GUY + GM];
-const ICON_OF = n => n.id;
+const ICON_OF = n => n.kind === 'tech' ? n.ref : n.id;
 const nodeVisible = n => n.id === ROOT || (rootOwned() && owned(NODE[n.parent]));
 
 function treeViewApply() {
@@ -1378,9 +1535,9 @@ function renderTree() {
     G.treeSeen[n.id] = 1;
     nodes += `<div class="gnode ${cls} ${n.id === ROOT ? 'root' : ''} ${G.treeSel === n.id ? 'sel' : ''} ${fresh ? 'new' : ''}" style="left:${x}px;top:${y}px" data-id="${n.id}">` +
       `<img src="${icon(ICON_OF(n))}" alt="">` +
-      (own ? (n.kind === 'def' || n.kind === 'module' ? `<span class="glv">${nodeLevel(n)}/3</span>` : '') : `<span class="gcost">${fmt(nodeCost(n))}</span>`) +
+      (own ? (n.kind === 'module' || n.kind === 'bonus' ? `<span class="glv">${nodeLevel(n)}/3</span>` : '') : `<span class="gcost">${fmt(nodeCost(n))}</span>`) +
       (!own && !av ? '<span class="glk"></span>' : '') +
-      `<span class="glab">${GLABEL[n.id] || shortName(n)}</span></div>`;
+      (n.kind === 'tech' ? `<span class="grom">${n.lv === 1 ? 'II' : 'III'}</span>` : '') + `<span class="glab">${GLABEL[n.id] || shortName(n)}</span></div>`;
   });
   const maxX = (Math.max(...Object.values(GPOS).map(p => p[0])) - GMIN_X) * GUX + GM * 2;
   const maxY = (Math.max(...Object.values(GPOS).map(p => p[1])) - GMIN_Y) * GUY + GM * 2;
@@ -1393,7 +1550,7 @@ function renderTree() {
   const sel = G.treeSel && NODE[G.treeSel];
   if (sel && nodeVisible(sel)) {
     const lv = nodeLevel(sel), own = lv > 0, av = nodeAvailable(sel);
-    sh.innerHTML = `<div class="shead"><img src="${icon(sel.id)}" alt=""><div><b>${nodeName(sel)}</b><div class="note">${own ? (sel.kind === 'def' || sel.kind === 'module' ? 'Acquis · niveau ' + lv + '/3' : 'Acquis') : av ? 'Disponible : ' + fmt(nodeCost(sel)) : 'Verrouillé'}</div></div><button class="btn" data-act="treeSel" data-id="${sel.id}">Fermer</button></div>` + treeDetail(sel);
+    sh.innerHTML = `<div class="shead"><img src="${icon(ICON_OF(sel))}" alt=""><div><b>${nodeName(sel)}</b><div class="note">${own ? (sel.kind === 'module' || sel.kind === 'bonus' ? 'Acquis · rang ' + lv + '/3' : 'Acquis') : av ? 'Disponible : ' + fmt(nodeCost(sel)) : 'Verrouillé'}</div></div><button class="btn" data-act="treeSel" data-id="${sel.id}">Fermer</button></div>` + treeDetail(sel);
   } else {
     sh.innerHTML = `<div class="hint" style="margin:0">${rootOwned() ? 'Touchez un élément. Les éléments en gris sont les prochains achats possibles ; le reste se dévoile à mesure que vous avancez.' : 'Un seul choix pour commencer : le nid de mitrailleuse, au centre. Touchez-le.'}</div>`;
   }
@@ -1564,6 +1721,14 @@ function genBG() {
     for (let i = 0; i < 7; i++) { b.fillStyle = R() < 0.65 ? 'rgba(16,17,22,0.5)' : 'rgba(130,134,145,0.12)'; b.beginPath(); b.ellipse(c * T + 6 + R() * (T - 12), r * T + 6 + R() * (T - 12), 1 + R() * 3.2, 1 + R() * 2, 0, 0, Math.PI * 2); b.fill(); }
   });
   strokeAll(1.6, 'rgba(205,196,150,0.6)', [9, 9]);
+  // emplacements de pièges peints sur la route
+  TRAP_SLOTS.forEach(([c, r]) => {
+    const x = c * T, y = r * T;
+    b.fillStyle = 'rgba(214,184,92,0.07)'; b.fillRect(x + 5, y + 5, T - 10, T - 10);
+    b.strokeStyle = 'rgba(214,184,92,0.75)'; b.lineWidth = 1.4; b.setLineDash([4, 3]); b.strokeRect(x + 5.5, y + 5.5, T - 11, T - 11); b.setLineDash([]);
+    b.fillStyle = 'rgba(214,184,92,0.8)';
+    [[x + 5, y + 5], [x + T - 9, y + 5], [x + 5, y + T - 9], [x + T - 9, y + T - 9]].forEach(([px, py]) => b.fillRect(px, py, 4, 4));
+  });
   // gravats au sol
   DECOR.filter(d => d.kind === 'rubble').forEach(d => {
     for (let j = 0; j < 9; j++) { b.fillStyle = R() < 0.5 ? '#4a4944' : '#36352f'; b.fillRect(d.x + (R() - 0.5) * 24, d.y + (R() - 0.5) * 20, 2 + R() * 5, 2 + R() * 4); }
@@ -1757,7 +1922,8 @@ function drawHero() {
   seg(sx - ux * 4, sy - uy * 4, sx + ux * len, sy + uy * len);
   ctx.lineCap = 'round';
   if (w.id === 'm2flame') { ctx.fillStyle = '#7a2a1c'; ctx.fillRect(BX - face * 5 - 2, PY(BY, h + 9), 4, 8); }
-  if (G.flash > 0 && w.kind !== 'flame') { ctx.fillStyle = '#ffd37a'; ell(sx + ux * (len + 3), sy + uy * (len + 3), 3.4, 3.4); ctx.fill(); }
+  if (G.flash > 0 && w.kind !== 'flame') { ctx.fillStyle = G.superT > 0 ? '#ff7a3a' : '#ffd37a'; ell(sx + ux * (len + 3), sy + uy * (len + 3), G.superT > 0 ? 5 : 3.4, G.superT > 0 ? 5 : 3.4); ctx.fill(); }
+  if (G.superT > 0) { ctx.strokeStyle = `rgba(255,110,50,${0.5 + 0.3 * Math.sin(G.time * 20)})`; ctx.lineWidth = 2; ell(BX, PY(BY, h + 9), 11, 13); ctx.stroke(); }
 }
 function drawBunker() {
   const lv = G.bunkerLv, x = BX, y = BY;
@@ -2039,6 +2205,7 @@ function draw() {
     ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(fx, fy, rr, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => { ctx.moveTo(fx + dx * (rr - 3), fy + dy * (rr - 3)); ctx.lineTo(fx + dx * (rr + 4), fy + dy * (rr + 4)); }); ctx.stroke();
   }
+  if (G.aim === 'arty') { ctx.fillStyle = 'rgba(255,80,50,0.9)'; ctx.font = '700 12px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Touchez la zone à pilonner', W / 2, PY(H, -4)); }
   if (G.paused && G.mode === 'wave') {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, 0, cv.width, cv.height); screenT();
     ctx.fillStyle = '#e6e2d6'; ctx.font = '700 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText('PAUSE', W / 2, SH / 2);
@@ -2058,7 +2225,7 @@ function frame(now) {
   if (!G.paused) updateFx(dt * (G.mode === 'wave' ? G.speed : 1));
   G.defs.forEach(d => { if (d.flash > 0) d.flash -= dt; if (d.on > 0) d.on -= dt; });
   draw();
-  hud(false);
+  hudFrame();
   requestAnimationFrame(frame);
 }
 
@@ -2073,6 +2240,7 @@ cv.addEventListener('pointerdown', e => {
 panel.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
 $('weaponBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('placeBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
+$('bonusBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('overlay').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   SND.init();
@@ -2102,7 +2270,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeDef, placeCost, defUpCost, openTree, closeTree,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike,
 };
 })();
 </script>
