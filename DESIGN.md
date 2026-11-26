@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.9)
+# DERNIER BASTION — document de conception (V2.0)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,36 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 octies. Changement V2.0 : transitions de phase et ergonomie
+
+**Retour de Renan** : l'évolution était éparpillée entre la carte, le panneau et l'arbre. La carte rétrécissait puis grandissait à chaque ouverture du panneau. Le menu n'était pas pratique.
+
+**Références consultées** :
+- les deux phases nettes du genre (préparation, puis vague) ;
+- les vagues lancées par le joueur et le choix d'un bonus parmi 3 (Orcs Must Die Deathtrap) ;
+- le démarrage automatique optionnel (Bloons TD 6) ;
+- l'icône de vague à l'entrée de la route, qui montre la composition et permet l'appel anticipé (Kingdom Rush) ;
+- l'information à la demande, avec les détails dans des menus contextuels (Defender's Quest, Lars Doucet) ;
+- des transitions courtes et marquées.
+
+**Règle retenue : l'arbre débloque, la carte améliore.**
+
+- **Carte stable.** Le panneau devient une feuille qui glisse par-dessus la carte : l'échelle du plan ne change plus jamais. La barre d'armes passe aussi en surimpression. Un appui sur la carte referme la feuille.
+- **Fin de vague.** Une bannière centrale (« Vague 12 repoussée », prime, état du bastion) s'affiche pendant 1,9 s. Un bilan compact reste en haut : abattus, PV perdus, alerte si la puissance de feu est sous le repère. Le bouton « Bilan » ouvre le détail ; le panneau ne s'ouvre plus tout seul.
+- **Préparation.**
+  - Un marqueur à tête de mort se place à l'entrée de chaque route attaquée par la prochaine vague, avec le nombre de zombies. Le toucher affiche la composition de cette route et un bouton « Lancer la vague ».
+  - Un badge sur l'onglet Arbre compte les déblocages à portée de bourse.
+- **Bastion.** L'onglet Construire devient Bastion. Le toucher, ou toucher le bastion sur la carte, ouvre une fiche qui regroupe :
+  - les PV et la réparation ;
+  - l'étage suivant, achetable directement s'il est disponible ;
+  - l'arme de l'homme et ses trois améliorations ;
+  - les modules et bonus à installer ou améliorer ;
+  - les cartes de la partie.
+
+  Les achats faits ici sont les mêmes que dans l'arbre.
+- **Lancement.** Une bannière rouge (« Vague 13 », nombre de zombies, routes, ouverture d'une route, Abomination), puis 2 s d'approche avant les premiers zombies.
+- **Pendant la vague.** Une barre de progression en haut de la carte. Dès que tous les zombies sont sortis, les marqueurs passent à l'orange avec la prime d'appel anticipé : les toucher permet d'appeler la vague suivante.
 
 ## 2 septies. Changement V1.9 : portées revues
 

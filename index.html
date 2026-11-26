@@ -33,7 +33,7 @@
   /* Stage */
   #stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;background:#0a0b0c}
   #cv{display:block;touch-action:none;position:absolute;left:0;top:0}
-  #toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(15,17,18,.92);
+  #toast{position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(15,17,18,.92);
     border:1px solid var(--khaki2);color:var(--txt);padding:7px 12px;border-radius:8px;font-size:13px;
     max-width:92%;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}
   #toast.show{opacity:1}
@@ -41,7 +41,7 @@
     background:rgba(15,17,18,.94);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:12px;width:max-content;max-width:94%}
   #placeBar.show{display:flex}
   /* Weapon bar */
-  #weaponBar{display:flex;gap:6px;overflow-x:auto;padding:6px 8px;background:#121517;border-top:1px solid var(--line);scrollbar-width:none}
+  #weaponBar{position:absolute;left:8px;right:72px;bottom:8px;z-index:3;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
   #weaponBar::-webkit-scrollbar{display:none}
   #weaponBar.hide{display:none}
   .wchip{flex:0 0 auto;background:#1f2427;border:1px solid var(--line);border-radius:16px;padding:5px 11px;font-size:12px;color:var(--mute)}
@@ -53,9 +53,40 @@
   #btnWave{flex:1.6;background:var(--khaki);color:#16140c;border-radius:8px;padding:9px 6px;font-weight:700;font-size:13px}
   #btnWave:disabled{background:#3a3628;color:#9a9278}
   /* Panel */
-  #panel{height:36vh;max-height:320px;overflow-y:auto;background:var(--panel);padding:4px 8px calc(10px + env(safe-area-inset-bottom));
+  #panel{position:absolute;left:0;right:0;bottom:0;z-index:7;max-height:66%;height:auto;border-radius:14px 14px 0 0;box-shadow:0 -10px 26px rgba(0,0,0,.55);transition:transform .22s ease;overflow-y:auto;background:var(--panel);padding:4px 8px calc(10px + env(safe-area-inset-bottom));
     -webkit-overflow-scrolling:touch}
-  #panel.closed{display:none}
+  #panel.closed{transform:translateY(106%);pointer-events:none;box-shadow:none}
+  .shead{position:sticky;top:-4px;z-index:2;display:flex;align-items:center;gap:8px;margin:0 -8px;padding:10px 10px 8px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .shead b{flex:1;font-size:15px}
+  .shead .grab{position:absolute;left:50%;top:3px;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#3a4044}
+  #banner{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(.94);z-index:6;pointer-events:none;opacity:0;transition:opacity .25s,transform .25s;text-align:center;background:rgba(10,11,12,.82);border:1px solid var(--khaki2);border-radius:12px;padding:12px 22px;min-width:220px;max-width:86%}
+  #banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #banner b{display:block;font-size:24px;letter-spacing:.04em;color:var(--khaki)}
+  #banner span{display:block;font-size:13px;margin-top:3px;color:var(--txt)}
+  #banner.red{border-color:#c65a40}
+  #banner.red b{color:#ef8a6c}
+  #recap{position:absolute;top:8px;left:8px;right:8px;max-width:380px;margin:0 auto;z-index:4;display:flex;align-items:center;gap:8px;background:rgba(15,17,18,.93);border:1px solid var(--line);border-radius:10px;padding:6px 8px 6px 10px;font-size:12px}
+  #recap.hide{display:none}
+  #recap .rt{flex:1;line-height:1.35}
+  #recap .rt b{color:var(--khaki)}
+  #recap .btn{padding:6px 10px}
+  #wprog{position:absolute;top:0;left:0;right:0;height:4px;z-index:4;background:rgba(255,255,255,.06);display:none}
+  #wprog.show{display:block}
+  #wprog i{display:block;height:100%;width:0;background:#e0704f;transition:width .25s}
+  .gt{position:absolute;z-index:4;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;background:none;border:0;padding:0;color:var(--txt)}
+  .gt .gc{min-width:36px;height:36px;padding:0 7px;border-radius:18px;background:#4a1912;border:2px solid #e0704f;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:3px;box-shadow:0 2px 10px rgba(0,0,0,.65)}
+  .gt .gc svg{width:15px;height:15px}
+  .gt .gn{font-size:10.5px;margin-top:2px;background:rgba(0,0,0,.65);border-radius:4px;padding:0 5px;white-space:nowrap}
+  .gt.early .gc{background:#4d3410;border-color:#d08a3a;animation:gp .7s ease-in-out infinite alternate}
+  @keyframes gp{from{transform:scale(1)}to{transform:scale(1.14)}}
+  #gateTip{position:absolute;z-index:6;width:250px;background:rgba(15,17,18,.97);border:1px solid var(--khaki2);border-radius:12px;padding:9px 10px;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+  #gateTip.hide{display:none}
+  #gateTip .row{margin-top:7px}
+  .badge{display:inline-block;min-width:17px;height:17px;line-height:17px;border-radius:9px;background:#d08a3a;color:#16140c;font-size:10.5px;font-weight:700;margin-left:6px;padding:0 4px;vertical-align:1px}
+  .badge.hide{display:none}
+  .uprow{display:flex;gap:6px;margin-top:6px}
+  .uprow .btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 4px;font-size:11px;line-height:1.2}
+  .uprow .btn b{font-size:12px}
   .sect{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;margin:10px 2px 6px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:7px}
   .card.eq{border-color:var(--khaki2)}
@@ -207,14 +238,19 @@
     <div id="bonusBar"></div>
     <div id="placeBar"><span id="placeTxt"></span><button class="btn" data-act="stopPlace">Terminer</button></div>
     <div id="slotMenu" class="sm hide"></div>
+    <div id="weaponBar"></div>
+    <div id="wprog"><i></i></div>
+    <div id="gates"></div>
+    <div id="gateTip" class="hide"></div>
+    <div id="recap" class="hide"></div>
+    <div id="banner"><b id="banT"></b><span id="banS"></span></div>
+    <section id="panel" class="closed"></section>
   </div>
-  <div id="weaponBar"></div>
   <nav id="tabs">
-    <button class="tab" data-tab="arbre">Arbre</button>
-    <button class="tab" data-tab="construire">Construire</button>
+    <button class="tab" data-tab="arbre">Arbre<span id="treeBadge" class="badge hide"></span></button>
+    <button class="tab" data-tab="bastion">Bastion</button>
     <button id="btnWave">Lancer vague 1</button>
   </nav>
-  <section id="panel"></section>
 </div>
 <div id="tree" class="hide">
   <div class="thead"><div><b>Améliorations</b><div class="note">Argent : <span id="treeMoney">0</span></div></div><button class="btn" data-act="closeTree">Fermer</button></div>
@@ -498,7 +534,7 @@ function freshState() {
     defs: [], defMap: new Map(),
     zombies: [], projs: [], tracers: [], booms: [], parts: [], texts: [],
     queue: [], spawnT: 0, waveCount: 0, killed: 0,
-    speed: 1, paused: false, tab: 'construire', panelOpen: true, placing: null, selected: null, focus: null,
+    speed: 1, paused: false, tab: 'bastion', panelOpen: false, placing: null, selected: null, focus: null, gateTip: null,
     unlocked: {}, defTech: { wire: 0, mine: 0, ditch: 0, mgnest: 0, sniper: 0, mortar: 0, flamer: 0 },
     bonus: { superTir: 0, arty: 0, repair: 0 }, bcd: { superTir: 0, arty: 0, repair: 0 }, superT: 0, superMult: 1, aim: null,
     pressure: 1, hpScale: 1, power: 0, waveDmg: 0, budget: 0, depthSum: 0, depthN: 0, lastDepth: 0, pMax: 1, treeOpen: false, treeSel: null, treePaused: false, tv: { x: 0, y: 0, s: 1 }, tvInit: false, treeSeen: {},
@@ -705,14 +741,16 @@ function launchWave(early) {
   G.queue = q;
   const baseSum = G.queue.reduce((a, it) => a + ZT[it.type].hp, 0);
   G.budget = hordeBudget(G.wave); G.hpScale = G.budget / Math.max(1, baseSum);
-  G.waveCount += G.queue.length; G.spawnT = 0.5;
-  G.mode = 'wave';
+  G.waveCount += G.queue.length; G.spawnT = early ? 0.5 : 2;
+  G.mode = 'wave'; G.gateTip = null; G.panelOpen = false;
   G.next = buildWave(G.wave + 1);
   const np = PATHS.find(p => p.opens === G.wave && G.wave > 1);
-  toast((early ? `Appel anticipé : vague ${G.wave}` : `Vague ${G.wave}`) + (np ? ` · le chemin ${np.name} est ouvert !` : '') + (G.wave === VICTORY && !G.won ? ' · dernière vague avant la victoire' : ''));
+  const S0 = waveSummary(q, G.wave);
+  banner(early ? `Vague ${G.wave} appelée` : `Vague ${G.wave}`,
+    `${q.length} zombies · ${S0.paths.length > 1 ? 'routes' : 'route'} ${S0.paths.join(', ')}` + (np ? ` · la route ${np.name} s'ouvre` : '') + (S0.boss ? ' · Abomination' : '') + (G.wave === VICTORY && !G.won ? ' · dernière avant la victoire' : ''), true, 2300);
   const fresh = Object.keys(ZTIP).filter(k => ZT[k].from === G.wave);
-  fresh.forEach((k, i) => setTimeout(() => toast(`Nouveau : ${ZT[k].name}, ${ZTIP[k]}`, 4000), 2200 + i * 4200));
-  if (G.wave % 10 === 0) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2200 + fresh.length * 4200);
+  fresh.forEach((k, i) => setTimeout(() => toast(`Nouveau : ${ZT[k].name}, ${ZTIP[k]}`, 4000), 2600 + i * 4200));
+  if (G.wave % 10 === 0) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2600 + fresh.length * 4200);
   SND.play('horn');
   G.panelOpen = false;
   renderAll();
@@ -751,8 +789,9 @@ function endWave() {
   while (G.wave >= G.nextDraft) { G.draftsDue++; G.nextDraft += DRAFT_EVERY; }
   if (G.draftsDue > 0 && !G.draft) makeDraft(false);
   const np = PATHS.find(p => p.opens === G.wave + 1 && G.wave + 1 > 1);
-  toast(`Vague ${G.wave} repoussée. Prime +${fmt(bonus)}` + (np ? ` · Attention : le chemin ${np.name} s'ouvre à la prochaine vague.` : ''), 3500);
-  G.panelOpen = true;
+  banner(G.waveFrom < G.wave ? `Vagues ${G.waveFrom} à ${G.wave} repoussées` : `Vague ${G.wave} repoussée`, `Prime +${fmt(bonus)}` + (G.report.lost > 0 ? ` · bastion -${G.report.lost} %` : ' · bastion intact'), false, 1900);
+  if (np) setTimeout(() => toast(`Attention : la route ${np.name} s'ouvre à la prochaine vague.`, 3500), 2000);
+  G.panelOpen = false; G.selected = null; G.slotMenu = null;
   saveGame();
   renderAll();
   if (victory) setTimeout(() => showOverlay('victory'), 700);
@@ -1340,11 +1379,11 @@ function newGame(fromSave, diff) {
   EFF = {};
   if (!fromSave) G.hp = bunkerMax();
   G.power = firepower(); G.next = buildWave(G.wave + 1);
-  G.mode = 'build'; G.panelOpen = true;
+  G.mode = 'build'; G.panelOpen = false; G.gateTip = null;
   hideOverlay();
   renderAll();
   if (G.draft) showOverlay('draft');
-  toast(fromSave ? `Partie reprise (${DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : `${DIFF[G.diff].name}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse.`, 3200);
+  toast(fromSave ? `Partie reprise (${DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : `${DIFF[G.diff].name}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse. L'arbre débloque, la carte améliore.`, 3200);
 }
 
 /* =========================================================
@@ -1469,14 +1508,18 @@ function act(a, ds) {
     case 'dUp': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'up') { S.pick = 'up'; break; } upgradeInst(G.selected); S.pick = null; break; }
     case 'dSell': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'sell') { S.pick = 'sell'; break; } sellSelected(); G.slotMenu = null; break; }
     case 'dTgt': { const d = G.selected; if (d && G.slotMenu) { const ks = Object.keys(TGT); d.tgt = ks[(ks.indexOf(d.tgt) + 1) % ks.length]; G.slotMenu.pick = null; } break; }
-    case 'dInfo': G.slotMenu = null; G.tab = 'construire'; G.panelOpen = true; break;
+    case 'dInfo': G.slotMenu = null; G.tab = 'def'; G.panelOpen = true; break;
+    case 'closeSheet': if (G.tab === 'def') G.selected = null; G.panelOpen = false; break;
+    case 'openReport': G.tab = 'report'; G.selected = null; G.panelOpen = true; G.slotMenu = null; break;
+    case 'gate': G.gateTip = G.gateTip === +ds.p ? null : +ds.p; G.slotMenu = null; renderGates(); return;
+    case 'startWave': G.gateTip = null; startWave(); return;
     case 'reroll': if (G.draft && G.rerolls > 0) { G.rerolls--; makeDraft(true); saveGame(); } return;
     case 'hq': showOverlay('hq'); return;
     case 'perk': { const P = PERKS[ds.id], r = perk(ds.id); if (P && r < P.cost.length && META.ins >= P.cost[r]) { META.ins -= P.cost[r]; META.perks[ds.id] = r + 1; saveMeta(); } showOverlay('hq'); return; }
     case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; G.slotMenu = null; if (G.placing) G.panelOpen = false; break;
-    case 'stopPlace': G.placing = null; G.tab = 'construire'; G.panelOpen = true; break;
+    case 'stopPlace': G.placing = null; break;
     case 'sellDef': sellSelected(); G.slotMenu = null; break;
-    case 'closeSel': G.selected = null; if (G.slotMenu && G.slotMenu.def) G.slotMenu = null; break;
+    case 'closeSel': G.selected = null; if (G.slotMenu && G.slotMenu.def) G.slotMenu = null; if (G.tab === 'def') G.panelOpen = false; break;
     case 'treeSel': G.treeSel = G.treeSel === ds.id ? null : ds.id; break;
     case 'openTree': openTree(null); return;
     case 'openNode': openTree(ds.id); return;
@@ -1488,7 +1531,7 @@ function act(a, ds) {
     case 'back': showOverlay(G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : G.draft ? 'draft' : 'victory'); return;
     case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); if (G.draft) showOverlay('draft'); return;
     case 'tgt': if (G.selected && TGT[ds.m]) G.selected.tgt = ds.m; break;
-    case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.panelOpen = true; G.slotMenu = null; } break; }
+    case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.tab = 'def'; G.panelOpen = true; G.slotMenu = null; } break; }
     case 'closeReport': G.report = null; break;
     case 'continue': { const s = loadSave(); newGame(s); return; }
   }
@@ -1509,13 +1552,16 @@ function onTap(wx, wy, sx, sy) {
   if (G.mode !== 'build' && G.mode !== 'wave') return;
   const c = Math.floor(wx / T), r = Math.floor(wy / T), k = c + ',' + r;
   if (G.aim === 'arty' && G.mode === 'wave') { artyStrike(wx, wy); renderAll(); return; }
+  // une feuille ou une bulle ouverte : l'appui sur la carte la referme seulement
+  if (G.panelOpen) { if (G.tab === 'def') G.selected = null; G.panelOpen = false; renderAll(); return; }
+  if (G.gateTip !== null) { G.gateTip = null; renderGates(); return; }
   const prev = G.slotMenu;
   if (prev) {
     if (prev.def) G.selected = null;
     G.slotMenu = null; renderSlotMenu();
   }
   if (G.placing) {
-    if (G.defMap.has(k)) { G.placing = null; G.selected = G.defMap.get(k); G.tab = 'construire'; G.panelOpen = true; renderAll(); return; }
+    if (G.defMap.has(k)) { G.placing = null; openDefMenu(G.defMap.get(k), null); return; }
     if (canPlace(G.placing, c, r)) {
       const cost = placeCost(G.placing);
       if (spend(cost)) {
@@ -1535,7 +1581,7 @@ function onTap(wx, wy, sx, sy) {
   if (G.defMap.has(k)) { openDefMenu(G.defMap.get(k), prev); return; }
   if (!G.defMap.has(k)) { const t = G.defs.find(d => DEF[d.type].place === 'side' && Math.abs(sx - d.x) < 15 && sy < PY(d.y) + 6 && sy > PY(d.y, d.type === 'sniper' ? 50 : 26)); if (t) { openDefMenu(t, prev); return; } }
   if (!G.defMap.has(k) && (SLOT_SET.has(k) || TRAP_SET.has(k))) { openSlotMenu(c, r, prev); return; }
-  if (Math.abs(sx - BX) < 26 && sy < PY(BY + 24) && sy > PY(BY - 24, roofH() + 22)) { G.tab = 'construire'; G.selected = null; G.panelOpen = true; renderAll(); return; }
+  if (Math.abs(sx - BX) < 26 && sy < PY(BY + 24) && sy > PY(BY - 24, roofH() + 22)) { G.tab = 'bastion'; G.selected = null; G.panelOpen = true; renderAll(); return; }
   if (G.selected || prev) { G.selected = null; renderAll(); }
 }
 
@@ -1545,6 +1591,66 @@ function onTap(wx, wy, sx, sy) {
 const $ = id => document.getElementById(id);
 const panel = $('panel'), stage = $('stage'), cv = $('cv'), ctx = cv.getContext('2d');
 let toastTimer = 0;
+let bannerTimer = null;
+function banner(title, sub, red, ms) {
+  const b = $('banner'); $('banT').textContent = title; $('banS').textContent = sub || '';
+  b.classList.toggle('red', !!red); b.classList.add('show');
+  clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove('show'), ms || 1800);
+}
+function renderRecap() {
+  const el = $('recap'), R = G.report;
+  if (!(G.mode === 'build' && R && !G.treeOpen && !G.panelOpen)) { el.classList.add('hide'); return; }
+  const w = G.wave + 1; G.power = firepower(); const weak = G.next && G.power < advisedPower(w) * 0.8;
+  el.innerHTML = `<div class="rt"><b>Vague ${R.to} repoussée</b> · ${fmt(R.kills)} abattus · ${R.lost > 0 ? 'bastion -' + R.lost + ' %' : 'bastion intact'}` +
+    (weak ? `<br><span style="color:#e3a08f">Puissance sous le repère pour la vague ${w}</span>` : '') + `</div><button class="btn" data-act="openReport">Bilan</button><button class="btn" data-act="closeReport" aria-label="Fermer">×</button>`;
+  el.classList.remove('hide');
+}
+// Entrées des routes : nombre de zombies de la prochaine vague par route (Kingdom Rush)
+const SKULL = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-3.3 0-5.5 2.2-5.5 5.2 0 1.8.8 3 1.9 3.7V13h1.6v-1.3h1.2V13h1.6v-1.3h1.2V13h1.6v-2.6c1.1-.7 1.9-1.9 1.9-3.7 0-3-2.2-5.2-5.5-5.2Z" fill="#f3e6df"/><circle cx="5.8" cy="7.4" r="1.4" fill="#4a1912"/><circle cx="10.2" cy="7.4" r="1.4" fill="#4a1912"/></svg>';
+function gateCounts() {
+  const by = {};
+  (G.next || []).forEach(it => { by[it.path] = (by[it.path] || 0) + 1; });
+  return by;
+}
+function gateCell(p) { const w0 = PATHS_DEF[p].wp[0]; return [clamp(w0[0], 0, COLS - 1), clamp(w0[1], 0, ROWS - 1)]; }
+function renderGates() {
+  const box = $('gates'), tip = $('gateTip');
+  const show = G.next && !G.treeOpen && !G.panelOpen && (G.mode === 'build' || canEarly());
+  if (!show) { box.innerHTML = ''; tip.classList.add('hide'); return; }
+  const by = gateCounts(), early = G.mode === 'wave';
+  box.innerHTML = Object.keys(by).map(p => `<button class="gt ${early ? 'early' : ''}" data-act="gate" data-p="${p}"><span class="gc">${SKULL}${by[p]}</span><span class="gn">${PATHS[p].name}${early ? ' · +' + fmt(earlyPrime()) : ''}</span></button>`).join('');
+  if (G.gateTip !== null && by[G.gateTip]) {
+    const p = G.gateTip, items = G.next.filter(it => it.path === p), cnt = {};
+    items.forEach(it => { cnt[it.type] = (cnt[it.type] || 0) + 1; });
+    const types = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+    tip.innerHTML = `<b>Vague ${G.wave + 1} · route ${PATHS[p].name}</b><div class="zl" style="margin-top:5px">${types.map(k => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} x${cnt[k]}</span>`).join('')}</div>` +
+      `<div class="note">${G.next.length} zombies au total sur ${Object.keys(by).length} route${Object.keys(by).length > 1 ? 's' : ''}.</div>` +
+      `<div class="row"><button class="btn buy" data-act="startWave">${early ? `Appeler maintenant +${fmt(earlyPrime())}` : `Lancer la vague ${G.wave + 1}`}</button><button class="btn" data-act="openReport">Détails</button></div>`;
+    tip.classList.remove('hide');
+  } else tip.classList.add('hide');
+  positionGates();
+}
+function positionGates() {
+  if (!G || !VIEW) return;
+  const sc = VIEW.sc, st = stage.getBoundingClientRect();
+  document.querySelectorAll('#gates .gt').forEach(b => {
+    const [c, r] = gateCell(+b.dataset.p);
+    b.style.left = clamp(VIEW.bx + (c * T + T / 2) * sc, 26, st.width - 26) + 'px';
+    b.style.top = clamp(VIEW.by + ((r * T + T / 2) * K + TOP) * sc, 26, st.height - 30) + 'px';
+  });
+  const tip = $('gateTip');
+  if (G.gateTip !== null && !tip.classList.contains('hide')) {
+    const [c, r] = gateCell(G.gateTip), x = VIEW.bx + (c * T + T / 2) * sc, y = VIEW.by + ((r * T + T / 2) * K + TOP) * sc;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let top = y + 30; if (top + th > st.height - 6) top = y - th - 30;
+    tip.style.left = clamp(x - tw / 2, 6, st.width - tw - 6) + 'px';
+    tip.style.top = clamp(top, 6, st.height - th - 6) + 'px';
+  }
+}
+function renderTreeBadge() {
+  const m = Math.floor(G.money), n = G.mode === 'build' || G.mode === 'wave' ? TREE.filter(x => nodeVisible(x) && nodeAvailable(x) && nodeCost(x) <= m).length : 0;
+  const b = $('treeBadge'); b.textContent = n; b.classList.toggle('hide', !n);
+}
 function toast(s, ms) { const t = $('toast'); t.textContent = s; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200); }
 
 const pips = (n, max) => '<div class="pips">' + Array.from({ length: max }, (_, i) => `<span class="pip ${i < n ? 'f' : ''}"></span>`).join('') + '</div>';
@@ -1635,7 +1741,74 @@ function treeDetail(n) {
   if (kids.length) h += `<div class="note" style="margin-top:6px">Ouvre : ${kids.map(shortName).join(', ')}</div>`;
   return h + '</div>';
 }
+const sheetHead = t => `<div class="shead"><span class="grab"></span><b>${t}</b><button class="btn" data-act="closeSheet">Fermer</button></div>`;
 function panelBuild() {
+  if (G.tab === 'bastion') return sheetBastion();
+  if (G.tab === 'report') return sheetReport();
+  if (!G.selected) { G.panelOpen = false; return ''; }
+  return sheetHead('Défense') + sheetDef();
+}
+function nextWaveCard() {
+  if (!G.next) return '';
+  const w = G.wave + 1, S = waveSummary(G.next, w);
+  G.power = firepower();
+  return `<div class="sect">Prochaine vague · ${w}${w === VICTORY && !G.won ? ' · la dernière avant la victoire' : ''}</div><div class="card"><div class="zl">${S.types.map(([k, n]) => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} x${n}</span>`).join('')}</div>` +
+    `<div class="note">${S.total} zombies · ${S.paths.length > 1 ? 'routes' : 'route'} ${S.paths.join(', ')}${S.fresh.length ? ' · nouveau : ' + S.fresh.join(', ') : ''}</div>` +
+    `<div class="note">Votre puissance de feu : <b style="color:${G.power >= advisedPower(w) ? 'var(--khaki)' : '#e3a08f'}">${fmt(G.power)}</b> · repère ${DIFF[G.diff].name} : ${fmt(advisedPower(w))}</div>` +
+    (G.power < advisedPower(w) * 0.8 ? `<div class="note" style="color:#e3a08f">Puissance nettement sous le repère : une horde peut percer d'un coup. Renforcez tours et pièges, et le bastion.</div>` : '') + '</div>';
+}
+function sheetReport() {
+  let h = sheetHead('Bilan et prochaine vague');
+  if (G.report) {
+    const R = G.report;
+    h += `<div class="sect">Bilan · vague${R.from < R.to ? 's ' + R.from + ' à ' + R.to : ' ' + R.to}</div><div class="card"><div class="note">${fmt(R.kills)} zombies abattus · bastion ${R.lost > 0 ? '-' + R.lost + ' % de PV' : 'intact'} · prime +${fmt(R.bonus)}${R.prime ? ' · appel anticipé +' + fmt(R.prime) : ''}</div>` +
+      R.rows.map(r => `<div class="rrow" ${r.def >= 0 ? `data-act="selDef" data-i="${r.def}"` : ''}><span class="rn">${r.name}${r.lv ? ' · niv. ' + r.lv : ''}</span><span class="rk">${r.k} élim.</span><span class="rbar"><i style="width:${r.pct}%"></i></span><span class="rp">${r.pct} %</span></div>`).join('') +
+      `<div class="note" style="margin-top:6px">Part des dégâts. Touchez une défense pour voir sa fiche.</div></div>`;
+  }
+  return h + nextWaveCard();
+}
+function sheetBastion() {
+  const money = Math.floor(G.money);
+  let h = sheetHead(`Bastion · ${BUNKER_LV[G.bunkerLv].name}`);
+  const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / repairRate());
+  h += `<div class="card"><div class="row"><div style="flex:1"><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}.</div></div>` +
+    (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div>';
+  const nb = ['muret', 'hesco', 'casemate', 'blinde'].map(id => NODE[id]).find(n => !owned(n));
+  if (!nb) h += '<div class="note" style="margin-top:6px">Bastion au dernier étage.</div>';
+  else if (nodeAvailable(nb)) { const B = BUNKER_LV[nb.ref], c = nodeCost(nb); h += `<div class="br"><span style="flex:1;font-size:12px">Étage suivant : <b>${B.name}</b> · ${fmt(B.hp)} PV, armure ${B.armor}</span><button class="btn buy" data-act="node" data-id="${nb.id}" data-cost="${c}">${fmt(c)}</button></div>`; }
+  else h += `<div class="br"><span class="note" style="flex:1">Étage suivant : ${nodeName(nb)}, après ${reqText(nb)}.</span><button class="btn" data-act="openNode" data-id="${nb.id}">Arbre</button></div>`;
+  h += '</div>';
+  // l'homme : arme équipée et ses trois améliorations
+  const w = WBY[G.equipped], st = G.weapons[w.id], ownedW = WEAPONS.filter(x => G.weapons[x.id].owned);
+  h += `<div class="sect">L'homme · ${w.short}</div><div class="card">`;
+  if (ownedW.length > 1) h += `<div class="chips">${ownedW.map(x => `<button class="wchip ${G.equipped === x.id ? 'eq' : ''}" data-act="equip" data-id="${x.id}">${x.short}</button>`).join('')}</div>`;
+  h += `<div class="stats" style="margin-top:4px">${statLine(w, ws(w.id))}</div>`;
+  if (rootOwned()) h += '<div class="uprow">' + ['Cadence', 'Puissance', zoneLabel(w)].map((lab, b) => st.up[b]
+    ? `<button class="btn" disabled><b>${lab}</b>acquis</button>`
+    : `<button class="btn buy" data-act="upW" data-id="${w.id}" data-b="${b}" data-cost="${upCost(w, b)}"><b>${lab}</b>${fmt(upCost(w, b))}</button>`).join('') + '</div>';
+  else h += '<div class="note">Améliorations après le premier choix de l\'arbre.</div>';
+  h += '</div>';
+  // modules et bonus : améliorer ce qui est installé, installer ce qui est débloquable
+  const rows = [];
+  MOD_ORDER.forEach(id => {
+    const lv = G.mods[id], M = MODULES[id];
+    if (lv >= 1) rows.push(`<div class="br"><span style="flex:1;font-size:12px">${M.name} ${pips(lv, 3)}</span>${lv < 3 ? `<button class="btn buy" data-act="modUp" data-id="${id}" data-cost="${M.levels[lv].cost}">Niv. ${lv + 1} · ${fmt(M.levels[lv].cost)}</button>` : '<span class="tag">Max</span>'}</div>`);
+    else { const n = TREE.find(x => x.kind === 'module' && x.ref === id); if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">${M.name}</span><button class="btn buy" data-act="node" data-id="${n.id}" data-cost="${nodeCost(n)}">Installer · ${fmt(nodeCost(n))}</button></div>`); }
+  });
+  ['superTir', 'arty', 'repair'].forEach(id => {
+    const lv = G.bonus[id], B = BONUS[id];
+    if (lv >= 1) rows.push(`<div class="br"><span style="flex:1;font-size:12px">Bonus : ${B.name} ${pips(lv, 3)}</span>${lv < 3 ? `<button class="btn buy" data-act="upB" data-id="${id}" data-cost="${B.levels[lv].cost}">Rang ${lv + 1} · ${fmt(B.levels[lv].cost)}</button>` : '<span class="tag">Max</span>'}</div>`);
+    else { const n = NODE[id]; if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">Bonus : ${B.name}</span><button class="btn buy" data-act="node" data-id="${id}" data-cost="${nodeCost(n)}">Débloquer · ${fmt(nodeCost(n))}</button></div>`); }
+  });
+  if (rows.length) h += `<div class="sect">Modules et bonus</div><div class="card">${rows.join('')}</div>`;
+  const cardIds = Object.keys(G.cards).filter(id => G.cards[id] > 0 && id !== 'ravit');
+  h += `<div class="sect">Cartes de la partie</div>` + (cardIds.length
+    ? `<div class="chips">${cardIds.map(id => `<span class="cchip" style="--c:${CAT_COL[CARDS[id].cat]}">${CARDS[id].name}${G.cards[id] > 1 ? ' x' + G.cards[id] : ''}</span>`).join('')}</div>` : '') +
+    `<div class="hint" style="margin-top:6px">Prochaine carte après la vague ${G.nextDraft}${G.rerolls ? ` · ${G.rerolls} relance${G.rerolls > 1 ? 's' : ''}` : ''}.</div>`;
+  h += `<div class="hint" style="margin-top:10px">Règle simple : l'arbre débloque, la carte améliore. Touchez une défense posée pour l'améliorer, un emplacement libre pour construire, le bastion pour cette fiche.</div><div class="row" style="margin-top:6px"><button class="btn" data-act="openReport">Bilan et prochaine vague</button><button class="btn buy" data-act="openTree">Ouvrir l'arbre</button></div>`;
+  return h;
+}
+function sheetDef() {
   let h = '';
   const d = G.selected;
   if (d) {
@@ -1650,44 +1823,7 @@ function panelBuild() {
     if (D.place === 'side') h += `<div class="tgt"><span class="bl">Priorité de tir</span>${Object.keys(TGT).map(m => `<button class="wchip ${d.tgt === m ? 'eq' : ''}" data-act="tgt" data-m="${m}">${TGT[m]}</button>`).join('')}</div>`;
     h += `<div class="note" style="margin-top:7px">Depuis le début : ${fmt(d.st.kills)} éliminations, ${fmt(d.st.dmg)} dégâts. Dernière vague : ${fmt(d.st.wk)} éliminations.</div></div>`;
   }
-  if (G.report && G.mode === 'build') {
-    const R = G.report;
-    h += `<div class="sect">Bilan · vague${R.from < R.to ? 's ' + R.from + ' à ' + R.to : ' ' + R.to}</div><div class="card"><div class="note">${fmt(R.kills)} zombies abattus · bastion ${R.lost > 0 ? '-' + R.lost + ' % de PV' : 'intact'} · prime +${fmt(R.bonus)}${R.prime ? ' · appel anticipé +' + fmt(R.prime) : ''}</div>` +
-      R.rows.map(r => `<div class="rrow" ${r.def >= 0 ? `data-act="selDef" data-i="${r.def}"` : ''}><span class="rn">${r.name}${r.lv ? ' · niv. ' + r.lv : ''}</span><span class="rk">${r.k} élim.</span><span class="rbar"><i style="width:${r.pct}%"></i></span><span class="rp">${r.pct} %</span></div>`).join('') +
-      `<div class="row" style="margin-top:6px"><span class="note" style="flex:1">Part des dégâts. Touchez une défense pour la sélectionner.</span><button class="btn" data-act="closeReport">Fermer</button></div></div>`;
-  }
-  if (G.next) {
-    const w = G.wave + 1, S = waveSummary(G.next, w);
-    G.power = firepower();
-    h += `<div class="sect">Prochaine vague · ${w}${w === VICTORY && !G.won ? ' · la dernière avant la victoire' : ''}</div><div class="card"><div class="zl">${S.types.map(([k, n]) => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} x${n}</span>`).join('')}</div>` +
-      `<div class="note">${S.total} zombies · ${S.paths.length > 1 ? 'routes' : 'route'} ${S.paths.join(', ')}${S.fresh.length ? ' · nouveau : ' + S.fresh.join(', ') : ''}</div>` +
-      `<div class="note">Votre puissance de feu : <b style="color:${G.power >= advisedPower(w) ? 'var(--khaki)' : '#e3a08f'}">${fmt(G.power)}</b> · repère ${DIFF[G.diff].name} : ${fmt(advisedPower(w))}</div>` +
-      (G.power < advisedPower(w) * 0.8 ? `<div class="note" style="color:#e3a08f">Puissance nettement sous le repère : une horde peut percer d'un coup. Renforcez tours et pièges, et le bastion.</div>` : '') +
-      (G.mode === 'wave' ? '' : `<div class="note">Pendant une vague, dès que tous les zombies sont sortis, le bouton du bas permet d'appeler la suivante plus tôt contre une prime.</div>`) + '</div>';
-  }
-  const cardIds = Object.keys(G.cards).filter(id => G.cards[id] > 0 && id !== 'ravit');
-  const nd = G.nextDraft;
-  h += `<div class="sect">Cartes de la partie</div>` + (cardIds.length
-    ? `<div class="chips">${cardIds.map(id => `<span class="cchip" style="--c:${CAT_COL[CARDS[id].cat]}">${CARDS[id].name}${G.cards[id] > 1 ? ' x' + G.cards[id] : ''}</span>`).join('')}</div>`
-    : '') + `<div class="hint" style="margin-top:6px">Prochaine carte après la vague ${nd}. Une carte parmi ${perk('large') ? 4 : 3}, valable pour toute la partie${G.rerolls ? ` · ${G.rerolls} relance${G.rerolls > 1 ? 's' : ''}` : ''}.</div>`;
-  const ownedW = WEAPONS.filter(w => G.weapons[w.id].owned);
-  h += `<div class="sect">Arme de l'homme</div><div class="chips">${ownedW.map(w => `<button class="wchip ${G.equipped === w.id ? 'eq' : ''}" data-act="equip" data-id="${w.id}">${w.short}</button>`).join('')}</div>`;
-  const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / repairRate());
-  h += `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div><div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}. Évolutions : arbre, branche Fortification.</div></div>` +
-    (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
-  const freeT = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length, freeP = TRAP_SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
-  h += `<div class="sect">Poser une défense</div><div class="hint">Le plus simple : touchez un emplacement libre sur la carte, puis touchez deux fois la défense voulue (la première montre sa portée). Touchez une défense posée pour l'améliorer ou la vendre. Tours : ${freeT} emplacement${freeT > 1 ? 's' : ''} libre${freeT > 1 ? 's' : ''} sur ${SLOTS.length}. Pièges : ${freeP} emplacement${freeP > 1 ? 's' : ''} libre${freeP > 1 ? 's' : ''} sur ${TRAP_SLOTS.length}, peints sur la route.</div>`;
-  const avail = DEF_ORDER.filter(t => G.unlocked[t]);
-  if (!avail.length) {
-    h += `<div class="card"><div class="row"><div>Aucune défense débloquée.<div class="note">Premier choix dans l'arbre : le nid de mitrailleuse.</div></div><button class="btn buy" data-act="openTree">Ouvrir l'arbre</button></div></div>`;
-  } else {
-    h += '<div class="grid2">' + avail.map(type => {
-      const D = DEF[type], c = placeCost(type);
-      return `<button class="bcard ${G.placing === type ? 'on' : ''}" data-act="place" data-type="${type}" data-cost="${c}"><img class="bico" src="${icon(type)}" alt=""><span class="k">${D.place === 'path' ? 'Piège' : 'Tour'}</span><b>${D.name}</b><span class="c">${fmt(c)}</span><div class="d">Pose au niv. 1 · ${D.levels[0].n}</div></button>`;
-    }).join('') + '</div>';
-    const locked = DEF_ORDER.length - avail.length;
-    if (locked) h += `<div class="hint" style="margin-top:8px">${locked} autre${locked > 1 ? 's' : ''} défense${locked > 1 ? 's' : ''} à débloquer dans l'arbre.</div>`;
-  }
+
   return h;
 }
 
@@ -1711,7 +1847,7 @@ function renderBonusBar(force) {
 
 function renderPanel() {
   panel.classList.toggle('closed', !G.panelOpen);
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === 'arbre' ? G.treeOpen : G.panelOpen));
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === 'arbre' ? G.treeOpen : G.panelOpen && G.tab === 'bastion'));
   if (!G.panelOpen) return;
   const top = G.selected && G.selected !== renderPanel.lastSel ? 0 : panel.scrollTop;
   renderPanel.lastSel = G.selected;
@@ -1725,6 +1861,7 @@ function refreshAfford(force) {
   G.lastMoney = m;
   document.querySelectorAll('#panel [data-cost], #treeSheet [data-cost], #slotMenu [data-cost]').forEach(b => { b.disabled = m < +b.dataset.cost; });
   if (G.treeOpen) $('treeMoney').textContent = fmt(G.money);
+  renderTreeBadge();
 }
 function renderWeaponBar() {
   const owned = WEAPONS.filter(w => G.weapons[w.id].owned);
@@ -1750,7 +1887,7 @@ function renderButtons() {
   $('btnSound').classList.toggle('on', SND.on);
   $('weaponBar').classList.toggle('hide', G.panelOpen || !(G.mode === 'build' || G.mode === 'wave'));
 }
-function renderAll() { renderSlotMenu(); renderBonusBar(true); renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
+function renderAll() { renderGates(); renderRecap(); renderTreeBadge(); renderSlotMenu(); renderBonusBar(true); renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
 
 let hudCache = '';
 function hud(force) {
@@ -1763,6 +1900,11 @@ function hud(force) {
   $('hpFill').style.width = clamp(G.hp / max * 100, 0, 100) + '%';
   $('hpText').textContent = `${fmt(Math.ceil(G.hp))}/${fmt(max)}`;
   if (G.mode === 'wave') renderWaveBtn();
+  const pg = $('wprog');
+  pg.classList.toggle('show', G.mode === 'wave');
+  if (G.mode === 'wave') pg.firstChild.style.width = clamp((G.waveCount - G.queue.length - G.zombies.length) / Math.max(1, G.waveCount) * 100, 0, 100) + '%';
+  const gk = G.mode + '|' + canEarly() + '|' + G.wave;
+  if (gk !== hud.gk) { hud.gk = gk; renderGates(); }
   refreshAfford(false);
 }
 function hudFrame() { hud(false); renderBonusBar(false); }
@@ -2007,7 +2149,7 @@ function fit() {
     lightDirty = true;
   }
   VIEW = { sc, dpr, bx, by };
-  placeSlotMenu();
+  placeSlotMenu(); positionGates();
 }
 const groundT = () => ctx.setTransform(VK, 0, 0, VK * K, OX, OY + TOP * VK);
 const screenT = () => ctx.setTransform(VK, 0, 0, VK, OX, OY);
@@ -2581,7 +2723,7 @@ function draw() {
     if (S.def && S.pick === 'up' && G.selected && DEF[G.selected.type].levels[G.selected.lv + 1]) { const L2 = effL(G.selected.type, G.selected.lv + 1); if (L2.range) showRange(G.selected.x, G.selected.y, L2.range, 'rgba(140,220,140,0.95)'); if (G.selected.type === 'mine') showRange(G.selected.x, G.selected.y, L2.r, 'rgba(140,220,140,0.95)'); }
   }
   if (G.selected) { const L = effL(G.selected.type, G.selected.lv); if (L.range) showRange(G.selected.x, G.selected.y, L.range, 'rgba(214,184,92,0.8)'); ctx.strokeStyle = '#d6b85c'; ctx.lineWidth = 1.6; ctx.strokeRect(G.selected.c * T + 1, G.selected.r * T + 1, T - 2, T - 2); }
-  if (G.mode === 'build' && G.panelOpen && !G.selected && !G.placing) showRange(BX, BY, ws(G.equipped).range, 'rgba(214,184,92,0.45)');
+  if (G.panelOpen && G.tab === 'bastion') showRange(BX, BY, ws(G.equipped).range, 'rgba(214,184,92,0.45)');
   screenT();
   if (G.focus && !G.focus.dead) {
     const f = G.focus, fx = f.x, fy = PY(f.y, f.r * 1.4), rr = f.r + 6 + Math.sin(G.time * 10) * 1.5;
@@ -2624,12 +2766,14 @@ panel.addEventListener('click', e => { const b = e.target.closest('[data-act]');
 $('weaponBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('placeBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('slotMenu').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
+['gates', 'gateTip', 'recap'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); }));
 $('bonusBar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 $('overlay').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b.dataset); });
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   SND.init();
   if (b.dataset.tab === 'arbre') { openTree(null); return; }
-  G.panelOpen = !G.panelOpen; G.tab = 'construire'; renderAll();
+  const on = G.panelOpen && G.tab === 'bastion';
+  G.panelOpen = !on; G.tab = 'bastion'; G.selected = null; G.slotMenu = null; G.gateTip = null; renderAll();
 }));
 $('tree').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
 $('btnWave').addEventListener('click', () => { SND.init(); startWave(); });
