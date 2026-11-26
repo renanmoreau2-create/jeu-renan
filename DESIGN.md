@@ -29,8 +29,8 @@ Grille de 9 × 13 cases, bunker au centre.
 | Sud | bord bas | 14 cases, en S | vague 6 |
 | Est | bord droit, en bas | 10 cases, flanc court | vague 13 |
 
-- Les **pièges** (barbelés, mines, fossés) se posent **sur** le chemin.
-- Les **tours** se posent **à côté** du chemin, sur n'importe quelle case libre.
+- Les **pièges** (barbelés, mines, fossés) se posent n'importe où **sur** le chemin.
+- Les **tours** se posent **uniquement sur 10 emplacements balisés** (plateformes en béton) : 4 sur le chemin Nord, 3 sur le Sud, 2 sur l'Est et 1 au pied du bunker. Placer une tour devient un choix tactique : quel type sur quel emplacement, et lequel garder libre pour plus tard.
 - Le chemin Est est volontairement court : c'est une brèche de fin de partie qui oblige à réorganiser la défense.
 
 ## 3. L'homme et ses armes (11 armes, toutes portables par un fantassin)
@@ -127,10 +127,13 @@ Les types s'inspirent des grandes références du genre : les infectés spéciau
 | Brute | vague 12, puis toutes les 4 vagues | Énorme, encaisse beaucoup | Puissance concentrée |
 | Abomination | boss toutes les 10 vagues | Boss, armure lourde | Toute la défense |
 
-## 7. Vagues et économie
+## 7. Vagues et économie : des hordes
 
-- Nombre de zombies : environ 10 à la vague 1, environ 50 à la vague 10, plus de 100 à la vague 20.
-- Points de vie : multipliés par environ 1,12 par vague (courbe exponentielle, conforme aux retours des joueurs du genre).
+Le principe retenu est la masse plutôt que la résistance individuelle.
+- **Nombre de zombies** : 17 à la vague 1, environ 80 à la vague 10, environ 170 à la vague 20, environ 270 à la vague 30.
+- **Arrivée en hordes** : des paquets serrés de 5 à plus de 25 zombies sur un même chemin, séparés par de courtes accalmies qui raccourcissent au fil des vagues. Les chemins sont attaqués à tour de rôle, donc simultanément dès qu'ils sont plusieurs.
+- **Points de vie** : multipliés par 1,07 par vague jusqu'à la vague 15, puis la pente se durcit (+6 % supplémentaires par vague). La fin de partie ne devient donc pas une promenade.
+- **Conséquence voulue** : les armes et défenses de zone (mines, mortier, lance-grenades, lance-flammes, barbelés) prennent le dessus sur le tir unique.
 - Chaque nouveau type de zombie est annoncé à son arrivée, avec la parade conseillée.
 - Armure du boss progressive : 4 à la vague 10, 6 à la vague 20, 8 à partir de la vague 30.
 - Intervalle d'apparition : de plus en plus court. Les zombies se répartissent entre les chemins ouverts.
@@ -144,9 +147,17 @@ Les types s'inspirent des grandes références du genre : les infectés spéciau
 - **Minigun** : exclu, parce qu'il n'est pas portable à la main par un soldat. La demande était « toutes les armes qu'un soldat peut porter ».
 - **RPO-A Shmel en arme finale** : c'est l'arme portable non guidée au souffle le plus puissant de la liste (charge thermobarique). Un missile guidé comme l'Akeron MP ou le Javelin aurait moins de sens contre des zombies.
 
-## 9. Calibrage V1 (simulations automatiques)
+## 9. Calibrage (simulations automatiques)
 
-Un joueur automatique qui répartit ses achats entre tours, armes, pièges, améliorations et modules atteint la **vague 20 à 30**. Un joueur qui thésaurise sans renforcer le bunker tombe vers la **vague 12** (arrivée de la Brute). Les murs de difficulté voulus sont les boss des vagues 10, 20 et 30.
+Version 1.1 (hordes et emplacements) : un joueur automatique qui répartit ses achats atteint la **vague 20 à 30**. Un joueur qui garde son argent sans construire tombe entre les **vagues 9 et 12**. Les murs voulus sont les boss des vagues 10, 20 et 30.
+
+Ajustements faits pour les hordes :
+- Récompense par zombie réduite, puisqu'ils sont plus nombreux.
+- Argent de départ porté à 400.
+- Armure du Blindé ramenée de 6 à 4 : le MP5 ne lui faisait plus qu'un point de dégât par balle.
+- La pente des points de vie se durcit après la vague 15 : en simulation, le jeu devenait trop facile en fin de partie, avec 180 000 d'argent en banque à la vague 60.
+
+Version 1 :
 
 Ajustements faits après simulation :
 - Bouffi moins destructeur au contact.

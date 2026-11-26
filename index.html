@@ -38,7 +38,7 @@
     max-width:92%;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}
   #toast.show{opacity:1}
   #placeBar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:none;gap:8px;align-items:center;
-    background:rgba(15,17,18,.94);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:12px;white-space:nowrap}
+    background:rgba(15,17,18,.94);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:12px;width:max-content;max-width:94%}
   #placeBar.show{display:flex}
   /* Weapon bar */
   #weaponBar{display:flex;gap:6px;overflow-x:auto;padding:6px 8px;background:#121517;border-top:1px solid var(--line);scrollbar-width:none}
@@ -135,13 +135,17 @@
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
 const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
-const SKEY = 'dernierBastion.save.v1', BKEY = 'dernierBastion.best';
+const SKEY = 'dernierBastion.save.v2', BKEY = 'dernierBastion.best';
 
 const PATHS_DEF = [
   { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
   { id: 'S', name: 'Sud',  opens: 6,  wp: [[6,13],[6,11],[1,11],[1,8],[4,8],[4,6]] },
   { id: 'E', name: 'Est',  opens: 13, wp: [[9,11],[8,11],[8,9],[7,9],[7,7],[6,7],[6,6],[4,6]] },
 ];
+
+// Emplacements de tours : les seules cases où une tour peut être posée
+const SLOTS = [[1,1],[4,2],[6,3],[3,5],[5,5],[3,7],[2,10],[5,10],[7,10],[8,8]];
+const SLOT_SET = new Set(SLOTS.map(([c, r]) => c + ',' + r));
 
 // Armes de l'homme (ordre de progression)
 const WEAPONS = [
@@ -227,15 +231,15 @@ const DEF_ORDER = ['wire','mine','ditch','mgnest','sniper','mortar','flamer'];
 
 // Bestiaire
 const ZT = {
-  walker:  { name:'Rôdeur',     hp:30,   speed:20, dmg:6,  armor:0, reward:6,   r:7,  color:'#6f7d5c', from:1,  w:10 },
-  runner:  { name:'Coureur',    hp:20,   speed:46, dmg:5,  armor:0, reward:7,   r:6,  color:'#a3a97c', from:3,  w:6 },
-  crawler: { name:'Rampant',    hp:36,   speed:15, dmg:5,  armor:0, reward:8,   r:6,  color:'#5e5b48', from:5,  w:4, noWire:true },
-  bloater: { name:'Bouffi',     hp:75,   speed:15, dmg:0,  armor:0, reward:12,  r:11, color:'#9ca24c', from:7,  w:2.5, boom:50 },
-  armored: { name:'Blindé',     hp:110,  speed:18, dmg:8,  armor:6, reward:14,  r:8,  color:'#4c5866', from:8,  w:3 },
-  spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:12,  r:7,  color:'#6fae4a', from:9,  w:2, spit:12, spitRange:100, spitCd:2 },
-  screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:14,  r:7,  color:'#cfc6b2', from:11, w:1.5, aura:70 },
-  brute:   { name:'Brute',      hp:450,  speed:13, dmg:22, armor:3, reward:60,  r:14, color:'#7a3d2c', from:12, w:0.6 },
-  boss:    { name:'Abomination',hp:1500, speed:9,  dmg:60, armor:8, reward:500, r:22, color:'#3f2643', from:999, w:0, boss:true },
+  walker:  { name:'Rôdeur',     hp:30,   speed:20, dmg:6,  armor:0, reward:4,   r:7,  color:'#6f7d5c', from:1,  w:10 },
+  runner:  { name:'Coureur',    hp:20,   speed:46, dmg:5,  armor:0, reward:4,   r:6,  color:'#a3a97c', from:3,  w:6 },
+  crawler: { name:'Rampant',    hp:36,   speed:15, dmg:5,  armor:0, reward:5,   r:6,  color:'#5e5b48', from:5,  w:4, noWire:true },
+  bloater: { name:'Bouffi',     hp:75,   speed:15, dmg:0,  armor:0, reward:8,   r:11, color:'#9ca24c', from:7,  w:2.5, boom:50 },
+  armored: { name:'Blindé',     hp:110,  speed:18, dmg:8,  armor:4, reward:9,   r:8,  color:'#4c5866', from:8,  w:3 },
+  spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:8,   r:7,  color:'#6fae4a', from:9,  w:2, spit:12, spitRange:100, spitCd:2 },
+  screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:9,   r:7,  color:'#cfc6b2', from:11, w:1.5, aura:70 },
+  brute:   { name:'Brute',      hp:700,  speed:13, dmg:22, armor:3, reward:50,  r:14, color:'#7a3d2c', from:12, w:0.6 },
+  boss:    { name:'Abomination',hp:2400, speed:9,  dmg:60, armor:8, reward:400, r:22, color:'#3f2643', from:999, w:0, boss:true },
 };
 
 const ZTIP = {
@@ -247,7 +251,7 @@ const ZTIP = {
   screamer:'accélère les zombies autour de lui. À abattre en priorité.',
   brute:   'énorme et résistant. Concentrez le feu.',
 };
-const hpMult  = w => Math.pow(1.12, w - 1);
+const hpMult  = w => Math.pow(1.07, w - 1) * Math.pow(1.06, Math.max(0, w - 15));
 const dmgMult = w => 1 + 0.05 * (w - 1);
 const rewMult = w => 1 + 0.08 * (w - 1);
 
@@ -299,7 +303,7 @@ function freshState() {
   const weapons = {};
   WEAPONS.forEach(w => weapons[w.id] = { owned: w.id === 'glock', up: [0, 0, 0] });
   return {
-    mode: 'title', wave: 0, money: 300, bunkerLv: 0, hp: BUNKER_LV[0].hp,
+    mode: 'title', wave: 0, money: 400, bunkerLv: 0, hp: BUNKER_LV[0].hp,
     mods: { wire: 0, claymore: 0, mg: 0, flame: 0, rockets: 0 },
     ms: { clayCd: 0, clayFlash: 0, clayAng: 0, mgCd: 0, mgAng: -1, flameT: 0, flameAng: 0, flameOn: 0, rocketCd: 0 },
     weapons, equipped: 'glock', heroCd: 0, heroAng: -Math.PI / 2, flash: 0,
@@ -385,7 +389,7 @@ const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor;
 const openPaths = w => PATHS.filter(p => p.opens <= w);
 
 function buildWave(w) {
-  const count = Math.round(8 + w * 2.2 + Math.pow(w, 1.35));
+  const count = Math.round(12 + w * 5 + 0.35 * Math.pow(w, 1.7));
   const types = Object.keys(ZT).filter(k => !ZT[k].boss && ZT[k].from <= w);
   const weight = k => k === 'walker' ? Math.max(3, 10 - w * 0.3) : ZT[k].w;
   const tot = types.reduce((a, k) => a + weight(k), 0);
@@ -400,10 +404,18 @@ function buildWave(w) {
   // mélange
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
   if (w >= 12 && w % 4 === 0) for (let i = 0; i < 1 + Math.floor((w - 12) / 8); i++) list.push('brute');
-  if (w % 10 === 0) for (let i = 0; i < w / 10; i++) list.push('boss');
   const paths = openPaths(w);
-  const gap = Math.max(0.2, 1.1 - w * 0.03);
-  return list.map((t, i) => ({ type: t, path: paths[i % paths.length].idx, gap: ZT[t].boss ? 2.5 : gap * (0.6 + rand() * 0.8) }));
+  // hordes : paquets serrés sur un chemin, séparés par de courtes accalmies
+  const out = [], pause = Math.max(1.6, 5.5 - w * 0.13);
+  let i = 0, h = 0;
+  while (i < list.length) {
+    const size = Math.min(list.length - i, 5 + Math.floor(w * 0.7) + Math.floor(rand() * 4));
+    const p = paths[h % paths.length].idx;
+    for (let j = 0; j < size; j++, i++) out.push({ type: list[i], path: p, gap: j === size - 1 ? pause * (0.8 + rand() * 0.4) : 0.1 + rand() * 0.15 });
+    h++;
+  }
+  if (w % 10 === 0) for (let k = 0; k < w / 10; k++) out.push({ type: 'boss', path: paths[k % paths.length].idx, gap: 2.5 });
+  return out;
 }
 
 function startWave() {
@@ -444,7 +456,7 @@ function endWave() {
 function spawnZombie(type, pi) {
   const Z = ZT[type], w = G.wave, p = PATHS[pi];
   const z = {
-    type, path: p, d: 0, off: (rand() - 0.5) * 14,
+    type, path: p, d: 0, off: (rand() - 0.5) * 22,
     hp: Z.hp * hpMult(w), maxHp: Z.hp * hpMult(w), armor: Z.boss ? Math.min(8, 2 + Math.floor(w / 5)) : Z.armor,
     speed: Z.speed * (0.9 + rand() * 0.2), dmg: Z.dmg * dmgMult(w),
     reward: Math.round(Z.reward * rewMult(w)), r: Z.r, atkT: 0.6, walk: rand() * 10,
@@ -851,7 +863,7 @@ function canPlace(type, c, r) {
   const k = c + ',' + r;
   if (G.defMap.has(k)) return false;
   const onPath = PATH_CELLS.has(k);
-  return DEF[type].place === 'path' ? onPath : !onPath;
+  return DEF[type].place === 'path' ? onPath : SLOT_SET.has(k);
 }
 function spend(n) { if (G.money < n) { toast('Pas assez d\'argent.'); return false; } G.money -= n; return true; }
 
@@ -894,7 +906,7 @@ function onTap(wx, wy) {
       const L0 = DEF[G.placing].levels[0];
       if (spend(L0.cost)) { addDef(G.placing, c, r); SND.play('click'); if (G.money < L0.cost) { G.placing = null; G.panelOpen = G.mode === 'build'; toast('Fonds épuisés pour cette défense.', 1500); } if (G.mode === 'build') saveGame(); }
     } else {
-      toast(DEF[G.placing].place === 'path' ? 'Un piège se pose sur le chemin.' : 'Une tour se pose à côté du chemin.', 1400);
+      toast(DEF[G.placing].place === 'path' ? 'Un piège se pose sur le chemin.' : 'Une tour se pose uniquement sur un emplacement balisé.', 1400);
     }
     renderAll(); return;
   }
@@ -1015,7 +1027,8 @@ function panelDefenses() {
       (N ? `<button class="btn buy" data-act="upDef" data-cost="${N.cost}">Améliorer ${fmt(N.cost)}</button>` : '<span class="tag">Niveau max</span>') +
       `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div></div>`;
   }
-  h += '<div class="sect">Construire</div><div class="hint">Pièges : sur le chemin. Tours : sur une case libre à côté. Touchez une défense posée pour l\'améliorer.</div><div class="grid2">';
+  const freeSlots = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
+  h += `<div class="sect">Construire</div><div class="hint">Pièges : n'importe où sur le chemin. Tours : uniquement sur les emplacements balisés (${freeSlots} libre${freeSlots > 1 ? 's' : ''} sur ${SLOTS.length}). Touchez une défense posée pour l'améliorer.</div><div class="grid2">`;
   DEF_ORDER.forEach(type => {
     const D = DEF[type], L = D.levels[0];
     h += `<button class="bcard ${G.placing === type ? 'on' : ''}" data-act="place" data-type="${type}" data-cost="${L.cost}"><span class="k">${D.place === 'path' ? 'Piège' : 'Tour'}</span><b>${D.name}</b><span class="c">${fmt(L.cost)}</span><div class="d">${D.levels.map(x => x.n).join(' > ')}</div></button>`;
@@ -1051,7 +1064,7 @@ function renderWaveBtn() {
 function renderPlaceBar() {
   const pb = $('placeBar');
   pb.classList.toggle('show', !!G.placing);
-  if (G.placing) $('placeTxt').textContent = `${DEF[G.placing].name} (${fmt(DEF[G.placing].levels[0].cost)}) : touchez une case ${DEF[G.placing].place === 'path' ? 'du chemin' : 'libre'}`;
+  if (G.placing) $('placeTxt').textContent = `${DEF[G.placing].name} (${fmt(DEF[G.placing].levels[0].cost)}) : ${DEF[G.placing].place === 'path' ? 'touchez le chemin' : 'touchez un emplacement'}`;
 }
 function renderButtons() {
   $('btnSpeed').textContent = 'x' + G.speed; $('btnSpeed').classList.toggle('on', G.speed > 1);
@@ -1149,7 +1162,7 @@ function genBG() {
   });
   // décor hors chemin : épaves, arbres morts, gravats
   const free = [];
-  for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) { const k = c + ',' + r; if (!PATH_CELLS.has(k) && !(Math.abs(c - BC.c) <= 1 && Math.abs(r - BC.r) <= 1)) free.push([c, r]); }
+  for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) { const k = c + ',' + r; if (!PATH_CELLS.has(k) && !SLOT_SET.has(k) && !(Math.abs(c - BC.c) <= 1 && Math.abs(r - BC.r) <= 1)) free.push([c, r]); }
   for (let i = 0; i < 7; i++) {
     const [c, r] = free[Math.floor(R() * free.length)], x = c * T + T / 2, y = r * T + T / 2, kind = R();
     b.save(); b.translate(x, y); b.rotate(R() * Math.PI);
@@ -1165,6 +1178,18 @@ function genBG() {
     }
     b.restore();
   }
+  // emplacements de tours : plateformes en béton balisées
+  SLOTS.forEach(([c, r]) => {
+    const x = c * T, y = r * T;
+    b.fillStyle = 'rgba(0,0,0,0.35)'; b.fillRect(x + 5, y + 6, T - 9, T - 9);
+    b.fillStyle = '#56574f'; b.fillRect(x + 4, y + 4, T - 8, T - 8);
+    b.strokeStyle = '#34352f'; b.lineWidth = 1; b.strokeRect(x + 4.5, y + 4.5, T - 9, T - 9);
+    b.strokeStyle = 'rgba(120,120,110,0.5)'; b.beginPath(); b.moveTo(x + 9, y + 15); b.lineTo(x + 18, y + 13); b.moveTo(x + 24, y + 28); b.lineTo(x + 31, y + 25); b.stroke();
+    b.strokeStyle = '#c8b273'; b.lineWidth = 2; const L = 7, m = 6;
+    [[x + m, y + m, 1, 1], [x + T - m, y + m, -1, 1], [x + m, y + T - m, 1, -1], [x + T - m, y + T - m, -1, -1]].forEach(([px, py, sx, sy]) => {
+      b.beginPath(); b.moveTo(px, py + sy * L); b.lineTo(px, py); b.lineTo(px + sx * L, py); b.stroke();
+    });
+  });
 }
 
 function drawPathOverlays(next) {
@@ -1314,7 +1339,7 @@ function drawHero() {
 function drawZombie(z) {
   const Z = ZT[z.type], r = z.r;
   ctx.save(); ctx.translate(z.x, z.y);
-  ctx.fillStyle = 'rgba(0,0,0,0.33)'; ctx.beginPath(); ctx.ellipse(1.5, 2.5, r * 1.05, r * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+  if (G.zombies.length < 160) { ctx.fillStyle = 'rgba(0,0,0,0.33)'; ctx.beginPath(); ctx.ellipse(1.5, 2.5, r * 1.05, r * 0.8, 0, 0, Math.PI * 2); ctx.fill(); }
   ctx.rotate(z.ang);
   const col = z.hitT > 0 ? '#f1eee4' : Z.color;
   const sw = Math.sin(z.walk * 2) * r * 0.18;
@@ -1344,7 +1369,7 @@ function drawZombie(z) {
   if (z.hp < z.maxHp) {
     const bw = Math.max(12, r * 2.2), f = clamp(z.hp / z.maxHp, 0, 1);
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(z.x - bw / 2, z.y - r - 6, bw, 3);
-    ctx.fillStyle = z.armor >= 6 ? '#7fa6c4' : '#c9472f'; ctx.fillRect(z.x - bw / 2, z.y - r - 6, bw * f, 3);
+    ctx.fillStyle = z.armor >= 4 ? '#7fa6c4' : '#c9472f'; ctx.fillRect(z.x - bw / 2, z.y - r - 6, bw * f, 3);
   }
 }
 const shadeCache = {};
@@ -1492,7 +1517,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS,
+  get G() { return G; }, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET,
 };
 })();
 </script>
