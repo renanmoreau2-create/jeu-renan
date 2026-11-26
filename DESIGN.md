@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V1.5)
+# DERNIER BASTION — document de conception (V1.6)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -76,6 +76,47 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
 
+## 2 quater. Changements V1.6 : rogue-lite hybride
+
+Choix validé par Renan : l'arbre reste dans la partie, avec son principe « débloquer ou améliorer ». Deux couches s'y ajoutent.
+
+**Cartes de ravitaillement** (inspiration : Thronefall, Rogue Tower). Après les vagues 5, 10, 15, et ainsi de suite, on choisit une carte parmi 3, tirées au hasard. Elle vaut pour toute la partie. Une carte n'est proposée que si elle sert : pas de carte « Mines » sans mines débloquées. Un appel anticipé qui saute un multiple de 5 n'en fait pas perdre : les tirages dus s'enchaînent.
+
+| Carte | Famille | Effet par exemplaire | Maximum |
+|---|---|---|---|
+| Munitions perforantes | Tir | balles de l'homme : +1 cible traversée | 2 |
+| Main sûre | Tir | arme de l'homme : +20 % de cadence | 3 |
+| Charge creuse | Tir | arme de l'homme : +25 % de dégâts | 3 |
+| Bandes de cartouches | Appui | nids de mitrailleuse : +25 % de cadence | 2 |
+| Lunettes de précision | Appui | tireurs d'élite : +30 % de dégâts, +15 % de portée | 2 |
+| Obus à fragmentation | Appui | mortiers : rayon +25 % | 2 |
+| Napalm | Appui | tous les lance-flammes : brûlure +50 % | 2 |
+| Barbelé électrifié | Génie | barbelés, pièges et couronne : +100 % de dégâts | 2 |
+| Charges renforcées | Génie | mines : +40 % de dégâts, réarmement -20 % | 2 |
+| Fossés profonds | Génie | fossés : ralentissement +15 points | 1 |
+| Sacs supplémentaires | Fortification | bastion : +20 % de PV max | 3 |
+| Plaques de blindage | Fortification | bastion : armure +2 | 2 |
+| Maçons | Fortification | réparations à moitié prix | 1 |
+| Prime de chasse | Économie | +15 % d'argent par zombie | 3 |
+| Ravitaillement | Économie | argent immédiat : 150 + 40 × la vague | sans limite |
+| Intendance | Économie | défenses à poser : -15 % de prix | 2 |
+| Opérateur radio | Bonus | recharge des bonus -25 % | 2 |
+
+**Insignes et Quartier général.** Chaque vague tenue rapporte des insignes, conservés entre les parties : 0,5 en Facile, 1 en Normal, 1,5 en Cauchemar, plus 10 vagues de prime à la victoire. Ils sont gagnés vague par vague : abandonner une partie ne les fait pas perdre. Le Quartier général, sur l'écran titre, les échange contre des avantages permanents volontairement modestes, pour ne pas fausser la courbe de difficulté.
+
+| Avantage | Rang 1 | Rang 2 | Rang 3 | Coût en insignes |
+|---|---|---|---|---|
+| Trésor de guerre | +100 d'argent au départ | +200 | +300 | 4, 8, 14 |
+| Sacs de réserve | +10 % de PV du bastion | +20 % | +30 % | 5, 10, 18 |
+| Récupération | +5 % d'argent par zombie | +10 % | +15 % | 6, 12, 20 |
+| Relance | 1 relance de tirage par partie | 2 | 3 | 5, 10, 16 |
+| Choix élargi | 4 cartes proposées au lieu de 3 | | | 20 |
+| Briefing | une carte au choix dès le début | | | 15 |
+
+Tout débloquer coûte 163 insignes, soit environ 4 à 6 parties en Normal.
+
+**Calibrage V1.6** (cartes choisies au hasard par les joueurs automatiques, Normal à × 0,7) : les cartes renforcent nettement le joueur. Le joueur « achats toutes les 3 vagues » passe de 13 à 6 vagues avec pertes sur 40, et tombe aux vagues 60 à 70 au lieu de 56 à 60. Normal a donc été relevé à × 0,75 et Cauchemar à × 0,9. Ce réglage reste provisoire : il doit être confirmé par des parties humaines.
+
 ## 2 ter. Changements V1.5 (gameplay : un but, de l'information, des décisions)
 
 **Pourquoi.** Le directeur de vagues V1.4 réglait la horde sur la puissance de feu du joueur : chaque amélioration était aussitôt compensée, et un bon placement n'était pas récompensé. Les références du genre (Kingdom Rush, Bloons TD 6) font l'inverse : des vagues fixes, identiques à chaque partie, qu'on bat en optimisant.
@@ -93,8 +134,8 @@ Grille de 9 × 13 cases, bunker au centre.
 | Difficulté | PV des hordes | Dégâts des zombies | Argent |
 |---|---|---|---|
 | Facile | × 0,45 | × 0,85 | × 1,1 |
-| Normal | × 0,7 | × 1 | × 1 |
-| Cauchemar | × 0,85 | × 1,2 | × 0,95 |
+| Normal | × 0,75 (× 0,7 en V1.5) | × 1 | × 1 |
+| Cauchemar | × 0,9 (× 0,85 en V1.5) | × 1,2 | × 0,95 |
 
 **Victoire à la vague 40**, puis mode infini au choix. Records conservés par difficulté, avec la mention de victoire. Le compteur affiche « 12/40 ».
 
@@ -337,7 +378,7 @@ Ajustements faits après simulation :
 
 ## 11. Pistes V2
 
-- **Retenu : rogue-lite hybride.** L'arbre reste dans la partie. Toutes les 5 vagues, une carte parmi 3, valable pour la partie. Entre les parties, des insignes achètent des avantages permanents modestes.
+- Rogue-lite hybride : fait en V1.6.
 
 - Défenses qui s'usent : barbelés arrachés par les brutes, à réparer.
 - Munitions et rechargement par arme.

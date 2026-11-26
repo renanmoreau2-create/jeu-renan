@@ -9,6 +9,7 @@ Tower defense post-apocalyptique pour téléphone, en vue 3/4 de nuit : un homme
 - Des hordes : neuf types de zombies, un boss toutes les 10 vagues, trois chemins qui s'ouvrent au fil des vagues.
 - Trois difficultés, victoire à la vague 40 puis mode infini, records par difficulté.
 - Aperçu de la prochaine vague, appel anticipé contre une prime, bilan des dégâts par défense, priorité de tir réglable par tour.
+- Toutes les 5 vagues, une carte de ravitaillement parmi 3. Entre les parties, des insignes à dépenser au Quartier général.
 - Sauvegarde automatique sur l'appareil entre deux vagues.
 
 Fichiers :

@@ -148,6 +148,18 @@
   .ov .big.diff b{display:block;font-size:16px}
   .ov .big.diff span{font-size:12px;opacity:.8}
   #btnWave.early{background:#d08a3a;color:#16140c}
+  .dcard{display:block;width:100%;text-align:left;margin-top:10px;padding:12px 12px 12px 14px;border-radius:10px;background:#1c2124;border:1px solid var(--line);border-left:5px solid var(--c);color:var(--txt)}
+  .dcard .dk{font-size:11px;color:var(--c);text-transform:uppercase;letter-spacing:.06em}
+  .dcard b{display:block;font-size:16px;margin:2px 0 3px}
+  .dcard .dd{font-size:12px;color:#c9c5b8}
+  .dcard .ds{font-size:11px;color:var(--mute);margin-top:4px}
+  .perk{display:flex;align-items:center;gap:8px;text-align:left;background:#15181a;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}
+  .perk .pt{flex:1;min-width:0}
+  .perk .pt b{font-size:14px}
+  .perk .pt .note{font-size:11.5px}
+  .perk .btn{white-space:nowrap}
+  .ins{color:var(--khaki);font-weight:700}
+  .cchip{font-size:11px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:6px;padding:3px 7px;color:var(--txt)}
   .zl{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px}
   .zc{font-size:11px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:6px;padding:2px 6px;color:var(--txt)}
   .rrow{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 0;border-bottom:1px dashed #2c3236}
@@ -206,7 +218,21 @@
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
 const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
-const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best', BKEY2 = 'dernierBastion.best.v5';
+const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best', BKEY2 = 'dernierBastion.best.v5', MKEY = 'dernierBastion.meta.v1';
+// Progression permanente entre les parties : insignes gagnés à chaque vague, avantages modestes
+function loadMeta() { try { const j = JSON.parse(localStorage.getItem(MKEY) || 'null'); if (j) return { ins: +j.ins || 0, perks: j.perks || {} }; } catch (e) {} return { ins: 0, perks: {} }; }
+function saveMeta() { try { localStorage.setItem(MKEY, JSON.stringify(META)); } catch (e) {} }
+let META = loadMeta();
+const perk = id => META.perks[id] || 0;
+const PERKS = {
+  tresor:   { name: 'Trésor de guerre', desc: r => `+${100 * r} d'argent au départ`, cost: [4, 8, 14] },
+  reserve:  { name: 'Sacs de réserve', desc: r => `Bastion : +${10 * r} % de PV max`, cost: [5, 10, 18] },
+  recup:    { name: 'Récupération', desc: r => `+${5 * r} % d'argent par zombie`, cost: [6, 12, 20] },
+  relance:  { name: 'Relance', desc: r => `${r} relance${r > 1 ? 's' : ''} de tirage par partie`, cost: [5, 10, 16] },
+  large:    { name: 'Choix élargi', desc: () => '4 cartes proposées au lieu de 3', cost: [20] },
+  briefing: { name: 'Briefing', desc: () => 'Une carte au choix dès le début de la partie', cost: [15] },
+};
+const PERK_ORDER = Object.keys(PERKS);
 
 const PATHS_DEF = [
   { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
@@ -335,17 +361,66 @@ const ZTIP = {
 };
 const hpMult  = w => Math.pow(1.07, w - 1) * Math.pow(1.06, Math.max(0, w - 15));
 const dmgMult = w => (1 + 0.05 * (w - 1)) * (G ? DIFF[G.diff].dmg : 1);
-const rewMult = w => (1 + 0.08 * (w - 1)) * (G ? DIFF[G.diff].rew : 1);
+const rewMult = w => (1 + 0.08 * (w - 1)) * (G ? DIFF[G.diff].rew * (1 + 0.15 * cardN('chasse')) : 1) * (1 + 0.05 * perk('recup'));
 
 /* Difficulté : la horde suit une courbe fixe, identique à chaque partie.
    Victoire à la vague 40, puis mode infini. */
 const VICTORY = 40;
 const DIFF = {
-  facile:    { name: 'Facile',    hp: 0.45, dmg: 0.85, rew: 1.1,  desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
-  normal:    { name: 'Normal',    hp: 0.7,  dmg: 1,    rew: 1,    desc: "L'équilibre prévu : la vague 40 se mérite." },
-  cauchemar: { name: 'Cauchemar', hp: 0.85, dmg: 1.2,  rew: 0.95, desc: 'Pour ceux qui ont déjà gagné en Normal.' },
+  facile:    { name: 'Facile',    hp: 0.45, dmg: 0.85, rew: 1.1,  ins: 0.5, desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
+  normal:    { name: 'Normal',    hp: 0.75, dmg: 1,    rew: 1,    ins: 1,   desc: "L'équilibre prévu : la vague 40 se mérite." },
+  cauchemar: { name: 'Cauchemar', hp: 0.9,  dmg: 1.2,  rew: 0.95, ins: 1.5, desc: 'Pour ceux qui ont déjà gagné en Normal.' },
 };
 const DIFF_ORDER = ['facile', 'normal', 'cauchemar'];
+
+/* Cartes de ravitaillement : une parmi 3 toutes les 5 vagues, valables pour la partie */
+const DRAFT_EVERY = 5;
+const CAT_COL = { Tir: '#c8b273', Appui: '#7fa6c9', 'Génie': '#9cc27a', Fortification: '#b9a3d6', 'Économie': '#e0b356', Bonus: '#e3a08f' };
+const CARDS = {
+  perf:    { name: 'Munitions perforantes', cat: 'Tir', max: 2, desc: "Balles de l'homme : traversent 1 cible de plus" },
+  cadence: { name: 'Main sûre', cat: 'Tir', max: 3, desc: "Arme de l'homme : +20 % de cadence" },
+  charge:  { name: 'Charge creuse', cat: 'Tir', max: 3, desc: "Arme de l'homme : +25 % de dégâts" },
+  bandes:  { name: 'Bandes de cartouches', cat: 'Appui', max: 2, desc: 'Nids de mitrailleuse : +25 % de cadence', req: () => G.unlocked.mgnest },
+  lunette: { name: 'Lunettes de précision', cat: 'Appui', max: 2, desc: "Tireurs d'élite : +30 % de dégâts, +15 % de portée", req: () => G.unlocked.sniper },
+  obus:    { name: 'Obus à fragmentation', cat: 'Appui', max: 2, desc: 'Mortiers : rayon +25 %', req: () => G.unlocked.mortar },
+  napalm:  { name: 'Napalm', cat: 'Appui', max: 2, desc: 'Tous les lance-flammes : brûlure +50 %', req: () => G.unlocked.flamer || G.weapons.m2flame.owned || G.mods.flame },
+  elec:    { name: 'Barbelé électrifié', cat: 'Génie', max: 2, desc: 'Barbelés, pièges et couronne : +100 % de dégâts', req: () => G.unlocked.wire || G.mods.wire },
+  charges: { name: 'Charges renforcées', cat: 'Génie', max: 2, desc: 'Mines : +40 % de dégâts, réarmement -20 %', req: () => G.unlocked.mine },
+  fosse:   { name: 'Fossés profonds', cat: 'Génie', max: 1, desc: 'Fossés : ralentissement +15 points', req: () => G.unlocked.ditch },
+  sacs:    { name: 'Sacs supplémentaires', cat: 'Fortification', max: 3, desc: 'Bastion : +20 % de PV max' },
+  blind:   { name: 'Plaques de blindage', cat: 'Fortification', max: 2, desc: 'Bastion : armure +2' },
+  macon:   { name: 'Maçons', cat: 'Fortification', max: 1, desc: 'Réparations à moitié prix' },
+  chasse:  { name: 'Prime de chasse', cat: 'Économie', max: 3, desc: "+15 % d'argent par zombie" },
+  ravit:   { name: 'Ravitaillement', cat: 'Économie', max: 99, desc: '' },
+  intend:  { name: 'Intendance', cat: 'Économie', max: 2, desc: 'Défenses à poser : -15 % de prix' },
+  radio:   { name: 'Opérateur radio', cat: 'Bonus', max: 2, desc: 'Recharge des bonus -25 %', req: () => ['superTir', 'arty', 'repair'].some(id => G.bonus[id]) },
+};
+const cardN = id => (G && G.cards && G.cards[id]) || 0;
+const ravitAmount = () => Math.round((150 + 40 * G.wave) * DIFF[G.diff].rew);
+const cardDesc = id => id === 'ravit' ? `+${fmt(ravitAmount())} d'argent tout de suite` : CARDS[id].desc;
+// statistiques des défenses modifiées par les cartes (mises en cache)
+let EFF = {};
+function effL(type, lv) {
+  const k = type + lv;
+  if (EFF[k]) return EFF[k];
+  const L = DEF[type].levels[lv]; let E = L;
+  if (type === 'mgnest' && cardN('bandes')) E = { ...L, rate: L.rate * (1 + 0.25 * cardN('bandes')) };
+  else if (type === 'sniper' && cardN('lunette')) E = { ...L, dmg: L.dmg * (1 + 0.3 * cardN('lunette')), range: L.range * (1 + 0.15 * cardN('lunette')) };
+  else if (type === 'mortar' && cardN('obus')) E = { ...L, r: L.r * (1 + 0.25 * cardN('obus')) };
+  else if (type === 'flamer' && cardN('napalm')) E = { ...L, burn: L.burn * (1 + 0.5 * cardN('napalm')) };
+  else if (type === 'wire' && cardN('elec')) E = { ...L, dps: L.dps * (1 + cardN('elec')) };
+  else if (type === 'mine' && cardN('charges')) E = { ...L, dmg: L.dmg * (1 + 0.4 * cardN('charges')), cd: L.cd * Math.pow(0.8, cardN('charges')) };
+  else if (type === 'ditch' && cardN('fosse')) E = { ...L, slow: Math.min(0.85, L.slow + 0.15) };
+  return (EFF[k] = E);
+}
+function modL(id) {
+  const L = MODULES[id].levels[G.mods[id] - 1];
+  if (id === 'wire' && cardN('elec')) return { ...L, dps: L.dps * (1 + cardN('elec')) };
+  if (id === 'flame' && cardN('napalm')) return { ...L, burn: L.burn * (1 + 0.5 * cardN('napalm')) };
+  return L;
+}
+const bonusCd = id => BONUS[id].levels[G.bonus[id] - 1].cd * (1 - 0.25 * cardN('radio'));
+const repairRate = () => cardN('macon') ? 4 : 2;
 
 /* =========================================================
    CHEMINS
@@ -411,6 +486,7 @@ function freshState() {
     pressure: 1, hpScale: 1, power: 0, waveDmg: 0, budget: 0, depthSum: 0, depthN: 0, lastDepth: 0, pMax: 1, treeOpen: false, treeSel: null, treePaused: false, tv: { x: 0, y: 0, s: 1 }, tvInit: false, treeSeen: {},
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
     diff: 'normal', won: false, next: null, waveFrom: 1, prime: 0, report: null, hp0: 0, defNo: {},
+    cards: {}, draft: null, draftsDue: 0, nextDraft: DRAFT_EVERY, rerolls: 0, insRun: 0,
     st: { hero: newSt(), arty: newSt(), wire: newSt(), claymore: newSt(), mg: newSt(), flame: newSt(), rockets: newSt() },
   };
 }
@@ -477,6 +553,10 @@ function ws(id) {
     else if (b.kind === 'explosive') s.radius = b.radius * 1.4;
     else if (b.kind === 'flame') { s.cone = b.cone * 1.35; s.range = b.range * 1.15; }
   }
+  s.rate *= 1 + 0.2 * cardN('cadence');
+  s.dmg *= 1 + 0.25 * cardN('charge');
+  if (b.kind === 'bullet') s.pierce += cardN('perf');
+  if (s.burn) s.burn *= 1 + 0.5 * cardN('napalm');
   if (G.superT > 0) s.dmg *= G.superMult;
   return s;
 }
@@ -499,7 +579,7 @@ function firepower() {
   G.superT = sT;
   let P = best;
   G.defs.forEach(d => {
-    const L = DEF[d.type].levels[d.lv];
+    const L = effL(d.type, d.lv);
     switch (d.type) {
       case 'mgnest': P += L.dmg * L.rate; break;
       case 'sniper': P += L.dmg * L.rate * (1 + 0.35 * (L.pierce - 1)); break;
@@ -510,7 +590,7 @@ function firepower() {
       case 'ditch': P += L.dps * 2 + L.slow * 30; break;
     }
   });
-  const M = G.mods, ml = id => MODULES[id].levels[M[id] - 1];
+  const M = G.mods, ml = id => modL(id);
   if (M.wire) P += ml('wire').dps * 3 + ml('wire').slow * 30;
   if (M.claymore) P += ml('claymore').dmg / ml('claymore').cd * 5;
   if (M.mg) P += ml('mg').dmg * ml('mg').rate;
@@ -531,8 +611,8 @@ function hordeBudget(w) {
 }
 // Puissance repère affichée au joueur pour la difficulté choisie
 const advisedPower = w => refPower(w) * Math.pow(DIFF[G.diff].hp / DIFF.cauchemar.hp, 1 / DIR.beta);
-const bunkerMax = () => BUNKER_LV[G.bunkerLv].hp;
-const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor;
+const bunkerMax = () => Math.round(BUNKER_LV[G.bunkerLv].hp * (1 + 0.2 * cardN('sacs')) * (1 + 0.1 * perk('reserve')));
+const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor + 2 * cardN('blind');
 
 /* =========================================================
    VAGUES
@@ -647,12 +727,39 @@ function endWave() {
   let victory = false;
   if (!G.won && G.wave >= VICTORY) { G.won = true; victory = true; }
   recordBest();
+  // insignes permanents : selon les vagues tenues et la difficulté
+  const ins = DIFF[G.diff].ins * (G.wave - G.waveFrom + 1 + (victory ? 10 : 0));
+  META.ins += ins; G.insRun += ins; saveMeta();
+  while (G.wave >= G.nextDraft) { G.draftsDue++; G.nextDraft += DRAFT_EVERY; }
+  if (G.draftsDue > 0 && !G.draft) makeDraft(false);
   const np = PATHS.find(p => p.opens === G.wave + 1 && G.wave + 1 > 1);
   toast(`Vague ${G.wave} repoussée. Prime +${fmt(bonus)}` + (np ? ` · Attention : le chemin ${np.name} s'ouvre à la prochaine vague.` : ''), 3500);
   G.panelOpen = true;
   saveGame();
   renderAll();
   if (victory) setTimeout(() => showOverlay('victory'), 700);
+  else if (G.draft) showOverlay('draft');
+}
+function makeDraft(reroll) {
+  const pool = Object.keys(CARDS).filter(id => cardN(id) < CARDS[id].max && (!CARDS[id].req || CARDS[id].req()));
+  const n = perk('large') ? 4 : 3, pick = [];
+  while (pick.length < n && pool.length) pick.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
+  G.draft = pick;
+  if (reroll) showOverlay('draft');
+}
+function pickCard(id) {
+  if (!G.draft || !G.draft.includes(id)) return;
+  const oldMax = bunkerMax();
+  let msg = CARDS[id].desc;
+  if (id === 'ravit') { const a = ravitAmount(); G.money += a; msg = `+${fmt(a)} d'argent`; }
+  G.cards[id] = cardN(id) + 1; EFF = {};
+  if (id === 'sacs') G.hp += bunkerMax() - oldMax;
+  toast(`${CARDS[id].name} : ${msg}`, 2200);
+  G.draft = null; G.draftsDue = Math.max(0, G.draftsDue - 1);
+  if (G.draftsDue > 0) makeDraft(false);
+  saveGame();
+  if (G.draft) showOverlay('draft'); else hideOverlay();
+  renderAll();
 }
 
 /* =========================================================
@@ -705,7 +812,7 @@ function bunkerHit(dmg) {
 
 function updateZombies(dt) {
   const screamers = G.zombies.filter(z => !z.dead && z.type === 'screamer');
-  const wireM = G.mods.wire ? MODULES.wire.levels[G.mods.wire - 1] : null;
+  const wireM = G.mods.wire ? modL('wire') : null;
   for (const z of G.zombies) {
     if (z.dead) continue;
     const Z = ZT[z.type];
@@ -721,7 +828,7 @@ function updateZombies(dt) {
     const c = Math.floor(z.x / T), r = Math.floor(z.y / T);
     const tr = G.defMap.get(c + ',' + r);
     if (tr && DEF[tr.type].place === 'path') {
-      const L = DEF[tr.type].levels[tr.lv]; SRC = tr.st;
+      const L = effL(tr.type, tr.lv); SRC = tr.st;
       if (tr.type === 'wire') {
         if (!Z.noWire) { mul *= 1 - L.slow; hurt(z, L.dps * dt, 0); }
       } else if (tr.type === 'ditch') {
@@ -875,7 +982,7 @@ function fireWeapon(s, t) {
 
 function updateDefs(dt) {
   for (const d of G.defs) {
-    const D = DEF[d.type], L = D.levels[d.lv];
+    const D = DEF[d.type], L = effL(d.type, d.lv);
     if (d.cd > 0) d.cd -= dt;
     if (D.place === 'path') continue;
     SRC = d.st;
@@ -935,7 +1042,7 @@ function updateModules(dt) {
     } else if (S.mgCd < 0) S.mgCd = 0;
   }
   if (M.flame) {
-    const L = MODULES.flame.levels[M.flame - 1];
+    const L = modL('flame');
     S.flameT -= dt; if (S.flameOn > 0) S.flameOn -= dt;
     const t = pickTarget(BX, BY, L.range);
     if (t) {
@@ -1032,7 +1139,7 @@ function useBonus(id) {
   if (id === 'arty') { G.aim = G.aim === 'arty' ? null : 'arty'; if (G.aim) toast('Touchez la zone à pilonner.', 2200); return; }
   if (id === 'superTir') { G.superT = L.dur; G.superMult = L.mult; toast(`Super tir : dégâts x${L.mult}`, 1300); SND.play('horn'); }
   if (id === 'repair') { const add = bunkerMax() * L.pct; G.hp = Math.min(bunkerMax(), G.hp + add); floatText(BX, BY - 20, '+' + fmt(add) + ' PV'); SND.play('click'); }
-  G.bcd[id] = L.cd;
+  G.bcd[id] = bonusCd(id);
 }
 function artyStrike(x, y) {
   const L = BONUS.arty.levels[G.bonus.arty - 1];
@@ -1040,7 +1147,7 @@ function artyStrike(x, y) {
     const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 46, tx = x + Math.cos(a) * r, ty = y + Math.sin(a) * r;
     G.projs.push({ type: 'shell', sx: tx, sy: ty, tx, ty, t: -0.4 - i * 0.14, dur: 0.7, dmg: L.dmg * 30 * G.hpScale, r: 36, ap: 0.5, burn: 0, h0: 240, h1: 0, src: G.st.arty });
   }
-  G.bcd.arty = L.cd; G.aim = null; SND.play('horn');
+  G.bcd.arty = bonusCd('arty'); G.aim = null; SND.play('horn');
 }
 
 function gameOver() {
@@ -1136,7 +1243,7 @@ function reqText(n) {
   if (n.id !== ROOT && !rootOwned()) return 'Nid de mitrailleuse';
   return nodeReqs(n).filter(([id, lv]) => nodeLevel(NODE[id]) < lv).map(([id, lv]) => shortName(NODE[id]) + (lv > 1 ? ' niv. ' + lv : '')).join(' + ');
 }
-const placeCost = type => DEF[type].levels[0].cost;
+const placeCost = type => Math.round(DEF[type].levels[0].cost * (1 - 0.15 * cardN('intend')));
 
 function buyNode(id) {
   const n = NODE[id];
@@ -1186,7 +1293,7 @@ function saveGame() {
   try {
     localStorage.setItem(SKEY, JSON.stringify({ v:5, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
       weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure,
-      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo,
+      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
       defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt })) }));
   } catch (e) {}
 }
@@ -1206,11 +1313,19 @@ function newGame(fromSave, diff) {
     if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
     d.defs.forEach(x => { if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; } });
     if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
+    G.cards = d.cards || {}; G.draft = d.draft || null; G.draftsDue = d.draftsDue || (G.draft ? 1 : 0); G.rerolls = d.rerolls || 0; G.insRun = d.insRun || 0;
+    G.nextDraft = d.nextDraft || (Math.floor(G.wave / DRAFT_EVERY) + 1) * DRAFT_EVERY;
+  } else {
+    G.money += 100 * perk('tresor'); G.rerolls = perk('relance');
+    if (perk('briefing')) { G.draftsDue = 1; makeDraft(false); }
   }
+  EFF = {};
+  if (!fromSave) G.hp = bunkerMax();
   G.power = firepower(); G.next = buildWave(G.wave + 1);
   G.mode = 'build'; G.panelOpen = true;
   hideOverlay();
   renderAll();
+  if (G.draft) showOverlay('draft');
   toast(fromSave ? `Partie reprise (${DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : `${DIFF[G.diff].name}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse.`, 3200);
 }
 
@@ -1257,7 +1372,11 @@ function act(a, ds) {
     case 'upB': { const lv = G.bonus[ds.id]; if (lv >= 1 && lv < 3 && spend(BONUS[ds.id].levels[lv].cost)) G.bonus[ds.id]++; break; }
     case 'useBonus': useBonus(ds.id); renderBonusBar(true); return;
     case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv >= 1 && lv < 3 && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
-    case 'repair': { const miss = bunkerMax() - G.hp, cost = Math.ceil(miss / 2), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * 2); } break; }
+    case 'repair': { const k = repairRate(), miss = bunkerMax() - G.hp, cost = Math.ceil(miss / k), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * k); } break; }
+    case 'card': pickCard(ds.id); return;
+    case 'reroll': if (G.draft && G.rerolls > 0) { G.rerolls--; makeDraft(true); saveGame(); } return;
+    case 'hq': showOverlay('hq'); return;
+    case 'perk': { const P = PERKS[ds.id], r = perk(ds.id); if (P && r < P.cost.length && META.ins >= P.cost[r]) { META.ins -= P.cost[r]; META.perks[ds.id] = r + 1; saveMeta(); } showOverlay('hq'); return; }
     case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; if (G.placing) G.panelOpen = false; break;
     case 'stopPlace': G.placing = null; G.tab = 'construire'; G.panelOpen = true; break;
     case 'sellDef': { const d = G.selected; if (d) { G.money += Math.floor(d.spent * 0.6); G.defs = G.defs.filter(x => x !== d); G.defMap.delete(d.c + ',' + d.r); G.selected = null; } break; }
@@ -1270,8 +1389,8 @@ function act(a, ds) {
     case 'tcenter': treeCenter(G.treeSel || ROOT); return;
     case 'new': showOverlay('diff'); return;
     case 'newDiff': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, ds.d); return; }
-    case 'back': showOverlay(G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : 'victory'); return;
-    case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); return;
+    case 'back': showOverlay(G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : G.draft ? 'draft' : 'victory'); return;
+    case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); if (G.draft) showOverlay('draft'); return;
     case 'tgt': if (G.selected && TGT[ds.m]) G.selected.tgt = ds.m; break;
     case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.panelOpen = true; } break; }
     case 'closeReport': G.report = null; break;
@@ -1418,7 +1537,7 @@ function panelBuild() {
   let h = '';
   const d = G.selected;
   if (d) {
-    const D = DEF[d.type], L = D.levels[d.lv], N = D.levels[d.lv + 1];
+    const D = DEF[d.type], L = effL(d.type, d.lv), N = D.levels[d.lv + 1] ? effL(d.type, d.lv + 1) : null;
     h += `<div class="sect">${D.name} · niveau ${d.lv + 1}</div><div class="card sel"><b>${L.n}</b><div class="stats">${defDesc(d.type, L)}</div>`;
     if (N) {
       h += G.defTech[d.type] > d.lv
@@ -1444,9 +1563,14 @@ function panelBuild() {
       (G.power < advisedPower(w) * 0.8 ? `<div class="note" style="color:#e3a08f">Puissance nettement sous le repère : une horde peut percer d'un coup. Renforcez tours et pièges, et le bastion.</div>` : '') +
       (G.mode === 'wave' ? '' : `<div class="note">Pendant une vague, dès que tous les zombies sont sortis, le bouton du bas permet d'appeler la suivante plus tôt contre une prime.</div>`) + '</div>';
   }
+  const cardIds = Object.keys(G.cards).filter(id => G.cards[id] > 0 && id !== 'ravit');
+  const nd = G.nextDraft;
+  h += `<div class="sect">Cartes de la partie</div>` + (cardIds.length
+    ? `<div class="chips">${cardIds.map(id => `<span class="cchip" style="--c:${CAT_COL[CARDS[id].cat]}">${CARDS[id].name}${G.cards[id] > 1 ? ' x' + G.cards[id] : ''}</span>`).join('')}</div>`
+    : '') + `<div class="hint" style="margin-top:6px">Prochaine carte après la vague ${nd}. Une carte parmi ${perk('large') ? 4 : 3}, valable pour toute la partie${G.rerolls ? ` · ${G.rerolls} relance${G.rerolls > 1 ? 's' : ''}` : ''}.</div>`;
   const ownedW = WEAPONS.filter(w => G.weapons[w.id].owned);
   h += `<div class="sect">Arme de l'homme</div><div class="chips">${ownedW.map(w => `<button class="wchip ${G.equipped === w.id ? 'eq' : ''}" data-act="equip" data-id="${w.id}">${w.short}</button>`).join('')}</div>`;
-  const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / 2);
+  const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / repairRate());
   h += `<div class="sect">Bastion · ${BUNKER_LV[G.bunkerLv].name}</div><div class="card"><div class="row"><div><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}. Évolutions : arbre, branche Fortification.</div></div>` +
     (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div></div>';
   const freeT = SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length, freeP = TRAP_SLOTS.filter(([c, r]) => !G.defMap.has(c + ',' + r)).length;
@@ -1477,7 +1601,7 @@ function renderBonusBar(force) {
   if (!show) { bar.innerHTML = ''; return; }
   bar.innerHTML = ownedB.map(id => {
     const L = BONUS[id].levels[G.bonus[id] - 1], cd = G.bcd[id], ready = cd <= 0 && G.mode === 'wave';
-    const pct = cd > 0 ? Math.round(cd / L.cd * 100) : 0;
+    const pct = cd > 0 ? Math.round(cd / bonusCd(id) * 100) : 0;
     return `<button class="bbtn ${ready ? 'ready' : ''} ${G.aim === id ? 'aim' : ''} ${id === 'superTir' && G.superT > 0 ? 'active' : ''}" data-act="useBonus" data-id="${id}" style="--p:${pct}%">` +
       `<img src="${icon(id)}" alt=""><span class="bcd">${cd > 0 ? Math.ceil(cd) : ''}</span><span class="blb">${BONUS[id].name}</span></button>`;
   }).join('');
@@ -1544,13 +1668,24 @@ function hudFrame() { hud(false); renderBonusBar(false); }
 function showOverlay(kind) {
   const o = $('overlay'), save = loadSave(), best = G ? G.best : loadBest(), rt = recText(best);
   let h = '<div class="ov">';
-  if (kind === 'over') {
-    h += `<h2>Le bastion est tombé</h2><div class="sub">${DIFF[G.diff].name} : vous avez tenu jusqu'à la vague ${G.wave}${G.won ? ', après la victoire' : ` sur ${VICTORY}`}.</div>` +
+  const insLine = () => `<div class="rec">Insignes gagnés : <span class="ins">+${fmt(G.insRun)}</span> · en réserve : ${fmt(META.ins)}. À dépenser au Quartier général.</div>`;
+  if (kind === 'draft') {
+    h += `<h2 style="color:var(--khaki)">Ravitaillement</h2><div class="sub">Vague ${G.wave} tenue. Choisissez une carte, valable pour toute la partie.</div>` +
+      G.draft.map(id => { const C = CARDS[id], n = cardN(id); return `<button class="dcard" style="--c:${CAT_COL[C.cat]}" data-act="card" data-id="${id}"><span class="dk">${C.cat}</span><b>${C.name}</b><div class="dd">${cardDesc(id)}</div>${n && id !== 'ravit' ? `<div class="ds">Déjà prise ${n} fois · maximum ${C.max}</div>` : ''}</button>`; }).join('') +
+      (G.rerolls > 0 ? `<button class="big alt" data-act="reroll">Relancer le tirage (${G.rerolls})</button>` : '');
+  } else if (kind === 'hq') {
+    h += `<h2 style="color:var(--khaki)">Quartier général</h2><div class="sub">Insignes en réserve : <span class="ins">${fmt(META.ins)}</span>. Ils se gagnent à chaque vague tenue (x0,5 en Facile, x1,5 en Cauchemar, +10 à la victoire).</div>` +
+      PERK_ORDER.map(id => { const P = PERKS[id], r = perk(id), max = P.cost.length, c = P.cost[r];
+        return `<div class="perk"><div class="pt"><b>${P.name}</b> ${pips(r, max)}<div class="note">${r ? 'Actuel : ' + P.desc(r) + '. ' : ''}${r < max ? (r ? 'Suivant : ' : '') + P.desc(r + 1) : 'Maximum atteint'}</div></div>` +
+          (r < max ? `<button class="btn buy" data-act="perk" data-id="${id}" ${META.ins >= c ? '' : 'disabled'}>${c} insignes</button>` : '<span class="tag">Max</span>') + '</div>'; }).join('') +
+      `<button class="big alt" data-act="back">Retour</button>`;
+  } else if (kind === 'over') {
+    h += `<h2>Le bastion est tombé</h2><div class="sub">${DIFF[G.diff].name} : vous avez tenu jusqu'à la vague ${G.wave}${G.won ? ', après la victoire' : ` sur ${VICTORY}`}.</div>` + insLine() +
       `<button class="big" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   } else if (kind === 'victory') {
     h += `<h1>VICTOIRE</h1><div class="sub">Vague ${VICTORY} tenue en ${DIFF[G.diff].name}. Le bastion tient toujours.</div>` +
       `<p>La partie peut continuer en mode infini : les hordes ne s'arrêtent plus, seul compte votre record.</p>` +
-      `<button class="big" data-act="endless">Continuer en mode infini</button><button class="big alt" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
+      insLine() + `<button class="big" data-act="endless">Continuer en mode infini</button><button class="big alt" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   } else if (kind === 'diff') {
     h += `<h2 style="color:var(--khaki)">Choisir la difficulté</h2><div class="sub">Victoire à la vague ${VICTORY}, puis mode infini.</div>` +
       DIFF_ORDER.map(k => `<button class="big diff ${k === 'normal' ? '' : 'alt'}" data-act="newDiff" data-d="${k}"><b>${DIFF[k].name}</b><span>${DIFF[k].desc}${best[k].w ? ` Record : vague ${best[k].w}${best[k].won ? ', victoire' : ''}.` : ''}</span></button>`).join('') +
@@ -1559,8 +1694,9 @@ function showOverlay(kind) {
   } else {
     h += `<h1>DERNIER BASTION</h1><div class="sub">Tenez le bastion. Aussi longtemps que possible.</div>` +
       `<p>Les hordes suivent les chemins jusqu'au bastion central. Tenez ${VICTORY} vagues pour gagner. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
-      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Les pièges se posent sur le chemin, les tours sur les emplacements balisés. La prochaine vague est annoncée dans le panneau Construire.</p>` +
+      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Toutes les 5 vagues, une carte de ravitaillement au choix change la partie. Entre les parties, les insignes gagnés achètent des avantages permanents au Quartier général.</p>` +
       (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1}, ${DIFF[save.diff || 'normal'].name})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
+      `<button class="big alt" data-act="hq">Quartier général · ${fmt(META.ins)} insigne${META.ins >= 2 ? 's' : ''}</button>` +
       (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   }
   o.innerHTML = h + '</div>';
@@ -2409,7 +2545,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
 };
 })();
 </script>
