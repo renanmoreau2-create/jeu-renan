@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.1)
+# DERNIER BASTION — document de conception (V2.2)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,69 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 decies. Changement V2.2 : réalisme des armes et difficulté relevée
+
+**Retour de Renan** : victoire en Normal sans qu'un seul zombie atteigne le bastion, avec 72 508 d'argent non dépensé à la vague 28. Les trois pouvoirs, en bas à droite, cachaient l'arrivée des routes Sud et Est, et leurs libellés n'apportaient rien. La réparation d'urgence pouvait être déclenchée à pleins PV, ce qui gaspillait son temps de recharge.
+
+**Diagnostic** (partie simulée) : le joueur automatique avait tout acheté vers la vague 24 ; au-delà, l'argent ne servait plus à rien. Les tours tiraient sans interruption. Le calibrage V2.1 supposait un humain moins fort que les joueurs automatiques : c'était faux pour un bon joueur.
+
+**Choix de Renan** : les trois mécaniques réalistes, une « victoire exigeante » en Normal (un bon joueur gagne, mais perd des PV sur les vagues de boss et peut échouer une partie sur trois), et pour l'économie, des revenus plus bas ainsi que de nouvelles dépenses.
+
+**1. Chargeurs de l'homme.** Capacités réelles et temps de rechargement :
+
+| Arme | Chargeur | Rechargement |
+|---|---|---|
+| Glock 17 | 17 | 1,6 s |
+| MP5 | 30 | 2,2 s |
+| Benelli M4 | 7 | 3,5 s |
+| HK416F | 30 | 2,4 s |
+| SCAR-H PR | 20 | 2,8 s |
+| Minimi | bande de 200 | 6 s |
+| M32 | 6 | 4 s |
+| Hécate II | 7 | 3,5 s |
+| Lance-flammes M2 | réservoir de 8 s | 6 s |
+| Carl Gustaf, Shmel | 1 | 2,4 s, 3 s |
+
+- Pendant une accalmie (aucune cible depuis 0,8 s), l'homme recharge de lui-même si son chargeur est entamé de plus de 30 %.
+- Une quatrième amélioration par arme, « Chargeur » (« Réservoir » pour le M2) : chargeur +50 % et rechargement 35 % plus rapide.
+- Sur la carte, une barre au-dessus de l'homme montre les munitions, et un cercle doré la progression du rechargement.
+
+**2. Surchauffe des mitrailleuses.**
+- Les nids de mitrailleuse surchauffent après 60 tirs pour la MAG 58, 100 pour la Double MAG et 70 pour la M2 Browning. Le canon est alors changé en 4 s, ou 5 s pour la M2.
+- Le canon refroidit dès que la tour cesse de tirer.
+- Achat par tour, dans son menu : « Canon de rechange » (300). La surchauffe survient 40 % plus tard et le canon est changé deux fois plus vite.
+- La mitrailleuse 12,7 du bastion suit la même règle : 80 tirs, puis 5 s d'arrêt.
+- Sur la carte, une barre de chaleur s'affiche sous la tour, puis un cercle rouge pendant le changement de canon.
+
+**3. Réservoirs des lance-flammes.**
+- Les tours lance-flammes tirent 7, 8 ou 9 s selon le niveau, puis remplissent leur réservoir en 5 à 5,5 s. Elles se rechargent à moitié vitesse quand elles ne tirent pas.
+- Achat par tour : « Réservoir supplémentaire » (450), réservoir +50 % et remplissage 35 % plus rapide.
+- Le lance-flammes fixe du bastion tire 9 s, puis s'arrête 5 s.
+- Entre deux vagues, tout est rechargé, refroidi et rempli.
+
+Ces trois règles réduisent la puissance de feu réelle de 20 à 50 % selon l'arme (le M32 est le plus touché). Elles créent surtout des trous dans le tir pendant les grosses hordes : alterner les types de tours et les placer pour qu'elles se relaient devient utile. La puissance de feu affichée en tient compte, et le repère conseillé a été abaissé en conséquence (x0,8).
+
+**4. Économie.** Les revenus sont réduits de 8 % au début, puis de 28 % dès la vague 19 (`eco(w)`). Cela vaut pour les primes par zombie, la prime de fin de vague, l'appel anticipé et la carte Ravitaillement. Le début de partie reste abordable, et la fin n'est plus saturée. En simulation, le joueur automatique dépense désormais tout son argent jusqu'à la vague 24.
+
+**5. Difficulté** (PV des hordes) :
+
+| Difficulté | Avant | Après |
+|---|---|---|
+| Facile | 0,38 | 0,35 |
+| Normal | 0,63 | 0,72 |
+| Cauchemar | 0,76 | 0,79 |
+
+**Calibrage V2.2** (joueurs automatiques, jusqu'à la vague 26) :
+- **Normal**, achats à chaque vague, profils équilibré et Génie : 4 victoires sur 4. Chaque partie a des pertes sur 8 à 12 vagues, dont 2 à 5 vagues à plus de 20 %, avec un pic de 78 %.
+- **Normal**, achats toutes les 2 vagues : 1 victoire sur 2 (avec 7 vagues à plus de 20 %). L'autre partie a été balayée en une vague, à la vague 11.
+- **Cauchemar**, achats à chaque vague : 1 victoire sur 2. L'autre partie a été balayée à la vague 13.
+- **Facile**, achats toutes les 2 vagues, mesuré à 0,38 avant la baisse à 0,35 : victoire sans perte pour le profil équilibré. Le profil Génie tombe à la vague 24.
+- Le directeur de vagues amortit encore : il baisse jusqu'à 15 % les PV des vagues suivantes quand le bastion souffre. Un très bon joueur ne profite pas de cet amortissement.
+
+**6. Interface.**
+- Les pouvoirs forment une colonne à gauche, entre les routes Nord et Sud : cette zone n'a ni chemin ni emplacement. Ils n'ont plus de libellé, seul le nom reste lu par les lecteurs d'écran.
+- La réparation d'urgence est grisée et refuse de partir quand le bastion est à pleins PV.
 
 ## 2 nonies. Changement V2.1 : donner envie de rejouer
 
@@ -498,9 +561,9 @@ Ajustements faits après simulation :
 
 - Rogue-lite hybride : fait en V1.6.
 - Leviers de rejouabilité (partie courte, défaite utile, menace, défis, défi du jour) : faits en V2.1.
+- Munitions et rechargement : faits en V2.2 (chargeurs de l'homme, surchauffe, réservoirs).
 
 - Défenses qui s'usent : barbelés arrachés par les brutes, à réparer.
-- Munitions et rechargement par arme.
 - Autres cartes, avec des chemins différents.
 - Graphismes en sprites et sons plus riches.
 - Classement des meilleurs scores.
