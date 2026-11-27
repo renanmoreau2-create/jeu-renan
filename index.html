@@ -84,6 +84,17 @@
   #gateTip .row{margin-top:7px}
   .badge{display:inline-block;min-width:17px;height:17px;line-height:17px;border-radius:9px;background:#d08a3a;color:#16140c;font-size:10.5px;font-weight:700;margin-left:6px;padding:0 4px;vertical-align:1px}
   .badge.hide{display:none}
+  .ov .why{background:#15181a;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:10px 0 4px;text-align:left;font-size:12.5px;line-height:1.5}
+  .ov .why b{color:var(--khaki)}
+  .ov .near{color:#ef8a6c;font-weight:700;margin-top:8px}
+  .ov .row2{display:flex;gap:8px}
+  .ov .row2 .big{flex:1}
+  .mz{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0 2px}
+  .mz .wchip{min-width:40px}
+  .goal{display:flex;align-items:center;gap:10px;text-align:left;background:#15181a;border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:7px;font-size:12.5px}
+  .goal.ok{border-color:#5c7a3a;background:#18200f}
+  .goal .gi{flex:1}
+  .goal .gr{color:var(--khaki);font-weight:700;white-space:nowrap}
   .uprow{display:flex;gap:6px;margin-top:6px}
   .uprow .btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 4px;font-size:11px;line-height:1.2}
   .uprow .btn b{font-size:12px}
@@ -272,12 +283,67 @@
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
 const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
-const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best', BKEY2 = 'dernierBastion.best.v5', MKEY = 'dernierBastion.meta.v1';
+const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best', BKEY2 = 'dernierBastion.best.v6', MKEY = 'dernierBastion.meta.v1';
 // Progression permanente entre les parties : insignes gagnés à chaque vague, avantages modestes
-function loadMeta() { try { const j = JSON.parse(localStorage.getItem(MKEY) || 'null'); if (j) return { ins: +j.ins || 0, perks: j.perks || {} }; } catch (e) {} return { ins: 0, perks: {} }; }
+function loadMeta() {
+  const m = { ins: 0, perks: {}, menace: 0, menacePick: 0, done: {}, daily: null };
+  try { const j = JSON.parse(localStorage.getItem(MKEY) || 'null'); if (j) Object.assign(m, j, { ins: +j.ins || 0 }); } catch (e) {}
+  return m;
+}
 function saveMeta() { try { localStorage.setItem(MKEY, JSON.stringify(META)); } catch (e) {} }
 let META = loadMeta();
-const perk = id => META.perks[id] || 0;
+const perk = id => (G && G.daily) ? 0 : (META.perks[id] || 0);
+// tirage reproductible (défi du jour) : même graine, mêmes vagues et mêmes cartes pour tout le monde
+function seeded(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  let a = h >>> 0;
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+/* Niveaux de menace : contraintes cumulées, débloquées en gagnant au niveau précédent */
+const MENACE = [
+  { name: 'Zombies plus rapides', desc: 'vitesse +10 %', apply: m => { m.speed *= 1.1; } },
+  { name: 'Bastion fragilisé', desc: 'PV du bastion -15 %', apply: m => { m.hp *= 0.85; } },
+  { name: 'Rationnement', desc: "argent -10 %", apply: m => { m.money *= 0.9; } },
+  { name: 'Hordes denses', desc: 'PV des hordes +12 %', apply: m => { m.horde *= 1.12; } },
+  { name: 'Nuit des Abominations', desc: 'une Abomination de plus par vague de boss', apply: m => { m.boss += 1; } },
+];
+// modificateur du défi du jour, tiré de la date
+const DAILY_MODS = [
+  { name: 'Zombies rapides', desc: 'vitesse +15 %', apply: m => { m.speed *= 1.15; } },
+  { name: 'Bastion fragile', desc: 'PV du bastion -20 %', apply: m => { m.hp *= 0.8; } },
+  { name: 'Disette', desc: 'argent -15 %', apply: m => { m.money *= 0.85; } },
+  { name: 'Grande meute', desc: 'hordes +15 %, argent +10 %', apply: m => { m.horde *= 1.15; m.money *= 1.1; } },
+  { name: 'Nuit des Abominations', desc: 'une Abomination de plus par vague de boss', apply: m => { m.boss += 1; } },
+];
+const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const dailyMod = key => DAILY_MODS[Math.floor(seeded(key + ':mod')() * DAILY_MODS.length)];
+const frDate = key => key.split('-').reverse().join('/');
+function makeMz(menace, daily) {
+  const m = { speed: 1, hp: 1, money: 1, horde: 1, boss: 0 };
+  for (let i = 0; i < menace; i++) MENACE[i].apply(m);
+  if (daily) dailyMod(daily).apply(m);
+  return m;
+}
+/* Défis secondaires : objectifs précis, récompensés une fois en insignes */
+const GOALS = [
+  { id: 'win_n', name: 'Tenir 25 vagues en Normal ou plus', ins: 10 },
+  { id: 'win_c', name: 'Tenir 25 vagues en Cauchemar', ins: 20 },
+  { id: 'no_sniper', name: "Gagner (Normal ou plus) sans poser de tireur d'élite", ins: 12 },
+  { id: 'no_repair', name: 'Gagner (Normal ou plus) sans aucune réparation du bastion', ins: 12 },
+  { id: 'boss_flame', name: 'Achever une Abomination au lance-flammes', ins: 8 },
+  { id: 'early10', name: 'Appeler 10 vagues en avance dans une même partie', ins: 6 },
+  { id: 'perfect8', name: 'Tenir 8 vagues de suite sans perdre un seul PV', ins: 8 },
+  { id: 'glock8', name: "Atteindre la vague 8 sans acheter d'autre arme que le Glock", ins: 6 },
+  { id: 'menace3', name: 'Gagner en Menace 3 ou plus', ins: 15 },
+  { id: 'daily', name: 'Terminer un défi du jour', ins: 5 },
+];
+function completeGoal(id) {
+  if (META.done[id]) return;
+  const g = GOALS.find(x => x.id === id); if (!g) return;
+  META.done[id] = true; META.ins += g.ins; if (G) G.insRun += g.ins; saveMeta();
+  setTimeout(() => toast(`Défi réussi : ${g.name}. +${g.ins} insignes`, 3800), 400);
+}
 const PERKS = {
   tresor:   { name: 'Trésor de guerre', desc: r => `+${100 * r} d'argent au départ`, cost: [4, 8, 14] },
   reserve:  { name: 'Sacs de réserve', desc: r => `Bastion : +${10 * r} % de PV max`, cost: [5, 10, 18] },
@@ -290,8 +356,8 @@ const PERK_ORDER = Object.keys(PERKS);
 
 const PATHS_DEF = [
   { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
-  { id: 'S', name: 'Sud',  opens: 6,  wp: [[6,13],[6,11],[1,11],[1,8],[4,8],[4,6]] },
-  { id: 'E', name: 'Est',  opens: 13, wp: [[9,11],[8,11],[8,9],[7,9],[7,7],[6,7],[6,6],[4,6]] },
+  { id: 'S', name: 'Sud',  opens: 4,  wp: [[6,13],[6,11],[1,11],[1,8],[4,8],[4,6]] },
+  { id: 'E', name: 'Est',  opens: 9,  wp: [[9,11],[8,11],[8,9],[7,9],[7,7],[6,7],[6,6],[4,6]] },
 ];
 
 // Emplacements de tours : les seules cases où une tour peut être posée
@@ -394,13 +460,13 @@ const DEF_ORDER = ['wire','mine','ditch','mgnest','sniper','mortar','flamer'];
 // Bestiaire
 const ZT = {
   walker:  { name:'Rôdeur',     hp:30,   speed:20, dmg:6,  armor:0, reward:5,   r:7,  color:'#6f7d5c', from:1,  w:10 },
-  runner:  { name:'Coureur',    hp:20,   speed:46, dmg:5,  armor:0, reward:5,   r:6,  color:'#a3a97c', from:3,  w:6 },
-  crawler: { name:'Rampant',    hp:36,   speed:15, dmg:5,  armor:0, reward:6,   r:6,  color:'#5e5b48', from:5,  w:4, noWire:true },
-  bloater: { name:'Bouffi',     hp:75,   speed:15, dmg:0,  armor:0, reward:10,  r:11, color:'#9ca24c', from:7,  w:2.5, boom:50 },
-  armored: { name:'Blindé',     hp:110,  speed:18, dmg:8,  armor:4, reward:11,  r:8,  color:'#4c5866', from:8,  w:3 },
-  spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:10,  r:7,  color:'#6fae4a', from:9,  w:2, spit:12, spitRange:100, spitCd:2 },
-  screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:11,  r:7,  color:'#cfc6b2', from:11, w:1.5, aura:70 },
-  brute:   { name:'Brute',      hp:700,  speed:13, dmg:22, armor:3, reward:60,  r:14, color:'#7a3d2c', from:12, w:0.6 },
+  runner:  { name:'Coureur',    hp:20,   speed:46, dmg:5,  armor:0, reward:5,   r:6,  color:'#a3a97c', from:2,  w:6 },
+  crawler: { name:'Rampant',    hp:36,   speed:15, dmg:5,  armor:0, reward:6,   r:6,  color:'#5e5b48', from:4,  w:4, noWire:true },
+  bloater: { name:'Bouffi',     hp:75,   speed:15, dmg:0,  armor:0, reward:10,  r:11, color:'#9ca24c', from:5,  w:2.5, boom:50 },
+  armored: { name:'Blindé',     hp:110,  speed:18, dmg:8,  armor:4, reward:11,  r:8,  color:'#4c5866', from:6,  w:3 },
+  spitter: { name:'Cracheur',   hp:55,   speed:19, dmg:0,  armor:0, reward:10,  r:7,  color:'#6fae4a', from:7,  w:2, spit:12, spitRange:100, spitCd:2 },
+  screamer:{ name:'Hurleur',    hp:70,   speed:22, dmg:5,  armor:0, reward:11,  r:7,  color:'#cfc6b2', from:8,  w:1.5, aura:70 },
+  brute:   { name:'Brute',      hp:700,  speed:13, dmg:22, armor:3, reward:60,  r:14, color:'#7a3d2c', from:9,  w:0.6 },
   boss:    { name:'Abomination',hp:1200, speed:9,  dmg:40, armor:8, reward:400, r:22, color:'#3f2643', from:999, w:0, boss:true },
 };
 
@@ -414,21 +480,25 @@ const ZTIP = {
   brute:   'énorme et résistant. Concentrez le feu.',
 };
 const hpMult  = w => Math.pow(1.07, w - 1) * Math.pow(1.06, Math.max(0, w - 15));
-const dmgMult = w => (1 + 0.05 * (w - 1)) * (G ? DIFF[G.diff].dmg : 1);
-const rewMult = w => (1 + 0.08 * (w - 1)) * (G ? DIFF[G.diff].rew * (1 + 0.15 * cardN('chasse')) : 1) * (1 + 0.05 * perk('recup'));
+/* Rythme : une partie se gagne en 25 vagues. Chaque vague vaut 1,6 vague de l'ancienne échelle de 40 :
+   difficulté, taille des hordes et revenus suivent eff(w). */
+const PACE = 1.6;
+const eff = w => 1 + (w - 1) * PACE;
+const dmgMult = w => (1 + 0.05 * (eff(w) - 1)) * (G ? DIFF[G.diff].dmg : 1);
+const rewMult = w => PACE * (1 + 0.08 * (eff(w) - 1)) * (G ? DIFF[G.diff].rew * (1 + 0.15 * cardN('chasse')) * G.mz.money : 1) * (1 + 0.05 * perk('recup'));
 
 /* Difficulté : la horde suit une courbe fixe, identique à chaque partie.
-   Victoire à la vague 40, puis mode infini. */
-const VICTORY = 40;
+   Victoire à la vague 25 (rythme ×1,6, voir eff), puis mode infini. */
+const VICTORY = 25;
 const DIFF = {
   facile:    { name: 'Facile',    hp: 0.38, dmg: 0.85, rew: 1.1,  ins: 0.5, desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
-  normal:    { name: 'Normal',    hp: 0.63, dmg: 1,    rew: 1,    ins: 1,   desc: "L'équilibre prévu : la vague 40 se mérite." },
+  normal:    { name: 'Normal',    hp: 0.63, dmg: 1,    rew: 1,    ins: 1,   desc: "L'équilibre prévu : la victoire se mérite." },
   cauchemar: { name: 'Cauchemar', hp: 0.76, dmg: 1.2,  rew: 0.95, ins: 1.5, desc: 'Pour ceux qui ont déjà gagné en Normal.' },
 };
 const DIFF_ORDER = ['facile', 'normal', 'cauchemar'];
 
 /* Cartes de ravitaillement : une parmi 3 toutes les 5 vagues, valables pour la partie */
-const DRAFT_EVERY = 5;
+const DRAFT_EVERY = 3;
 const CAT_COL = { Tir: '#c8b273', Appui: '#7fa6c9', 'Génie': '#9cc27a', Fortification: '#b9a3d6', 'Économie': '#e0b356', Bonus: '#e3a08f' };
 const CARDS = {
   perf:    { name: 'Munitions perforantes', cat: 'Tir', max: 2, desc: "Balles de l'homme : traversent 1 cible de plus" },
@@ -450,7 +520,7 @@ const CARDS = {
   radio:   { name: 'Opérateur radio', cat: 'Bonus', max: 2, desc: 'Recharge des bonus -25 %', req: () => ['superTir', 'arty', 'repair'].some(id => G.bonus[id]) },
 };
 const cardN = id => (G && G.cards && G.cards[id]) || 0;
-const ravitAmount = () => Math.round((150 + 40 * G.wave) * DIFF[G.diff].rew);
+const ravitAmount = () => Math.round((150 + 40 * eff(G.wave)) * DIFF[G.diff].rew);
 const cardDesc = id => id === 'ravit' ? `+${fmt(ravitAmount())} d'argent tout de suite` : CARDS[id].desc;
 // statistiques des défenses modifiées par les cartes (mises en cache)
 let EFF = {};
@@ -541,6 +611,8 @@ function freshState() {
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
     diff: 'normal', won: false, next: null, waveFrom: 1, prime: 0, report: null, hp0: 0, defNo: {},
     cards: {}, draft: null, draftsDue: 0, nextDraft: DRAFT_EVERY, rerolls: 0, insRun: 0, slotMenu: null,
+    menace: 0, daily: null, mz: makeMz(0, null), draftN: 0, prevBest: 0,
+    trk: { sniper: false, repaired: false, early: 0, streak: 0 }, breach: { path: {}, type: {} }, bossLeft: 0,
     st: { hero: newSt(), arty: newSt(), wire: newSt(), claymore: newSt(), mg: newSt(), flame: newSt(), rockets: newSt() },
   };
 }
@@ -661,11 +733,12 @@ const DIR = { K: 14, beta: 0.9, gamma: 0.05, ramp: 0.2, pMin: 0.85, pMax: 1.15 }
 const refPower = w => 85 + 5.5 * w * w;
 function hordeBudget(w) {
   G.power = firepower();
-  return DIR.K * Math.pow(refPower(w), DIR.beta) * (1 + DIR.gamma * (w - 1)) * (1 + DIR.ramp * Math.max(0, w - 10)) * DIFF[G.diff].hp * G.pressure;
+  const e = eff(w);
+  return DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * DIFF[G.diff].hp * G.mz.horde * G.pressure;
 }
 // Puissance repère affichée au joueur pour la difficulté choisie
-const advisedPower = w => refPower(w) * Math.pow(DIFF[G.diff].hp / DIFF.cauchemar.hp, 1 / DIR.beta);
-const bunkerMax = () => Math.round(BUNKER_LV[G.bunkerLv].hp * (1 + 0.2 * cardN('sacs')) * (1 + 0.1 * perk('reserve')));
+const advisedPower = w => refPower(eff(w)) * Math.pow(DIFF[G.diff].hp * G.mz.horde / DIFF.cauchemar.hp, 1 / DIR.beta);
+const bunkerMax = () => Math.round(BUNKER_LV[G.bunkerLv].hp * (1 + 0.2 * cardN('sacs')) * (1 + 0.1 * perk('reserve')) * G.mz.hp);
 const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor + 2 * cardN('blind');
 
 /* =========================================================
@@ -674,9 +747,11 @@ const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor + 2 * cardN('blind');
 const openPaths = w => PATHS.filter(p => p.opens <= w);
 
 function buildWave(w) {
-  const count = Math.round(12 + w * 5 + 0.35 * Math.pow(w, 1.7));
+  const rand = G && G.daily ? seeded(G.daily + ':v' + w) : Math.random;
+  const we = eff(w);
+  const count = Math.round(12 + we * 5 + 0.35 * Math.pow(we, 1.7));
   const types = Object.keys(ZT).filter(k => !ZT[k].boss && ZT[k].from <= w);
-  const weight = k => k === 'walker' ? Math.max(3, 10 - w * 0.3) : ZT[k].w;
+  const weight = k => k === 'walker' ? Math.max(3, 10 - we * 0.3) : ZT[k].w;
   const tot = types.reduce((a, k) => a + weight(k), 0);
   const list = [];
   // les nouveaux types sont présentés en petit groupe
@@ -688,22 +763,22 @@ function buildWave(w) {
   }
   // mélange
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
-  if (w >= 12 && w % 4 === 0) for (let i = 0; i < 1 + Math.floor((w - 12) / 8); i++) list.push('brute');
+  if (we >= 12 && w % 3 === 0) for (let i = 0; i < 1 + Math.floor((we - 12) / 8); i++) list.push('brute');
   const paths = openPaths(w);
   // hordes : paquets serrés sur un chemin, séparés par de courtes accalmies
-  const out = [], pause = Math.max(1.6, 5.5 - w * 0.13);
+  const out = [], pause = Math.max(1.6, 5.5 - we * 0.13);
   let i = 0, h = 0;
   while (i < list.length) {
-    const size = Math.min(list.length - i, 5 + Math.floor(w * 0.7) + Math.floor(rand() * 4));
+    const size = Math.min(list.length - i, 5 + Math.floor(we * 0.7) + Math.floor(rand() * 4));
     const p = paths[h % paths.length].idx;
     for (let j = 0; j < size; j++, i++) out.push({ type: list[i], path: p, gap: j === size - 1 ? pause * (0.8 + rand() * 0.4) : 0.1 + rand() * 0.15 });
     h++;
   }
-  if (w % 10 === 0) for (let k = 0; k < w / 10; k++) out.push({ type: 'boss', path: paths[k % paths.length].idx, gap: 2.5 });
+  if (w % 6 === 0) for (let k = 0; k < w / 6 + G.mz.boss; k++) out.push({ type: 'boss', path: paths[k % paths.length].idx, gap: 2.5 });
   return out;
 }
 
-const earlyPrime = () => Math.round((50 + 15 * (G.wave + 1)) * 0.5 * DIFF[G.diff].rew);
+const earlyPrime = () => Math.round((50 + 15 * eff(G.wave + 1)) * 0.5 * PACE * DIFF[G.diff].rew * G.mz.money);
 const canEarly = () => G.mode === 'wave' && !G.queue.length && !G.paused;
 function statSources() {
   const out = [{ name: "L'homme", st: G.st.hero }];
@@ -728,10 +803,10 @@ function waveSummary(q, w) {
 }
 function launchWave(early) {
   const q = G.next || buildWave(G.wave + 1);
-  if (early) { const pr = earlyPrime(); G.money += pr; G.prime += pr; floatText(BX, BY - 34, '+' + fmt(pr)); }
+  if (early) { const pr = earlyPrime(); G.money += pr; G.prime += pr; floatText(BX, BY - 34, '+' + fmt(pr)); if (++G.trk.early >= 10) completeGoal('early10'); }
   G.wave++;
   if (!early) {
-    G.waveFrom = G.wave; G.prime = 0; G.hp0 = G.hp; G.report = null;
+    G.waveFrom = G.wave; G.prime = 0; G.hp0 = G.hp; G.report = null; G.breach = { path: {}, type: {} };
     G.waveDmg = 0; G.depthSum = 0; G.depthN = 0; G.waveCount = 0; G.killed = 0;
     statSources().forEach(s => { s.st.wd = 0; s.st.wk = 0; });
     G.placing = null; G.selected = null; G.slotMenu = null;
@@ -750,7 +825,7 @@ function launchWave(early) {
     `${q.length} zombies · ${S0.paths.length > 1 ? 'routes' : 'route'} ${S0.paths.join(', ')}` + (np ? ` · la route ${np.name} s'ouvre` : '') + (S0.boss ? ' · Abomination' : '') + (G.wave === VICTORY && !G.won ? ' · dernière avant la victoire' : ''), true, 2300);
   const fresh = Object.keys(ZTIP).filter(k => ZT[k].from === G.wave);
   fresh.forEach((k, i) => setTimeout(() => toast(`Nouveau : ${ZT[k].name}, ${ZTIP[k]}`, 4000), 2600 + i * 4200));
-  if (G.wave % 10 === 0) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2600 + fresh.length * 4200);
+  if (G.wave % 6 === 0) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2600 + fresh.length * 4200);
   SND.play('horn');
   G.panelOpen = false;
   renderAll();
@@ -758,7 +833,7 @@ function launchWave(early) {
 
 function endWave() {
   let bonus = 0;
-  for (let w = G.waveFrom; w <= G.wave; w++) bonus += 50 + 15 * w;
+  for (let w = G.waveFrom; w <= G.wave; w++) bonus += (50 + 15 * eff(w)) * PACE * G.mz.money;
   bonus = Math.round(bonus * DIFF[G.diff].rew);
   G.money += bonus;
   // le directeur mesure jusqu'où les zombies sont arrivés avant de mourir et ajuste la horde suivante
@@ -784,8 +859,22 @@ function endWave() {
   if (!G.won && G.wave >= VICTORY) { G.won = true; victory = true; }
   recordBest();
   // insignes permanents : selon les vagues tenues et la difficulté
-  const ins = DIFF[G.diff].ins * (G.wave - G.waveFrom + 1 + (victory ? 10 : 0));
+  const ins = DIFF[G.diff].ins * (1 + 0.25 * G.menace) * (PACE * (G.wave - G.waveFrom + 1) + (victory ? 16 : 0));
   META.ins += ins; G.insRun += ins; saveMeta();
+  G.trk.streak = G.waveDmg > 0.5 ? 0 : G.trk.streak + (G.wave - G.waveFrom + 1);
+  if (G.trk.streak >= 8) completeGoal('perfect8');
+  if (G.wave >= 8 && WEAPONS.filter(x => G.weapons[x.id].owned).length === 1) completeGoal('glock8');
+  if (victory) {
+    const hard = G.diff !== 'facile';
+    if (hard) completeGoal('win_n');
+    if (G.diff === 'cauchemar') completeGoal('win_c');
+    if (hard && !G.trk.sniper) completeGoal('no_sniper');
+    if (hard && !G.trk.repaired) completeGoal('no_repair');
+    if (G.menace >= 3) completeGoal('menace3');
+    if (G.daily) completeGoal('daily');
+    if (hard && !G.daily && G.menace >= META.menace && META.menace < MENACE.length) { META.menace = G.menace + 1; saveMeta(); setTimeout(() => toast(`Menace ${META.menace} débloquée : ${MENACE[META.menace - 1].name}`, 3800), 4600); }
+    if (G.daily) recordDaily();
+  }
   while (G.wave >= G.nextDraft) { G.draftsDue++; G.nextDraft += DRAFT_EVERY; }
   if (G.draftsDue > 0 && !G.draft) makeDraft(false);
   const np = PATHS.find(p => p.opens === G.wave + 1 && G.wave + 1 > 1);
@@ -800,7 +889,8 @@ function endWave() {
 function makeDraft(reroll) {
   const pool = Object.keys(CARDS).filter(id => cardN(id) < CARDS[id].max && (!CARDS[id].req || CARDS[id].req()));
   const n = perk('large') ? 4 : 3, pick = [];
-  while (pick.length < n && pool.length) pick.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
+  const r = G.daily ? seeded(G.daily + ':c' + G.draftN + ':' + G.rerolls) : Math.random;
+  while (pick.length < n && pool.length) pick.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
   G.draft = pick;
   if (reroll) showOverlay('draft');
 }
@@ -809,7 +899,7 @@ function pickCard(id) {
   const oldMax = bunkerMax();
   let msg = CARDS[id].desc;
   if (id === 'ravit') { const a = ravitAmount(); G.money += a; msg = `+${fmt(a)} d'argent`; }
-  G.cards[id] = cardN(id) + 1; EFF = {};
+  G.cards[id] = cardN(id) + 1; EFF = {}; G.draftN++;
   if (id === 'sacs') G.hp += bunkerMax() - oldMax;
   toast(`${CARDS[id].name} : ${msg}`, 2200);
   G.draft = null; G.draftsDue = Math.max(0, G.draftsDue - 1);
@@ -826,8 +916,8 @@ function spawnZombie(type, pi) {
   const Z = ZT[type], w = G.wave, p = PATHS[pi];
   const z = {
     type, path: p, d: 0, off: (rand() - 0.5) * 22,
-    hp: Z.hp * G.hpScale, maxHp: Z.hp * G.hpScale, armor: Z.boss ? Math.min(8, 2 + Math.floor(w / 5)) : Z.armor,
-    speed: Z.speed * (0.9 + rand() * 0.2), dmg: Z.dmg * dmgMult(w),
+    hp: Z.hp * G.hpScale, maxHp: Z.hp * G.hpScale, armor: Z.boss ? Math.min(8, 2 + Math.floor(eff(w) / 5)) : Z.armor,
+    speed: Z.speed * (0.9 + rand() * 0.2) * G.mz.speed, dmg: Z.dmg * dmgMult(w),
     reward: Math.round(Z.reward * rewMult(w)), r: Z.r, atkT: 0.6, walk: rand() * 10,
     burnT: 0, burnDps: 0, hitT: 0, dead: false, x: 0, y: 0, ang: 0, atBase: false,
   };
@@ -851,6 +941,7 @@ function kill(z, reward) {
   if (!z.counted) { z.counted = true; G.depthSum += Math.min(1, z.d / z.path.total); G.depthN++; }
   if (reward) { G.money += z.reward; if (z.reward >= 100) floatText(z.x, z.y - 10, '+' + fmt(z.reward)); }
   G.killed++;
+  if (z.type === 'boss' && reward && SRC && (SRC === G.st.flame || (SRC === G.st.hero && WBY[G.equipped].kind === 'flame') || G.defs.some(d => d.type === 'flamer' && d.st === SRC))) completeGoal('boss_flame');
   if (G.focus === z) G.focus = null;
   const Z = ZT[z.type];
   blood(z.x, z.y, z.r, z.type === 'bloater' || z.type === 'spitter');
@@ -860,9 +951,10 @@ function kill(z, reward) {
   }
 }
 
-function bunkerHit(dmg) {
+function bunkerHit(dmg, z) {
   const eff = Math.max(dmg * 0.2, dmg - bunkerArmor());
   G.hp -= eff; G.waveDmg += eff; G.shake = Math.min(6, G.shake + 1.2);
+  if (z) { const B = G.breach; B.path[z.path.idx] = (B.path[z.path.idx] || 0) + eff; B.type[z.type] = (B.type[z.type] || 0) + eff; }
   SND.play('thud');
   if (G.hp <= 0) { G.hp = 0; gameOver(); }
 }
@@ -921,13 +1013,13 @@ function updateZombies(dt) {
       if (z.atkT <= 0) {
         if (Z.boom) {
           explodeFx(z.x, z.y, 40); SND.play('boom');
-          bunkerHit(Z.boom * dmgMult(G.wave)); kill(z, false);
+          bunkerHit(Z.boom * dmgMult(G.wave), z); kill(z, false);
           if (G.mode !== 'wave') return;
         } else if (Z.spit) {
           z.atkT = Z.spitCd;
-          G.projs.push({ type:'spit', sx:z.x, sy:z.y, tx:BX, ty:BY, t:0, dur: Math.hypot(BX - z.x, BY - z.y) / 150, dmg: Z.spit * dmgMult(G.wave), h0: 12, h1: roofH() * 0.5 + 8 });
+          G.projs.push({ type:'spit', sx:z.x, sy:z.y, tx:BX, ty:BY, t:0, dur: Math.hypot(BX - z.x, BY - z.y) / 150, dmg: Z.spit * dmgMult(G.wave), h0: 12, h1: roofH() * 0.5 + 8, from: z });
         } else {
-          z.atkT = 1; bunkerHit(z.dmg);
+          z.atkT = 1; bunkerHit(z.dmg, z);
           if (G.mode !== 'wave') return;
         }
       }
@@ -1134,7 +1226,7 @@ function updateProjs(dt) {
     }
     if (p.t >= p.dur) {
       p.done = true;
-      if (p.type === 'spit') { bunkerHit(p.dmg); if (G.mode !== 'wave') return; for (let i = 0; i < 6; i++) part(BX + (rand() - 0.5) * 20, BY + (rand() - 0.5) * 20, (rand() - 0.5) * 40, (rand() - 0.5) * 40, 0.4, '#8fd45a', 2, 'spark'); }
+      if (p.type === 'spit') { bunkerHit(p.dmg, p.from); if (G.mode !== 'wave') return; for (let i = 0; i < 6; i++) part(BX + (rand() - 0.5) * 20, BY + (rand() - 0.5) * 20, (rand() - 0.5) * 40, (rand() - 0.5) * 40, 0.4, '#8fd45a', 2, 'spark'); }
       else { SRC = p.src || null; explode(p.tx, p.ty, p.r, p.dmg, p.ap, p.burn, false); SRC = null; }
     }
   }
@@ -1195,7 +1287,7 @@ function useBonus(id) {
   const L = BONUS[id].levels[G.bonus[id] - 1];
   if (id === 'arty') { G.aim = G.aim === 'arty' ? null : 'arty'; if (G.aim) toast('Touchez la zone à pilonner.', 2200); return; }
   if (id === 'superTir') { G.superT = L.dur; G.superMult = L.mult; toast(`Super tir : dégâts x${L.mult}`, 1300); SND.play('horn'); }
-  if (id === 'repair') { const add = bunkerMax() * L.pct; G.hp = Math.min(bunkerMax(), G.hp + add); floatText(BX, BY - 20, '+' + fmt(add) + ' PV'); SND.play('click'); }
+  if (id === 'repair') { G.trk.repaired = true; const add = bunkerMax() * L.pct; G.hp = Math.min(bunkerMax(), G.hp + add); floatText(BX, BY - 20, '+' + fmt(add) + ' PV'); SND.play('click'); }
   G.bcd[id] = bonusCd(id);
 }
 function artyStrike(x, y) {
@@ -1209,7 +1301,10 @@ function artyStrike(x, y) {
 
 function gameOver() {
   if (G.mode === 'over') return;
+  const boss = G.zombies.filter(z => !z.dead && z.type === 'boss').sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+  G.bossLeft = boss ? boss.hp / boss.maxHp : 0;
   G.mode = 'over';
+  if (G.daily) { recordDaily(); completeGoal('daily'); }
   recordBest();
   try { localStorage.removeItem(SKEY); } catch (e) {}
   explodeFx(BX, BY, 70, true); G.shake = 10; SND.play('boom');
@@ -1333,31 +1428,78 @@ function loadBest() {
   const b = {}; DIFF_ORDER.forEach(k => b[k] = { w: 0, won: false });
   try {
     const j = JSON.parse(localStorage.getItem(BKEY2) || 'null');
-    if (j) DIFF_ORDER.forEach(k => { if (j[k]) b[k] = { w: j[k].w || 0, won: !!j[k].won }; });
-    else { const old = parseInt(localStorage.getItem(BKEY) || '0', 10) || 0; b.normal.w = old; }
+    if (j) DIFF_ORDER.forEach(k => { if (j[k]) b[k] = { w: j[k].w || 0, won: !!j[k].won, m: j[k].m || 0 }; });
   } catch (e) {}
   return b;
 }
 function recordBest() {
+  if (G.daily) return;
   const r = G.best[G.diff];
   if (G.wave > r.w) r.w = G.wave;
-  if (G.won) r.won = true;
+  if (G.won) { r.won = true; r.m = Math.max(r.m || 0, G.menace); }
   try { localStorage.setItem(BKEY2, JSON.stringify(G.best)); } catch (e) {}
 }
-const recText = b => DIFF_ORDER.filter(k => b[k].w > 0).map(k => `${DIFF[k].name} : vague ${b[k].w}${b[k].won ? ' (victoire)' : ''}`).join(' · ');
+const recText = b => DIFF_ORDER.filter(k => b[k].w > 0).map(k => `${DIFF[k].name} : vague ${b[k].w}${b[k].won ? ' (victoire' + (b[k].m ? ', Menace ' + b[k].m : '') + ')' : ''}`).join(' · ');
+function recordDaily() {
+  const key = G.daily; if (META.daily && META.daily.date > key) return;
+  const cur = META.daily && META.daily.date === key ? META.daily : { date: key, best: 0, won: false };
+  cur.best = Math.max(cur.best, G.wave); cur.won = cur.won || G.won; META.daily = cur; saveMeta();
+}
+function shareText() {
+  const what = G.daily ? `Défi du ${frDate(G.daily)} (${dailyMod(G.daily).name})` : `${DIFF[G.diff].name}${G.menace ? ', Menace ' + G.menace : ''}`;
+  return `Dernier Bastion · ${what} : ${G.won ? 'victoire, ' : ''}vague ${G.wave}/${VICTORY}. https://renanmoreau2-create.github.io/jeu-renan/`;
+}
+function shareResult() {
+  const t = shareText();
+  if (navigator.share) { navigator.share({ text: t }).catch(() => {}); return; }
+  try { navigator.clipboard.writeText(t).then(() => toast('Résultat copié : collez-le où vous voulez.', 2600), () => toast(t, 5000)); } catch (e) { toast(t, 5000); }
+}
+// conseils selon ce qui a percé
+const BREACH_TIP = {
+  walker: 'plus de mitrailleuses et des barbelés sur cette route', runner: 'des barbelés pour casser leur vitesse',
+  crawler: 'les Rampants passent sous les barbelés : mines et fossés', bloater: 'abattez les Bouffis loin du bastion : portée, tireurs d\'élite',
+  armored: 'contre les Blindés : perforation, 12,7, Hécate', spitter: 'les Cracheurs tirent de loin : de la portée près du bastion',
+  screamer: 'le Hurleur renforce les autres : priorité de tir sur lui', brute: 'contre les Brutes : mines, mortier, priorité « Plus fort »',
+  boss: "contre l'Abomination : frappe d'artillerie et priorité « Plus fort »",
+};
+function defeatHtml() {
+  const B = G.breach, paths = Object.keys(B.path), types = Object.keys(B.type).sort((a, b) => B.type[b] - B.type[a]);
+  const tot = paths.reduce((a, p) => a + B.path[p], 0) || 1, topP = paths.sort((a, b) => B.path[b] - B.path[a])[0];
+  let h = '';
+  // presque gagné : des faits réels seulement
+  const lines = [];
+  if (!G.daily) {
+    if (G.wave > G.prevBest && G.prevBest > 0) lines.push(`Nouveau record en ${DIFF[G.diff].name} !`);
+    else if (G.prevBest - G.wave > 0 && G.prevBest - G.wave <= 3) lines.push(`À ${G.prevBest - G.wave} vague${G.prevBest - G.wave > 1 ? 's' : ''} de votre record (vague ${G.prevBest}).`);
+  }
+  if (!G.won && VICTORY - G.wave <= 5) lines.push(`À ${VICTORY - G.wave} vague${VICTORY - G.wave > 1 ? 's' : ''} de la victoire.`);
+  if (G.bossLeft > 0 && G.bossLeft <= 0.35) lines.push(`L'Abomination n'avait plus que ${Math.max(1, Math.round(G.bossLeft * 100))} % de ses PV.`);
+  if (lines.length) h += `<div class="near">${lines.join('<br>')}</div>`;
+  if (topP !== undefined && types.length) {
+    h += `<div class="why"><b>Ce qui a percé</b> : surtout la route ${PATHS[topP].name} (${Math.round(B.path[topP] / tot * 100)} % des dégâts), ${types.slice(0, 2).map(k => ZT[k].name + (k === 'boss' ? '' : 's')).join(' et ')}.<br>Piste : ${BREACH_TIP[types[0]]}.</div>`;
+  }
+  // gradient vers le but : le prochain avantage du Quartier général
+  const nxt = PERK_ORDER.map(id => ({ id, r: META.perks[id] || 0 })).filter(x => x.r < PERKS[x.id].cost.length).map(x => ({ ...x, c: PERKS[x.id].cost[x.r] })).sort((a, b) => a.c - b.c)[0];
+  if (nxt) { const miss = Math.ceil(nxt.c - META.ins); h += `<div class="rec">${miss > 0 ? `Plus que <span class="ins">${miss} insigne${miss > 1 ? 's' : ''}</span> pour « ${PERKS[nxt.id].name} »` : `« ${PERKS[nxt.id].name} » est à votre portée au Quartier général`}.</div>`; }
+  return h;
+}
 function saveGame() {
   if (G.mode !== 'build') return;
   try {
-    localStorage.setItem(SKEY, JSON.stringify({ v:5, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
+    localStorage.setItem(SKEY, JSON.stringify({ v:6, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
       weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure,
-      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
+      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, menace:G.menace, daily:G.daily, trk:G.trk, draftN:G.draftN, prevBest:G.prevBest, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
       defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt })) }));
   } catch (e) {}
 }
-function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && (d.v === 4 || d.v === 5) ? d : null; } catch (e) { return null; } }
+function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v >= 4 && d.v <= 6 ? d : null; } catch (e) { return null; } }
 
-function newGame(fromSave, diff) {
+function newGame(fromSave, diff, opts) {
   G = freshState();
+  opts = opts || {};
+  G.daily = (fromSave && fromSave.daily) || opts.daily || null;
+  G.menace = G.daily ? 0 : (fromSave ? (fromSave.menace || 0) : clamp(opts.menace || 0, 0, META.menace));
+  G.mz = makeMz(G.menace, G.daily);
   G.diff = DIFF[(fromSave && fromSave.diff) || diff] ? ((fromSave && fromSave.diff) || diff) : 'normal';
   clearDecals();
   if (fromSave) {
@@ -1370,10 +1512,11 @@ function newGame(fromSave, diff) {
     if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
     d.defs.forEach(x => { if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; } });
     if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
+    if (d.trk) G.trk = Object.assign(G.trk, d.trk); G.draftN = d.draftN || 0; G.prevBest = d.prevBest || 0;
     G.cards = d.cards || {}; G.draft = d.draft || null; G.draftsDue = d.draftsDue || (G.draft ? 1 : 0); G.rerolls = d.rerolls || 0; G.insRun = d.insRun || 0;
     G.nextDraft = d.nextDraft || (Math.floor(G.wave / DRAFT_EVERY) + 1) * DRAFT_EVERY;
   } else {
-    G.money += 100 * perk('tresor'); G.rerolls = perk('relance');
+    G.money += 100 * perk('tresor'); G.rerolls = perk('relance'); G.prevBest = G.daily ? 0 : G.best[G.diff].w;
     if (perk('briefing')) { G.draftsDue = 1; makeDraft(false); }
   }
   EFF = {};
@@ -1383,7 +1526,7 @@ function newGame(fromSave, diff) {
   hideOverlay();
   renderAll();
   if (G.draft) showOverlay('draft');
-  toast(fromSave ? `Partie reprise (${DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : `${DIFF[G.diff].name}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse. L'arbre débloque, la carte améliore.`, 3200);
+  toast(fromSave ? `Partie reprise (${G.daily ? 'défi du jour' : DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : G.daily ? `Défi du ${frDate(G.daily)} : ${dailyMod(G.daily).name} (${dailyMod(G.daily).desc}). Sans avantages du Quartier général.` : `${DIFF[G.diff].name}${G.menace ? ' · Menace ' + G.menace : ''}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse.`, 3800);
 }
 
 /* =========================================================
@@ -1392,6 +1535,7 @@ function newGame(fromSave, diff) {
 function addDef(type, c, r, lv, spent) {
   const L = lv || 0;
   G.defNo[type] = (G.defNo[type] || 0) + 1;
+  if (type === 'sniper') G.trk.sniper = true;
   const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: L, spent: spent || placeCost(type), cd: 0, ang: -Math.PI / 2, flash: 0, on: 0,
     st: newSt(), no: G.defNo[type], tgt: type === 'sniper' ? 'strong' : 'first' };
   G.defs.push(d); G.defMap.set(c + ',' + r, d);
@@ -1501,7 +1645,7 @@ function act(a, ds) {
     case 'upB': { const lv = G.bonus[ds.id]; if (lv >= 1 && lv < 3 && spend(BONUS[ds.id].levels[lv].cost)) G.bonus[ds.id]++; break; }
     case 'useBonus': useBonus(ds.id); renderBonusBar(true); return;
     case 'modUp': { const m = MODULES[ds.id], lv = G.mods[ds.id]; if (lv >= 1 && lv < 3 && spend(m.levels[lv].cost)) G.mods[ds.id]++; break; }
-    case 'repair': { const k = repairRate(), miss = bunkerMax() - G.hp, cost = Math.ceil(miss / k), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * k); } break; }
+    case 'repair': { const k = repairRate(), miss = bunkerMax() - G.hp, cost = Math.ceil(miss / k), pay = Math.min(cost, Math.floor(G.money)); if (pay > 0) { G.trk.repaired = true; G.money -= pay; G.hp = Math.min(bunkerMax(), G.hp + pay * k); } break; }
     case 'card': pickCard(ds.id); return;
     case 'build': { const S = G.slotMenu; if (!S || S.def) break; if (S.pick !== ds.type) { S.pick = ds.type; break; } if (buildAt(ds.type, S.c, S.r)) G.slotMenu = null; break; }
     case 'closeSlot': if (G.slotMenu && G.slotMenu.def) G.selected = null; G.slotMenu = null; break;
@@ -1515,7 +1659,7 @@ function act(a, ds) {
     case 'startWave': G.gateTip = null; startWave(); return;
     case 'reroll': if (G.draft && G.rerolls > 0) { G.rerolls--; makeDraft(true); saveGame(); } return;
     case 'hq': showOverlay('hq'); return;
-    case 'perk': { const P = PERKS[ds.id], r = perk(ds.id); if (P && r < P.cost.length && META.ins >= P.cost[r]) { META.ins -= P.cost[r]; META.perks[ds.id] = r + 1; saveMeta(); } showOverlay('hq'); return; }
+    case 'perk': { const P = PERKS[ds.id], r = META.perks[ds.id] || 0; if (P && r < P.cost.length && META.ins >= P.cost[r]) { META.ins -= P.cost[r]; META.perks[ds.id] = r + 1; saveMeta(); } showOverlay('hq'); return; }
     case 'place': if (!G.unlocked[ds.type]) break; G.placing = G.placing === ds.type ? null : ds.type; G.selected = null; G.slotMenu = null; if (G.placing) G.panelOpen = false; break;
     case 'stopPlace': G.placing = null; break;
     case 'sellDef': sellSelected(); G.slotMenu = null; break;
@@ -1527,8 +1671,14 @@ function act(a, ds) {
     case 'tz': treeZoom(+ds.z); return;
     case 'tcenter': treeCenter(G.treeSel || ROOT); return;
     case 'new': showOverlay('diff'); return;
-    case 'newDiff': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, ds.d); return; }
-    case 'back': showOverlay(G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : G.draft ? 'draft' : 'victory'); return;
+    case 'newDiff': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, ds.d, { menace: META.menacePick || 0 }); return; }
+    case 'replay': { const o = { menace: G.menace, daily: G.daily ? todayKey() : null }; try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, G.daily ? 'normal' : G.diff, o); return; }
+    case 'daily': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, 'normal', { daily: todayKey() }); return; }
+    case 'dailyInfo': showOverlay('daily'); return;
+    case 'goals': showOverlay('goals'); return;
+    case 'mzPick': META.menacePick = clamp(+ds.l, 0, META.menace); saveMeta(); showOverlay('diff'); return;
+    case 'share': shareResult(); return;
+    case 'back': showOverlay(ds.to || (G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : G.draft ? 'draft' : 'victory')); return;
     case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); if (G.draft) showOverlay('draft'); return;
     case 'tgt': if (G.selected && TGT[ds.m]) G.selected.tgt = ds.m; break;
     case 'selDef': { const d = G.defs[+ds.i]; if (d) { G.selected = d; G.tab = 'def'; G.panelOpen = true; G.slotMenu = null; } break; }
@@ -1918,29 +2068,48 @@ function showOverlay(kind) {
       G.draft.map(id => { const C = CARDS[id], n = cardN(id); return `<button class="dcard" style="--c:${CAT_COL[C.cat]}" data-act="card" data-id="${id}"><span class="dk">${C.cat}</span><b>${C.name}</b><div class="dd">${cardDesc(id)}</div>${n && id !== 'ravit' ? `<div class="ds">Déjà prise ${n} fois · maximum ${C.max}</div>` : ''}</button>`; }).join('') +
       (G.rerolls > 0 ? `<button class="big alt" data-act="reroll">Relancer le tirage (${G.rerolls})</button>` : '');
   } else if (kind === 'hq') {
-    h += `<h2 style="color:var(--khaki)">Quartier général</h2><div class="sub">Insignes en réserve : <span class="ins">${fmt(META.ins)}</span>. Ils se gagnent à chaque vague tenue (x0,5 en Facile, x1,5 en Cauchemar, +10 à la victoire).</div>` +
-      PERK_ORDER.map(id => { const P = PERKS[id], r = perk(id), max = P.cost.length, c = P.cost[r];
+    h += `<h2 style="color:var(--khaki)">Quartier général</h2><div class="sub">Insignes en réserve : <span class="ins">${fmt(META.ins)}</span>. Ils se gagnent à chaque vague tenue (x0,5 en Facile, x1,5 en Cauchemar, bonus à la victoire et en Menace).</div>` +
+      PERK_ORDER.map(id => { const P = PERKS[id], r = META.perks[id] || 0, max = P.cost.length, c = P.cost[r];
         return `<div class="perk"><div class="pt"><b>${P.name}</b> ${pips(r, max)}<div class="note">${r ? 'Actuel : ' + P.desc(r) + '. ' : ''}${r < max ? (r ? 'Suivant : ' : '') + P.desc(r + 1) : 'Maximum atteint'}</div></div>` +
           (r < max ? `<button class="btn buy" data-act="perk" data-id="${id}" ${META.ins >= c ? '' : 'disabled'}>${c} insignes</button>` : '<span class="tag">Max</span>') + '</div>'; }).join('') +
       `<button class="big alt" data-act="back">Retour</button>`;
   } else if (kind === 'over') {
-    h += `<h2>Le bastion est tombé</h2><div class="sub">${DIFF[G.diff].name} : vous avez tenu jusqu'à la vague ${G.wave}${G.won ? ', après la victoire' : ` sur ${VICTORY}`}.</div>` + insLine() +
-      `<button class="big" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
+    const lab = G.daily ? `Défi du ${frDate(G.daily)}` : `${DIFF[G.diff].name}${G.menace ? ' · Menace ' + G.menace : ''}`;
+    h += `<h2>Le bastion est tombé</h2><div class="sub">${lab} : vague ${G.wave}${G.won ? ', après la victoire' : ` sur ${VICTORY}`}.</div>` + defeatHtml() + insLine() +
+      `<button class="big" data-act="replay">Rejouer · ${G.daily ? 'défi du jour' : DIFF[G.diff].name}</button>` +
+      `<div class="row2"><button class="big alt" data-act="new">Difficulté</button><button class="big alt" data-act="hq">Quartier général</button></div>` +
+      `<button class="big alt" data-act="share">Partager le résultat</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   } else if (kind === 'victory') {
-    h += `<h1>VICTOIRE</h1><div class="sub">Vague ${VICTORY} tenue en ${DIFF[G.diff].name}. Le bastion tient toujours.</div>` +
+    h += `<h1>VICTOIRE</h1><div class="sub">Vague ${VICTORY} tenue ${G.daily ? 'au défi du jour' : 'en ' + DIFF[G.diff].name + (G.menace ? ', Menace ' + G.menace : '')}. Le bastion tient toujours.</div>` +
       `<p>La partie peut continuer en mode infini : les hordes ne s'arrêtent plus, seul compte votre record.</p>` +
-      insLine() + `<button class="big" data-act="endless">Continuer en mode infini</button><button class="big alt" data-act="new">Nouvelle partie</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
+      insLine() + `<button class="big" data-act="endless">Continuer en mode infini</button><div class="row2"><button class="big alt" data-act="new">Nouvelle partie</button><button class="big alt" data-act="share">Partager</button></div>` +
+      (!G.daily && G.diff !== 'facile' && META.menace > G.menace ? `<div class="rec">Nouveau niveau de menace disponible au lancement d'une partie : ${MENACE[META.menace - 1].name}.</div>` : '') + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   } else if (kind === 'diff') {
     h += `<h2 style="color:var(--khaki)">Choisir la difficulté</h2><div class="sub">Victoire à la vague ${VICTORY}, puis mode infini.</div>` +
       DIFF_ORDER.map(k => `<button class="big diff ${k === 'normal' ? '' : 'alt'}" data-act="newDiff" data-d="${k}"><b>${DIFF[k].name}</b><span>${DIFF[k].desc}${best[k].w ? ` Record : vague ${best[k].w}${best[k].won ? ', victoire' : ''}.` : ''}</span></button>`).join('') +
+      (META.menace > 0 ? `<div class="rec" style="margin-top:12px">Niveau de menace</div><div class="mz">${Array.from({ length: META.menace + 1 }, (_, l) => `<button class="wchip ${(META.menacePick || 0) === l ? 'eq' : ''}" data-act="mzPick" data-l="${l}">${l ? 'M' + l : 'Aucune'}</button>`).join('')}</div>` +
+        `<div class="rec">${META.menacePick ? MENACE.slice(0, META.menacePick).map(x => x.desc).join(' · ') + ` · insignes +${25 * META.menacePick} %` : 'Sans contrainte supplémentaire.'}</div>` : '') +
       (save ? `<div class="rec">La partie en cours (vague ${save.wave + 1}) sera effacée.</div>` : '') +
       `<button class="big alt" data-act="back">Retour</button>`;
+  } else if (kind === 'daily') {
+    const key = todayKey(), M = dailyMod(key), D = META.daily && META.daily.date === key ? META.daily : null;
+    h += `<h2 style="color:var(--khaki)">Défi du ${frDate(key)}</h2><div class="sub">La même partie pour tout le monde aujourd'hui : mêmes vagues, même contrainte. Demain, un autre défi.</div>` +
+      `<div class="why"><b>Contrainte du jour</b> : ${M.name} (${M.desc}).<br>Difficulté Normal, sans les avantages du Quartier général. Les insignes gagnés comptent.</div>` +
+      (D ? `<div class="rec">Votre meilleur résultat aujourd'hui : vague ${D.best}${D.won ? ' (victoire)' : ''}.</div>` : '') +
+      (save ? `<div class="rec">La partie en cours (vague ${save.wave + 1}) sera effacée.</div>` : '') +
+      `<button class="big" data-act="daily">Lancer le défi du jour</button><button class="big alt" data-act="back" data-to="title">Retour</button>`;
+  } else if (kind === 'goals') {
+    const n = GOALS.filter(g => META.done[g.id]).length;
+    h += `<h2 style="color:var(--khaki)">Défis</h2><div class="sub">${n} sur ${GOALS.length} réussis. Chacun rapporte des insignes, une seule fois.</div>` +
+      GOALS.map(g => `<div class="goal ${META.done[g.id] ? 'ok' : ''}"><span class="gi">${META.done[g.id] ? 'Réussi · ' : ''}${g.name}</span><span class="gr">+${g.ins}</span></div>`).join('') +
+      `<button class="big alt" data-act="back" data-to="title">Retour</button>`;
   } else {
     h += `<h1>DERNIER BASTION</h1><div class="sub">Tenez le bastion. Aussi longtemps que possible.</div>` +
       `<p>Les hordes suivent les chemins jusqu'au bastion central. Tenez ${VICTORY} vagues pour gagner. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
-      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Toutes les 5 vagues, une carte de ravitaillement au choix change la partie. Entre les parties, les insignes gagnés achètent des avantages permanents au Quartier général.</p>` +
-      (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1}, ${DIFF[save.diff || 'normal'].name})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
-      `<button class="big alt" data-act="hq">Quartier général · ${fmt(META.ins)} insigne${META.ins >= 2 ? 's' : ''}</button>` +
+      `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Toutes les ${DRAFT_EVERY} vagues, une carte de ravitaillement au choix change la partie. Entre les parties, les insignes gagnés achètent des avantages permanents au Quartier général.</p>` +
+      (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1}, ${save.daily ? 'défi du jour' : DIFF[save.diff || 'normal'].name})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
+      `<button class="big alt" data-act="dailyInfo">Défi du jour${META.daily && META.daily.date === todayKey() ? ' · vague ' + META.daily.best : ''}</button>` +
+      `<div class="row2"><button class="big alt" data-act="hq">Quartier général · ${fmt(META.ins)}</button><button class="big alt" data-act="goals">Défis ${GOALS.filter(g => META.done[g.id]).length}/${GOALS.length}</button></div>` +
       (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   }
   o.innerHTML = h + '</div>';
@@ -2798,7 +2967,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, openSlotMenu, openDefMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, showOverlay, kill, PACE, eff, GOALS, MENACE, completeGoal, seeded, todayKey, dailyMod, defeatHtml, openSlotMenu, openDefMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
 };
 })();
 </script>

@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.0)
+# DERNIER BASTION — document de conception (V2.1)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -12,7 +12,7 @@ Titre provisoire. Toutes les valeurs d'équilibrage sont regroupées en tête du
 2. **Vague** : les zombies sortent des bords de la carte et suivent les chemins jusqu'au bunker. L'homme tire automatiquement sur la cible la plus avancée. Un appui sur un zombie force la cible.
 3. **Récompense** : chaque zombie tué rapporte de l'argent, plus une prime de fin de vague.
 4. **Escalade** : plus de zombies, plus résistants, plus variés, et de nouveaux chemins s'ouvrent.
-5. **Victoire** : tenir la vague 40. La partie peut continuer en mode infini.
+5. **Victoire** : tenir la vague 25 (V2.1, auparavant 40). La partie peut continuer en mode infini.
 6. **Défaite** : les points de vie du bunker tombent à zéro. Le record est conservé par difficulté, et la partie est sauvegardée à chaque début de préparation.
 
 Choix de conception (référence : boucle classique du genre et principes de Defender's Quest) :
@@ -27,8 +27,8 @@ Grille de 9 × 13 cases, bunker au centre.
 | Chemin | Entrée | Longueur | Ouverture |
 |---|---|---|---|
 | Nord | bord haut | 14 cases, en S | vague 1 |
-| Sud | bord bas | 14 cases, en S | vague 6 |
-| Est | bord droit, en bas | 10 cases, flanc court | vague 13 |
+| Sud | bord bas | 14 cases, en S | vague 4 |
+| Est | bord droit, en bas | 10 cases, flanc court | vague 9 |
 
 - Les **pièges** (barbelés, mines, fossés) se posent n'importe où **sur** le chemin.
 - Les **tours** se posent **uniquement sur 10 emplacements balisés** (plateformes en béton) : 4 sur le chemin Nord, 3 sur le Sud, 2 sur l'Est et 1 au pied du bunker. Placer une tour devient un choix tactique : quel type sur quel emplacement, et lequel garder libre pour plus tard.
@@ -75,6 +75,46 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 nonies. Changement V2.1 : donner envie de rejouer
+
+**Demande de Renan** : rendre le jeu plus « addictif », avec des leviers appuyés sur des études. Les cinq leviers proposés ont été ajoutés.
+
+**Garde-fous retenus.** Aucune série quotidienne punie si on la rate, aucun compte à rebours pour créer la peur de manquer, aucune jauge d'énergie, aucun tirage payant. Les messages de « presque gagné » n'affichent que des faits réels de la partie. Le but est l'envie de rejouer, pas la compulsion.
+
+**1. Une partie plus courte : victoire à la vague 25.** Une victoire à 40 vagues demandait une longue session ; une partie courte se relance plus facilement.
+- Chaque vague vaut 1,6 vague de l'ancienne échelle (`eff(w) = 1 + 1,6 (w - 1)`). La difficulté, la taille des hordes, les dégâts et les revenus suivent cette échelle : la vague 25 correspond à l'ancienne vague 39.
+- Routes : Sud à la vague 4, Est à la vague 9. Abomination toutes les 6 vagues (une de plus toutes les 6). Brutes toutes les 3 vagues à partir de la vague 9. Carte de ravitaillement toutes les 3 vagues.
+- Nouveaux records (les anciens étaient comptés sur 40 vagues).
+
+**2. Un écran de défaite qui apprend quelque chose et relance.**
+- Ce qui a percé : la route qui a fait le plus de dégâts au bastion (en %) et les deux types de zombies en cause, avec une piste concrète selon le type.
+- Les « presque » réels : nouveau record, écart avec le record s'il est de 3 vagues ou moins, vagues restantes avant la victoire s'il en reste 5 ou moins, PV restants de l'Abomination s'il lui en restait moins de 35 %.
+- Le prochain avantage du Quartier général et le nombre d'insignes qui manquent (effet de gradient vers le but).
+- « Rejouer » en un appui avec les mêmes réglages ; « Difficulté », « Quartier général » et « Partager » à côté.
+
+**3. Niveaux de menace (sur le modèle de l'Ascension de Slay the Spire et de la Chaleur de Hades).** Cinq contraintes cumulées, débloquées une à une en gagnant au niveau précédent (Normal ou Cauchemar) :
+
+| Niveau | Contrainte |
+|---|---|
+| 1 | zombies 10 % plus rapides |
+| 2 | PV du bastion -15 % |
+| 3 | argent -10 % |
+| 4 | PV des hordes +12 % |
+| 5 | une Abomination de plus à chaque vague de boss |
+
+Insignes : +25 % par niveau. Le niveau se choisit sur l'écran de difficulté ; les records gardent le plus haut niveau gagné.
+
+**4. Dix défis secondaires**, récompensés une seule fois en insignes (5 à 20) : gagner en Normal, en Cauchemar, sans tireur d'élite, sans réparer le bastion, en Menace 3 ; achever une Abomination au lance-flammes ; appeler 10 vagues en avance ; tenir 8 vagues de suite sans perdre un PV ; atteindre la vague 8 avec le seul Glock ; terminer un défi du jour. Ils donnent des buts variés et poussent à essayer d'autres façons de jouer (théorie de l'autodétermination : sentiment de compétence et d'autonomie).
+
+**5. Défi du jour.** La même partie pour tout le monde le même jour : composition des vagues tirée d'une graine liée à la date, une contrainte du jour parmi cinq (zombies rapides, bastion fragile, disette, grande meute, nuit des Abominations), difficulté Normal, sans les avantages du Quartier général. Le meilleur résultat du jour est conservé ; le bouton « Partager » envoie le résultat (partage du téléphone, sinon copie). Rater un jour ne fait rien perdre.
+
+**Calibrage V2.1** (joueurs automatiques, 2 parties par cas, jusqu'à la vague 30) :
+- Normal, achats à chaque vague ou toutes les 2-3 vagues, profils équilibré et Génie : 6 victoires sur 7. En mode infini, morts aux vagues 36 et 40, ou survie jusqu'à la fin du test (40 ou 45). C'est proche de la V2.0 (morts entre 59 et 70 sur l'ancienne échelle, soit 37 à 44 sur la nouvelle).
+- Effondrements possibles avant la victoire, comme avant : Génie avec achats toutes les 3 vagues (vague 18), Armes d'abord (vague 16).
+- Cauchemar, achats toutes les 2 vagues : 4 victoires sur 4, avec 2 à 5 vagues à plus de 20 % de pertes.
+- Menace 5 en Normal, achats toutes les 2 vagues : profil équilibré 2 victoires sur 2 (jusqu'à 43 % de pertes sur une vague) ; profil Génie mort 2 fois à la vague 12, la vague à 3 Abominations.
+- Limite : les joueurs automatiques dépensent mieux qu'un humain. Les retours de partie restent nécessaires pour régler la menace et le Cauchemar.
 
 ## 2 octies. Changement V2.0 : transitions de phase et ergonomie
 
@@ -215,7 +255,7 @@ Tout débloquer coûte 163 insignes, soit environ 4 à 6 parties en Normal.
 | Normal | × 0,63 (× 0,7 en V1.5, × 0,75 en V1.6) | × 1 | × 1 |
 | Cauchemar | × 0,76 (× 0,85 en V1.5, × 0,9 en V1.6) | × 1,2 | × 0,95 |
 
-**Victoire à la vague 40**, puis mode infini au choix. Records conservés par difficulté, avec la mention de victoire. Le compteur affiche « 12/40 ».
+**Victoire à la vague 25** depuis la V2.1 (40 auparavant), puis mode infini au choix. Records conservés par difficulté, avec la mention de victoire et le niveau de menace. Le compteur affiche « 12/25 ».
 
 **Aperçu de la prochaine vague** (onglet Construire) : composition par type, routes, nouveaux types. La puissance de feu du joueur y est comparée à un repère pour la difficulté choisie ; un avertissement apparaît en dessous de 80 % du repère.
 
@@ -457,6 +497,7 @@ Ajustements faits après simulation :
 ## 11. Pistes V2
 
 - Rogue-lite hybride : fait en V1.6.
+- Leviers de rejouabilité (partie courte, défaite utile, menace, défis, défi du jour) : faits en V2.1.
 
 - Défenses qui s'usent : barbelés arrachés par les brutes, à réparer.
 - Munitions et rechargement par arme.
