@@ -130,9 +130,10 @@
   .bcard:disabled{opacity:.45}
   .hint{font-size:12px;color:var(--mute);margin:2px 2px 8px}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
-  #bonusBar{position:absolute;right:8px;bottom:64px;display:flex;flex-direction:column;gap:10px;z-index:3}
-  .bbtn{position:relative;width:54px;height:54px;border-radius:50%;background:#15181a;border:2px solid #4c5357;padding:0;overflow:visible}
-  .bbtn img{width:40px;height:40px;margin-top:5px;border-radius:50%}
+  #bonusBar{position:absolute;left:6px;top:40%;display:flex;flex-direction:column;gap:8px;z-index:3}
+  .bbtn{position:relative;width:46px;height:46px;border-radius:50%;background:#15181a;border:2px solid #4c5357;padding:0;overflow:visible}
+  .bbtn.full{opacity:.4}
+  .bbtn img{width:34px;height:34px;margin-top:4px;border-radius:50%}
   .bbtn:after{content:"";position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(rgba(0,0,0,.72) var(--p), transparent 0);pointer-events:none}
   .bbtn.ready{border-color:var(--khaki);box-shadow:0 0 12px rgba(214,184,92,.55)}
   .bbtn.aim{border-color:#ff5a3a;box-shadow:0 0 14px rgba(255,90,58,.8)}
@@ -1284,6 +1285,7 @@ function update(dt) {
 
 function useBonus(id) {
   if (G.mode !== 'wave' || !G.bonus[id] || G.bcd[id] > 0) return;
+  if (id === 'repair' && G.hp >= bunkerMax() - 0.5) { toast('Bastion à pleins PV : réparation inutile.', 1500); return; }
   const L = BONUS[id].levels[G.bonus[id] - 1];
   if (id === 'arty') { G.aim = G.aim === 'arty' ? null : 'arty'; if (G.aim) toast('Touchez la zone à pilonner.', 2200); return; }
   if (id === 'superTir') { G.superT = L.dur; G.superMult = L.mult; toast(`Super tir : dégâts x${L.mult}`, 1300); SND.play('horn'); }
@@ -1783,6 +1785,9 @@ function renderGates() {
 function positionGates() {
   if (!G || !VIEW) return;
   const sc = VIEW.sc, st = stage.getBoundingClientRect();
+  // bonus : colonne gauche, entre la route Nord (rangée 1) et la route Sud (rangée 8), zone sans chemin ni emplacement
+  const bb = $('bonusBar');
+  if (bb.offsetHeight) { bb.style.left = Math.max(4, VIEW.bx + 3) + 'px'; bb.style.top = Math.round(VIEW.by + (5.5 * T * K + TOP) * sc - bb.offsetHeight / 2) + 'px'; }
   document.querySelectorAll('#gates .gt').forEach(b => {
     const [c, r] = gateCell(+b.dataset.p);
     b.style.left = clamp(VIEW.bx + (c * T + T / 2) * sc, 26, st.width - 26) + 'px';
@@ -1983,15 +1988,16 @@ function renderBonusBar(force) {
   const bar = $('bonusBar');
   const ownedB = BONUS_ORDER.filter(id => G.bonus[id]);
   const show = ownedB.length && (G.mode === 'wave' || G.mode === 'build');
-  const key = show ? ownedB.map(id => id + Math.ceil(G.bcd[id]) + (G.aim === id ? 'a' : '')).join('|') + G.mode + (G.superT > 0 ? 's' : '') : '';
+  const full = G.hp >= bunkerMax() - 0.5;
+  const key = show ? ownedB.map(id => id + Math.ceil(G.bcd[id]) + (G.aim === id ? 'a' : '')).join('|') + G.mode + (G.superT > 0 ? 's' : '') + (full ? 'f' : '') : '';
   if (!force && key === bonusKey) return;
   bonusKey = key;
   if (!show) { bar.innerHTML = ''; return; }
   bar.innerHTML = ownedB.map(id => {
-    const L = BONUS[id].levels[G.bonus[id] - 1], cd = G.bcd[id], ready = cd <= 0 && G.mode === 'wave';
+    const L = BONUS[id].levels[G.bonus[id] - 1], cd = G.bcd[id], idle = id === 'repair' && full, ready = cd <= 0 && G.mode === 'wave' && !idle;
     const pct = cd > 0 ? Math.round(cd / bonusCd(id) * 100) : 0;
-    return `<button class="bbtn ${ready ? 'ready' : ''} ${G.aim === id ? 'aim' : ''} ${id === 'superTir' && G.superT > 0 ? 'active' : ''}" data-act="useBonus" data-id="${id}" style="--p:${pct}%">` +
-      `<img src="${icon(id)}" alt=""><span class="bcd">${cd > 0 ? Math.ceil(cd) : ''}</span><span class="blb">${BONUS[id].name}</span></button>`;
+    return `<button aria-label="${BONUS[id].name}" class="bbtn ${ready ? 'ready' : ''} ${idle ? 'full' : ''} ${G.aim === id ? 'aim' : ''} ${id === 'superTir' && G.superT > 0 ? 'active' : ''}" data-act="useBonus" data-id="${id}" style="--p:${pct}%">` +
+      `<img src="${icon(id)}" alt=""><span class="bcd">${cd > 0 ? Math.ceil(cd) : ''}</span></button>`;
   }).join('');
 }
 
