@@ -573,7 +573,7 @@ const GOALS = [
   { id: 'boss_flame', name: 'Achever une Abomination au lance-flammes', ins: 8 },
   { id: 'early10', name: 'Appeler 10 vagues en avance dans une même partie', ins: 6 },
   { id: 'perfect8', name: 'Tenir 8 vagues de suite sans perdre un seul PV', ins: 8 },
-  { id: 'glock8', name: "Atteindre la vague 8 sans acheter d'autre arme que le Glock", ins: 6 },
+  { id: 'glock8', name: "Atteindre la vague 8 sans acheter d'autre arme que le pistolet", ins: 6 },
   { id: 'menace3', name: 'Gagner en Menace 3 ou plus', ins: 15 },
   { id: 'daily', name: 'Terminer un défi du jour', ins: 5 },
 ];
@@ -635,32 +635,32 @@ let CUR_MAP = null;
 
 // Armes de l'homme (ordre de progression)
 const WEAPONS = [
-  { id:'glock',  name:'Pistolet Glock 17',        short:'Glock 17',   kind:'bullet',   dmg:10,  rate:2.5, range:115, pierce:1, ap:0,    cost:0,     snd:'shot',
-    note:"Arme de poing réglementaire des armées françaises (Gen 5 FR)." },
-  { id:'mp5',    name:'Pistolet-mitrailleur MP5', short:'MP5',        kind:'bullet',   dmg:7,   rate:8,   range:115, pierce:1, ap:0,    cost:350,   snd:'shot',
+  { id:'glock',  name:'Pistolet 9 mm',           short:'Pistolet',   kind:'bullet',   dmg:10,  rate:2.5, range:115, pierce:1, ap:0,    cost:0,     snd:'shot',
+    note:"Arme de poing réglementaire, 17 coups." },
+  { id:'mp5',    name:'Pistolet-mitrailleur 9 mm', short:'PM 9 mm',        kind:'bullet',   dmg:7,   rate:8,   range:115, pierce:1, ap:0,    cost:350,   snd:'shot',
     note:"Pistolet-mitrailleur 9 mm des unités d'intervention." },
-  { id:'benelli',name:'Fusil à pompe Benelli M4', short:'Benelli M4', kind:'shotgun',  dmg:9,   rate:1.5, range:110, pellets:6, spread:0.5, ap:0, cost:650, snd:'shotgun',
-    note:"Fusil de combat semi-automatique (M1014 aux États-Unis)." },
-  { id:'hk416',  name:"Fusil d'assaut HK416F",    short:'HK416F',     kind:'bullet',   dmg:16,  rate:6,   range:160, pierce:1, ap:0.1,  cost:1200,  snd:'shot',
-    note:"Fusil d'assaut réglementaire, successeur du FAMAS." },
-  { id:'scar',   name:'FN SCAR-H PR',             short:'SCAR-H',     kind:'bullet',   dmg:55,  rate:1.7, range:190, pierce:2, ap:0.3,  cost:2000,  snd:'heavy',
+  { id:'benelli',name:'Fusil de combat calibre 12', short:'Fusil à pompe', kind:'shotgun',  dmg:9,   rate:1.5, range:110, pellets:6, spread:0.5, ap:0, cost:650, snd:'shotgun',
+    note:"Fusil de combat semi-automatique, 7 cartouches." },
+  { id:'hk416',  name:"Fusil d'assaut 5,56 mm",   short:"Fusil d'assaut",     kind:'bullet',   dmg:16,  rate:6,   range:160, pierce:1, ap:0.1,  cost:1200,  snd:'shot',
+    note:"Fusil d'assaut réglementaire des unités de combat." },
+  { id:'scar',   name:'Fusil de précision 7,62 mm', short:'Fusil 7,62',     kind:'bullet',   dmg:55,  rate:1.7, range:190, pierce:2, ap:0.3,  cost:2000,  snd:'heavy',
     note:"Fusil de précision semi-automatique 7,62 mm." },
-  { id:'minimi', name:'Mitrailleuse FN Minimi',   short:'Minimi',     kind:'bullet',   dmg:15,  rate:12,  range:165, pierce:1, ap:0.1,  cost:3000,  snd:'shot',
+  { id:'minimi', name:'Mitrailleuse légère 5,56 mm', short:'Mitr. légère',     kind:'bullet',   dmg:15,  rate:12,  range:165, pierce:1, ap:0.1,  cost:3000,  snd:'shot',
     note:"Mitrailleuse légère 5,56 mm." },
-  { id:'m32',    name:'Lance-grenades M32 MGL',   short:'M32',        kind:'explosive',dmg:70,  rate:1.5, range:170, radius:42, speed:260, ap:0.3, cost:4200, snd:'thump',
+  { id:'m32',    name:'Lance-grenades 40 mm',      short:'Lance-grenades',        kind:'explosive',dmg:70,  rate:1.5, range:170, radius:42, speed:260, ap:0.3, cost:4200, snd:'thump',
     note:"Lance-grenades revolver 40 mm à 6 coups." },
-  { id:'hecate', name:'PGM Hécate II',            short:'Hécate II',  kind:'bullet',   dmg:340, rate:0.75,range:220, pierce:4, ap:0.85, cost:6500,  snd:'heavy',
+  { id:'hecate', name:'Fusil anti-matériel 12,7 mm', short:'Anti-matériel',  kind:'bullet',   dmg:340, rate:0.75,range:220, pierce:4, ap:0.85, cost:6500,  snd:'heavy',
     note:"Fusil anti-matériel 12,7 mm de l'armée française." },
-  { id:'m2flame',name:'Lance-flammes M2',         short:'Lance-flammes M2', kind:'flame', dmg:9,   rate:15,  range:70,  cone:0.42, burn:22, ap:1, cost:8500, snd:'flame',
+  { id:'m2flame',name:'Lance-flammes dorsal',      short:'Lance-flammes', kind:'flame', dmg:9,   rate:15,  range:70,  cone:0.42, burn:22, ap:1, cost:8500, snd:'flame',
     note:"Lance-flammes dorsal, portée efficace d'environ 20 m." },
-  { id:'carlg',  name:'Carl Gustaf M4',           short:'Carl Gustaf',kind:'explosive',dmg:300, rate:0.55,range:190, radius:65, speed:330, ap:0.5, cost:12000, snd:'boom',
+  { id:'carlg',  name:'Canon sans recul 84 mm',    short:'Sans recul',kind:'explosive',dmg:300, rate:0.55,range:190, radius:65, speed:330, ap:0.5, cost:12000, snd:'boom',
     note:"Arme multirôle sans recul de 84 mm." },
-  { id:'shmel',  name:'RPO-A Shmel',              short:'Shmel',      kind:'explosive',dmg:760, rate:0.32,range:200, radius:105,speed:230, ap:0.6, burn:60, cost:17000, snd:'boom',
+  { id:'shmel',  name:'Lance-roquettes thermobarique', short:'Thermobarique',      kind:'explosive',dmg:760, rate:0.32,range:200, radius:105,speed:230, ap:0.6, burn:60, cost:17000, snd:'boom',
     note:"Lance-roquettes thermobarique portable : l'arme finale." },
 ];
 const WBY = Object.fromEntries(WEAPONS.map(w => [w.id, w]));
 /* Réalisme (V2.2) : chargeurs réels et temps de rechargement de l'homme [coups, secondes].
-   Lance-flammes M2 : réservoir de 8 s de tir (120 jets), bouteilles changées en 6 s. */
+   Lance-flammes dorsal : réservoir de 8 s de tir (120 jets), bouteilles changées en 6 s. */
 const MAG = { glock:[17,1.6], mp5:[30,2.2], benelli:[7,3.5], hk416:[30,2.4], scar:[20,2.8], minimi:[200,6],
   m32:[6,4], hecate:[7,3.5], m2flame:[120,6], carlg:[1,2.4], shmel:[1,3] };
 /* Tours : surchauffe des nids de mitrailleuse (tirs avant changement de canon), réservoir des
@@ -670,12 +670,12 @@ const GUN = {
             kitDesc: 'chauffe moins vite', kitLong: 'surchauffe 40 % plus tard, canon changé 2 fois plus vite' },
   flamer: { cap: [7, 8, 9], down: [5, 5, 5.5], cool: 0.1, kitCap: 1.5, kitDown: 0.65, kit: 'Grand réservoir', kitCost: 450, kitL: 'Réservoir', kitN: '+50 %',
             kitDesc: '+50 %', kitLong: 'réservoir +50 %, remplissage 35 % plus rapide' },
-  // tireurs d'élite : chargeur (FR-F2 10 coups, SCAR-H PR 20, Hécate II 7) ; rechargement si la tour n'a plus de cible
+  // tireurs d'élite : chargeur (fusil de précision 10 coups, semi-auto 20, anti-matériel 7) ; rechargement si la tour n'a plus de cible
   sniper: { cap: [10, 20, 7], down: [3, 2.8, 3.5], mag: true, cool: 0, kitCap: 1.5, kitDown: 0.65, kit: 'Grand chargeur', kitCost: 350, kitL: 'Chargeur', kitN: '+50 %',
             kitDesc: '+50 %', kitLong: 'chargeur +50 %, rechargement 35 % plus rapide' },
 };
 /* Modules du bastion : mêmes règles et mêmes options que les tours équivalentes.
-   12,7 M2 du bastion = M2 Browning du nid (70 tirs, 5 s) ; lance-flammes fixe = tour lance-flammes du même niveau. */
+   12,7 du bastion = mitrailleuse lourde du nid (70 tirs, 5 s) ; lance-flammes fixe = tour lance-flammes du même niveau. */
 const MOD_GUN = { mg: 'mgnest', flame: 'flamer' };
 const modCap = id => { const K = GUN[MOD_GUN[id]]; return (id === 'mg' ? K.cap[2] : K.cap[Math.max(0, G.mods[id] - 1)]) * (G.modKit[id] ? K.kitCap : 1); };
 const modDown = id => { const K = GUN[MOD_GUN[id]]; return (id === 'mg' ? K.down[2] : K.down[Math.max(0, G.mods[id] - 1)]) * (G.modKit[id] ? K.kitDown : 1); };
@@ -714,7 +714,7 @@ const MODULES = {
               { cost:300,  slow:0.35, dps:4,  r:60 }, { cost:700, slow:0.45, dps:9, r:64 }, { cost:1500, slow:0.55, dps:18, r:68 } ] },
   claymore:{ name:'Ceinture de Claymore', req:2, levels:[
               { cost:900,  dmg:160, r:80,  cd:10 }, { cost:1900, dmg:320, r:85,  cd:8 }, { cost:3800, dmg:640, r:90,  cd:6 } ] },
-  mg:      { name:'Mitrailleuse 12,7 M2', req:2, levels:[
+  mg:      { name:'Mitrailleuse lourde 12,7', req:2, levels:[
               { cost:1100, dmg:16, rate:6,   range:140, ap:0.3 }, { cost:2400, dmg:24, rate:7.5, range:150, ap:0.3 }, { cost:5000, dmg:36, rate:9, range:160, ap:0.4 } ] },
   flame:   { name:'Lance-flammes fixe', req:3, levels:[
               { cost:2600, dps:45, range:68, burn:15 }, { cost:5200, dps:80, range:72, burn:25 }, { cost:9500, dps:140, range:78, burn:40 } ] },
@@ -746,13 +746,13 @@ const DEF = {
            { n:'Fossé à pieux',      cost:220, slow:0.55, dps:12 },
            { n:'Fossé incendiaire',  cost:500, slow:0.6,  dps:30, burn:10 } ] },
   mgnest:{ name:'Nid de mitrailleuse', place:'side', levels:[
-           { n:'MAG 58',             cost:200, dmg:8,  rate:5, range:100, ap:0 },
-           { n:'Double MAG 58',      cost:380, dmg:9,  rate:9, range:110, ap:0 },
-           { n:'M2 Browning 12,7',   cost:800, dmg:22, rate:7, range:120, ap:0.3 } ] },
+           { n:'Mitrailleuse 7,62', cost:200, dmg:8,  rate:5, range:100, ap:0 },
+           { n:'Mitrailleuse jumelée', cost:380, dmg:9,  rate:9, range:110, ap:0 },
+           { n:'Mitrailleuse lourde 12,7', cost:800, dmg:22, rate:7, range:120, ap:0.3 } ] },
   sniper:{ name:"Tireur d'élite", place:'side', levels:[
-           { n:'FR-F2',              cost:350,  dmg:60,  rate:0.8, range:160, pierce:1, ap:0.3 },
-           { n:'SCAR-H PR',          cost:700,  dmg:120, rate:1.1, range:180, pierce:2, ap:0.4 },
-           { n:'Hécate II',          cost:1500, dmg:340, rate:0.9, range:200, pierce:3, ap:0.85 } ] },
+           { n:'Fusil de précision', cost:350,  dmg:60,  rate:0.8, range:160, pierce:1, ap:0.3 },
+           { n:'Fusil de précision semi-auto', cost:700,  dmg:120, rate:1.1, range:180, pierce:2, ap:0.4 },
+           { n:'Fusil anti-matériel', cost:1500, dmg:340, rate:0.9, range:200, pierce:3, ap:0.85 } ] },
   mortar:{ name:'Mortier', place:'side', levels:[
            { n:'Mortier 60 mm',      cost:500,  dmg:55,  r:36, rate:0.45, range:150, min:55 },
            { n:'Mortier 81 mm',      cost:950,  dmg:120, r:46, rate:0.5,  range:165, min:60 },
@@ -781,7 +781,7 @@ const ZTIP = {
   runner:  'rapide et fragile. Barbelés et fossés le freinent.',
   crawler: 'passe sous les barbelés. Mines et feu.',
   bloater: "explose au contact du bunker. Abattez-le tôt, au milieu des autres.",
-  armored: "armure lourde. Tireur d'élite, Hécate, explosifs.",
+  armored: "armure lourde. Tireur d'élite, fusil anti-matériel, explosifs.",
   spitter: "s'arrête à distance et crache de l'acide. Touchez-le pour le cibler.",
   screamer:'accélère les zombies autour de lui. À abattre en priorité.',
   brute:   'énorme et résistant. Concentrez le feu.',
@@ -798,7 +798,7 @@ const FREE_WAVES = 25;
    hide : nœuds de l'arbre absents de la mission (avec tout ce qui en dépend) ;
    arsenal : la seule tour permise dans le défi « Arsenal unique ». */
 const MISSIONS = [
-  { id: 'm1', n: 1, name: 'Le poste avancé', map: 'poste', waves: 12, eff0: 1, pace: 1.35, money: 400, hp: 1.25,
+  { id: 'm1', n: 1, name: 'Le poste avancé', map: 'poste', waves: 12, eff0: 1, pace: 1.35, money: 400, hp: 1.1,
     opens: { N: 1, E: 6 }, types: { walker: 1, runner: 3, crawler: 6, bloater: 9 }, boss: { 12: 1 },
     hide: ['mortar', 'ditch', 'flamer', 'casemate', 'mMg', 'mFlame', 'mRock', 'benelli', 'scar', 'minimi'], arsenal: 'mgnest',
     brief: "Un poste isolé au nord de la ville. Une longue route qui serpente, puis une deuxième par l'est à la vague 6.",
@@ -876,6 +876,9 @@ const CARDS = {
   chasse:  { name: 'Prime de chasse', cat: 'Économie', max: 3, desc: "+15 % d'argent par zombie" },
   ravit:   { name: 'Ravitaillement', cat: 'Économie', max: 99, desc: '' },
   intend:  { name: 'Intendance', cat: 'Économie', max: 2, desc: 'Défenses à poser : -15 % de prix' },
+  nuit:    { name: 'Jumelles de vision nocturne', cat: 'Tir', max: 1, desc: "Obscurité : deux fois moins de tirs ratés" },
+  calme:   { name: 'Discipline de feu', cat: 'Tir', max: 2, desc: 'Stress des équipes : -40 %' },
+  rations: { name: 'Café et rations', cat: 'Fortification', max: 1, desc: 'Fatigue des équipes : deux fois moins vite' },
   radio:   { name: 'Opérateur radio', cat: 'Bonus', max: 2, desc: 'Recharge des bonus -25 %', req: () => ['superTir', 'arty', 'repair'].some(id => G.bonus[id]) },
 };
 const cardN = id => (G && G.cards && G.cards[id]) || 0;
@@ -987,6 +990,7 @@ function freshState() {
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
     diff: 'normal', won: false, next: null, waveFrom: 1, prime: 0, report: null, hp0: 0, defNo: {},
     cards: {}, draft: null, draftsDue: 0, nextDraft: DRAFT_EVERY, rerolls: 0, insRun: 0, slotMenu: null,
+    night: 0.6, light: 0, flares: [], flareT: 0, crew: { stress: 0, fat: 0 }, shotW: 0, missW: 0,
     menace: 0, daily: null, mz: makeMz(0, null), draftN: 0, prevBest: 0, mission: null, hide: new Set(), ban: new Set(), noPlace: new Set(), dmgTot: 0,
     trk: { sniper: false, repaired: false, early: 0, streak: 0 }, breach: { path: {}, type: {} }, bossLeft: 0,
     st: { hero: newSt(), arty: newSt(), wire: newSt(), claymore: newSt(), mg: newSt(), flame: newSt(), rockets: newSt() },
@@ -1115,7 +1119,8 @@ const refPower = w => 85 + 5.5 * w * w;
 function hordeBudget(w) {
   G.power = firepower();
   const e = eff(w);
-  return lateMult(w) * DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * hpMul() * G.mz.horde * G.pressure;
+  // NIGHT_K : les tirs ratés de nuit (15 à 30 %) sont compensés par des hordes un peu moins résistantes
+  return NIGHT_K * lateMult(w) * DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * hpMul() * G.mz.horde * G.pressure;
 }
 // Puissance repère affichée au joueur pour la difficulté choisie
 // repère affiché : 0,8 depuis la V2.2 (chargeurs, surchauffe et réservoirs comptés dans la puissance de feu)
@@ -1137,7 +1142,8 @@ function buildWave(w) {
   const tot = types.reduce((a, k) => a + weight(k), 0);
   const list = [];
   // les nouveaux types sont présentés en petit groupe
-  types.filter(k => zFrom(k) === w).forEach(k => { for (let i = 0; i < 3; i++) list.push(k); });
+  // (V2.7) une élite (brute) fait ses débuts seule : trois brutes d'un coup créaient un mur infranchissable
+  types.filter(k => zFrom(k) === w).forEach(k => { for (let i = 0; i < (ZT[k].w < 1 ? 1 : 3); i++) list.push(k); });
   while (list.length < count) {
     let r = rand() * tot, pick = types[0];
     for (const k of types) { r -= weight(k); if (r <= 0) { pick = k; break; } }
@@ -1145,7 +1151,7 @@ function buildWave(w) {
   }
   // mélange
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
-  if ((curMission() ? zFrom('brute') <= w : we >= 12) && w % 3 === 0) for (let i = 0; i < 1 + Math.floor(Math.max(0, we - 12) / 8); i++) list.push('brute');
+  if ((curMission() ? zFrom('brute') < w : we >= 12 && zFrom('brute') !== w) && w % 3 === 0) for (let i = 0; i < 1 + Math.floor(Math.max(0, we - 12) / 8); i++) list.push('brute');
   const paths = openPaths(w);
   // hordes : paquets serrés sur un chemin, séparés par de courtes accalmies
   const out = [], pause = Math.max(1.6, 5.5 - we * 0.13);
@@ -1194,7 +1200,7 @@ function launchWave(early) {
   G.wave++;
   if (!early) {
     G.waveFrom = G.wave; G.prime = 0; G.hp0 = G.hp; G.report = null; G.breach = { path: {}, type: {} };
-    G.waveDmg = 0; G.depthSum = 0; G.depthN = 0; G.waveCount = 0; G.killed = 0;
+    G.waveDmg = 0; G.depthSum = 0; G.depthN = 0; G.waveCount = 0; G.killed = 0; G.shotW = 0; G.missW = 0;
     statSources().forEach(s => { s.st.wd = 0; s.st.wk = 0; });
     G.placing = null; G.selected = null; G.slotMenu = null; G.treeOpen = false; G.treePaused = false;
     // entre deux vagues : armes rechargées, canons refroidis, réservoirs pleins
@@ -1210,8 +1216,9 @@ function launchWave(early) {
   G.next = buildWave(G.wave + 1);
   const np = PATHS.find(p => p.opens === G.wave && G.wave > 1);
   const S0 = waveSummary(q, G.wave);
+  if (!early) { G.flares = []; G.flareT = 8; }
   banner(early ? `Vague ${G.wave} appelée` : `Vague ${G.wave}`,
-    `${q.length} zombies · ${S0.paths.length > 1 ? 'routes' : 'route'} ${S0.paths.join(', ')}` + (np ? ` · la route ${np.name} s'ouvre` : '') + (S0.boss ? ' · Abomination' : '') + (G.wave === VICTORY && !G.won ? ' · dernière avant la victoire' : ''), true, 2300);
+    `${early ? 'Pas de repos pour les équipes · ' : 'La nuit tombe · '}${q.length} zombies · ${S0.paths.length > 1 ? 'routes' : 'route'} ${S0.paths.join(', ')}` + (np ? ` · la route ${np.name} s'ouvre` : '') + (S0.boss ? ' · Abomination' : '') + (G.wave === VICTORY && !G.won ? ' · dernière avant la victoire' : ''), true, 2300);
   const fresh = Object.keys(ZTIP).filter(k => zFrom(k) === G.wave);
   fresh.forEach((k, i) => setTimeout(() => toast(`Nouveau : ${ZT[k].name}, ${ZTIP[k]}`, 4000), 2600 + i * 4200));
   if (bossCount(G.wave)) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2600 + fresh.length * 4200);
@@ -1237,13 +1244,14 @@ function endWave() {
   // bilan de la vague
   const src = statSources().filter(x => x.st.wd > 0).sort((a, b) => b.st.wd - a.st.wd);
   const tot = src.reduce((a, x) => a + x.st.wd, 0) || 1;
-  G.report = { from: G.waveFrom, to: G.wave, bonus, prime: G.prime, kills: G.killed, lost: Math.round(Math.max(0, G.hp0 - G.hp) / bunkerMax() * 100),
+  G.report = { from: G.waveFrom, to: G.wave, bonus, prime: G.prime, kills: G.killed, miss: G.shotW ? Math.round(G.missW / G.shotW * 100) : 0, lost: Math.round(Math.max(0, G.hp0 - G.hp) / bunkerMax() * 100),
     rows: src.slice(0, 7).map(x => ({ name: x.name, k: x.st.wk, pct: Math.round(x.st.wd / tot * 100), def: x.def ? G.defs.indexOf(x.def) : -1, lv: x.def ? x.def.lv + 1 : 0 })) };
   G.prime = 0;
   G.superT = 0; G.aim = null;
   G.mode = 'build';
   G.focus = null;
   G.projs = [];
+  dawn();
   let victory = false;
   if (!G.won && G.wave >= VICTORY) { G.won = true; victory = true; }
   recordBest();
@@ -1268,7 +1276,7 @@ function endWave() {
   while (G.wave >= G.nextDraft) { G.draftsDue++; G.nextDraft += DRAFT_EVERY; }
   if (G.draftsDue > 0 && !G.draft) makeDraft(false);
   const np = PATHS.find(p => p.opens === G.wave + 1 && G.wave + 1 > 1);
-  banner(G.waveFrom < G.wave ? `Vagues ${G.waveFrom} à ${G.wave} repoussées` : `Vague ${G.wave} repoussée`, `Prime +${fmt(bonus)}` + (G.report.lost > 0 ? ` · bastion -${G.report.lost} %` : ' · bastion intact'), false, 1900);
+  banner(G.waveFrom < G.wave ? `Vagues ${G.waveFrom} à ${G.wave} repoussées` : `Vague ${G.wave} repoussée`, `Le jour se lève · prime +${fmt(bonus)}` + (G.report.lost > 0 ? ` · bastion -${G.report.lost} %` : ' · bastion intact'), false, 1900);
   if (np) setTimeout(() => toast(`Attention : la route ${np.name} s'ouvre à la prochaine vague.`, 3500), 2000);
   G.panelOpen = false; G.selected = null; G.slotMenu = null;
   if (!(victory && G.mission)) saveGame();
@@ -1345,6 +1353,7 @@ function bunkerHit(dmg, z) {
   const eff = Math.max(dmg * 0.2, dmg - bunkerArmor());
   G.hp -= eff; G.waveDmg += eff; G.shake = Math.min(6, G.shake + 1.2);
   G.dmgTot = (G.dmgTot || 0) + eff;
+  G.crew.stress = Math.min(1, G.crew.stress + 0.03);
   if (z) { const B = G.breach; B.path[z.path.idx] = (B.path[z.path.idx] || 0) + eff; B.type[z.type] = (B.type[z.type] || 0) + eff; }
   SND.play('thud');
   if (G.hp <= 0) { G.hp = 0; gameOver(); }
@@ -1521,14 +1530,14 @@ function heroFire(dt) {
   }
 }
 function fireWeapon(s, t) {
-  const a = G.heroAng;
+  const a = s.kind === 'bullet' ? aimAng(BX, BY, G.heroAng, t, G.crew) : s.kind === 'shotgun' ? (rand() < missChance(G.crew, t) ? G.heroAng + (rand() < 0.5 ? -1 : 1) * 0.22 : G.heroAng) : G.heroAng;
   G.flash = 0.05;
   if (s.kind === 'bullet') {
     hitscan(BX, BY, a, s.range, s.dmg, s.pierce, s.ap, G.superT > 0 ? '#ff6a3a' : s.id === 'hecate' ? '#fff2c4' : '#ffd98a', (s.id === 'hecate' ? 2.2 : 1.2) + (G.superT > 0 ? 1 : 0), heroH());
   } else if (s.kind === 'shotgun') {
     for (let i = 0; i < s.pellets; i++) hitscan(BX, BY, a + (rand() - 0.5) * s.spread, s.range * (0.85 + rand() * 0.15), s.dmg, 1, s.ap, '#ffcf80', 1, heroH());
   } else if (s.kind === 'explosive') {
-    const dd = Math.hypot(t.x - BX, t.y - BY), tt = dd / s.speed, p = predict(t, tt);
+    const dd = Math.hypot(t.x - BX, t.y - BY), tt = dd / s.speed, p = aimPt(predict(t, tt), t, G.crew, s.radius);
     G.projs.push({ type: s.id === 'm32' ? 'gren' : 'rocket', sx: BX, sy: BY, tx: p.x, ty: p.y, t: 0, dur: Math.max(0.12, Math.hypot(p.x - BX, p.y - BY) / s.speed), h0: heroH(), h1: 2,
       dmg: s.dmg, r: s.radius, ap: s.ap, burn: s.burn || 0, src: SRC });
   } else if (s.kind === 'flame') {
@@ -1551,7 +1560,8 @@ function updateDefs(dt) {
       if (!t) continue;
       d.ang = Math.atan2(t.y - d.y, t.x - d.x);
       if (d.cd <= 0) {
-        hitscan(d.x, d.y, d.ang, L.range, L.dmg, L.pierce || 1, L.ap || 0, d.type === 'sniper' ? '#f6efd0' : '#ffd98a', d.type === 'sniper' ? 1.8 : 1.1, d.type === 'sniper' ? 33 + d.lv * 5 : 11);
+        d.shotT = G.time;
+        hitscan(d.x, d.y, aimAng(d.x, d.y, d.ang, t, d, d.type === 'sniper' ? 0.02 : 0.03), L.range, L.dmg, L.pierce || 1, L.ap || 0, d.type === 'sniper' ? '#f6efd0' : '#ffd98a', d.type === 'sniper' ? 1.8 : 1.1, d.type === 'sniper' ? 33 + d.lv * 5 : 11);
         d.cd += 1 / L.rate; if (d.cd < 0) d.cd = 0;
         d.flash = 0.05; SND.play(d.type === 'sniper' ? 'heavy' : 'shot');
         if (gunShot(d, 1 / gunCap(d), gunDown(d))) SND.play('click');
@@ -1560,7 +1570,7 @@ function updateDefs(dt) {
       if (d.cd > 0) continue;
       const t = pickTarget(d.x, d.y, L.range, L.min, d.tgt);
       if (!t) continue;
-      const p = predict(t, 1.15);
+      const p = aimPt(predict(t, 1.15), t, d, L.r); d.shotT = G.time;
       G.projs.push({ type:'shell', sx:d.x, sy:d.y, tx:p.x + (rand() - 0.5) * 8, ty:p.y + (rand() - 0.5) * 8, t:0, dur:1.15, dmg:L.dmg, r:L.r, ap:0.4, burn:0, h0: 22, h1: 0, src: d.st });
       d.flash = 0.08; d.cd = 1 / L.rate; d.ang = Math.atan2(p.y - d.y, p.x - d.x); SND.play('thump');
     } else if (d.type === 'flamer') {
@@ -1568,7 +1578,7 @@ function updateDefs(dt) {
       const t = pickTarget(d.x, d.y, L.range, 0, d.tgt);
       if (!t) { d.on = 0; continue; }
       d.ang = Math.atan2(t.y - d.y, t.x - d.x); d.on = 0.15;
-      if (d.cd <= 0) { cone(d.x, d.y, d.ang, L.range, 0.45, L.dps * 0.1, L.burn); flameFx(d.x, d.y, d.ang, L.range, 0.45, 9); d.cd = 0.1; SND.play('flame'); gunShot(d, 0.1 / gunCap(d), gunDown(d)); }
+      if (d.cd <= 0) { d.shotT = G.time; cone(d.x, d.y, d.ang, L.range, 0.45, L.dps * 0.1, L.burn); flameFx(d.x, d.y, d.ang, L.range, 0.45, 9); d.cd = 0.1; SND.play('flame'); gunShot(d, 0.1 / gunCap(d), gunDown(d)); }
     }
   }
   SRC = null;
@@ -1600,7 +1610,7 @@ function updateModules(dt) {
     const t = gunReady(S.mgG, dt, GUN.mgnest.cool) ? pickTarget(BX, BY, L.range) : null;
     if (t) {
       S.mgAng = Math.atan2(t.y - (BY - 10), t.x - (BX + 10));
-      if (S.mgCd <= 0) { SRC = G.st.mg; hitscan(BX + 13, BY + 9, S.mgAng, L.range, L.dmg, 1, L.ap, '#ffd98a', 1.4, roofH() + 6); SRC = null; S.mgCd += 1 / L.rate; if (S.mgCd < 0) S.mgCd = 0; SND.play('shot'); if (gunShot(S.mgG, 1 / modCap('mg'), modDown('mg'))) SND.play('click'); }
+      if (S.mgCd <= 0) { SRC = G.st.mg; hitscan(BX + 13, BY + 9, aimAng(BX + 13, BY + 9, S.mgAng, t, G.crew), L.range, L.dmg, 1, L.ap, '#ffd98a', 1.4, roofH() + 6); SRC = null; S.mgCd += 1 / L.rate; if (S.mgCd < 0) S.mgCd = 0; SND.play('shot'); if (gunShot(S.mgG, 1 / modCap('mg'), modDown('mg'))) SND.play('click'); }
     } else if (S.mgCd < 0) S.mgCd = 0;
   }
   if (M.flame) {
@@ -1620,7 +1630,7 @@ function updateModules(dt) {
       if (inR.length) {
         inR.sort((a, b) => b.hp - a.hp);
         for (let i = 0; i < L.n; i++) {
-          const z = inR[i % inR.length], p = predict(z, 0.6);
+          const z = inR[i % inR.length], p = aimPt(predict(z, 0.6), z, G.crew, L.radius);
           G.projs.push({ type:'rocket', sx:BX + 12, sy:BY + 12, tx:p.x + (rand() - 0.5) * 14, ty:p.y + (rand() - 0.5) * 14, t:-i * 0.09, dur:0.6, dmg:L.dmg, r:L.radius, ap:0.4, burn:0, h0: roofH() + 8, h1: 2, src: G.st.rockets });
         }
         S.rocketCd = L.cd;
@@ -1686,6 +1696,7 @@ function update(dt) {
   G.spawnT -= dt;
   while (G.queue.length && G.spawnT <= 0) { const it = G.queue.shift(); spawnZombie(it.type, it.path); G.spawnT += it.gap; }
   updateZombies(dt); if (G.mode !== 'wave') return;
+  nightTick(dt);
   updateHero(dt);
   updateDefs(dt);
   updateModules(dt);
@@ -1825,7 +1836,7 @@ function buyNode(id) {
   else if (n.kind === 'bunker') { const old = bunkerMax(); G.bunkerLv = n.ref; G.hp += bunkerMax() - old; }
   else G.mods[n.ref] = 1;
   const opened = TREE.filter(x => nodeAvailable(x) && nodeReqs(x).some(([p]) => p === id));
-  toast(`${nodeName(n)} débloqué.` + (opened.length ? ` Ouvre : ${opened.map(shortName).join(', ')}.` : ''), 3200);
+  toast(`Débloqué : ${nodeName(n)}.` + (opened.length ? ` Ouvre : ${opened.map(shortName).join(', ')}.` : ''), 3200);
   return true;
 }
 function upgradeInst(d) {
@@ -1892,7 +1903,7 @@ function shareResult() {
 const BREACH_TIP = {
   walker: 'plus de mitrailleuses et des barbelés sur cette route', runner: 'des barbelés pour casser leur vitesse',
   crawler: 'les Rampants passent sous les barbelés : mines et fossés', bloater: 'abattez les Bouffis loin du bastion : portée, tireurs d\'élite',
-  armored: 'contre les Blindés : perforation, 12,7, Hécate', spitter: 'les Cracheurs tirent de loin : de la portée près du bastion',
+  armored: 'contre les Blindés : perforation, 12,7, fusil anti-matériel', spitter: 'les Cracheurs tirent de loin : de la portée près du bastion',
   screamer: 'le Hurleur renforce les autres : priorité de tir sur lui', brute: 'contre les Brutes : mines, mortier, priorité « Plus fort »',
   boss: "contre l'Abomination : frappe d'artillerie et priorité « Plus fort »",
 };
@@ -1920,10 +1931,10 @@ function defeatHtml() {
 function saveGame() {
   if (G.mode !== 'build') return;
   try {
-    localStorage.setItem(SKEY, JSON.stringify({ v:6, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods, modKit:G.modKit,
+    localStorage.setItem(SKEY, JSON.stringify({ v:6, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods, modKit:G.modKit, light:G.light, crew:G.crew,
       weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure,
       diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, menace:G.menace, daily:G.daily, trk:G.trk, draftN:G.draftN, prevBest:G.prevBest, mission:G.mission, dmgTot:G.dmgTot || 0, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
-      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt, kit:d.kit || 0 })) }));
+      defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt, kit:d.kit || 0, fat:d.fat || 0 })) }));
   } catch (e) {}
 }
 function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return null; const d = JSON.parse(s); return d && d.v >= 4 && d.v <= 6 ? d : null; } catch (e) { return null; } }
@@ -1944,14 +1955,14 @@ function newGame(fromSave, diff, opts) {
   clearDecals();
   if (fromSave) {
     const d = fromSave;
-    G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods); G.modKit = Object.assign(G.modKit, d.modKit || {});
+    G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods); G.modKit = Object.assign(G.modKit, d.modKit || {}); G.light = d.light || 0; if (d.crew) G.crew = Object.assign(G.crew, d.crew);
     WEAPONS.forEach(w => { if (d.weapons[w.id]) G.weapons[w.id] = d.weapons[w.id]; });
     G.equipped = G.weapons[d.equipped] && G.weapons[d.equipped].owned ? d.equipped : 'glock';
     G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {});
     G.pressure = clamp(d.pressure || 1, DIR.pMin, DIR.pMax); G.won = !!d.won;
     if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
     d.defs.forEach(x => { const mv = CUR_MAP === 'carrefour' && TRAP_MOVED[x.c + ',' + x.r]; if (mv && DEF[x.type].place === 'path' && !d.defs.some(y => y.c === mv[0] && y.r === mv[1])) { x.c = mv[0]; x.r = mv[1]; }
-      if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; if (x.kit) dd.kit = 1; } });
+      if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; if (x.kit) dd.kit = 1; if (x.fat) dd.fat = x.fat; } });
     if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
     if (d.trk) G.trk = Object.assign(G.trk, d.trk); G.draftN = d.draftN || 0; G.prevBest = d.prevBest || 0; G.dmgTot = d.dmgTot || 0;
     G.cards = d.cards || {}; G.draft = d.draft || null; G.draftsDue = d.draftsDue || (G.draft ? 1 : 0); G.rerolls = d.rerolls || 0; G.insRun = d.insRun || 0;
@@ -1981,7 +1992,7 @@ function addDef(type, c, r, lv, spent) {
   G.defNo[type] = (G.defNo[type] || 0) + 1;
   if (type === 'sniper') G.trk.sniper = true;
   const d = { type, c, r, x: c * T + T / 2, y: r * T + T / 2, lv: L, spent: spent || placeCost(type), cd: 0, ang: -Math.PI / 2, flash: 0, on: 0,
-    st: newSt(), no: G.defNo[type], tgt: type === 'sniper' ? 'strong' : 'first', heat: 0, oh: 0, idle: 0, kit: 0 };
+    st: newSt(), no: G.defNo[type], tgt: type === 'sniper' ? 'strong' : 'first', heat: 0, oh: 0, idle: 0, kit: 0, stress: 0, fat: 0, shotT: -9 };
   G.defs.push(d); G.defMap.set(c + ',' + r, d);
   return d;
 }
@@ -2018,7 +2029,7 @@ function defMenuHtml(S, money) {
   const K = GUN[d.type];
   const kit = !K ? '' : d.kit ? `<button disabled><span class="l">${K.kitL}</span><span class="n">${K.kitN}, acquis</span></button>`
     : `<button class="${S.pick === 'kit' ? 'pick' : ''}" data-act="dKit" data-cost="${K.kitCost}" ${money < K.kitCost ? 'disabled' : ''}><span class="l">${S.pick === 'kit' ? 'Confirmer' : K.kitL}</span><span class="n">${K.kitN}</span><span class="p">${fmt(K.kitCost)}</span></button>`;
-  return `<div class="smt"><b>${defLabel(d)}</b> · niv. ${d.lv + 1} · ${D.levels[d.lv].n}<span>${fmt(d.st.kills)} élim.</span></div><div class="smr">${up}${kit}${tg}${sell}${info}<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button></div>`;
+  return `<div class="smt"><b>${defLabel(d)}</b> · niv. ${d.lv + 1} · ${D.levels[d.lv].n}<span>${fmt(d.st.kills)} élim.${D.place === 'side' && G.mode === 'wave' ? ' · précision ' + crewPrec(d) + ' %' : ''}</span></div><div class="smr">${up}${kit}${tg}${sell}${info}<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button></div>`;
 }
 function buildAt(type, c, r) {
   if (!G.unlocked[type] || !canPlace(type, c, r)) return false;
@@ -2103,6 +2114,7 @@ function act(a, ds) {
     case 'dUp': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'up') { S.pick = 'up'; break; } upgradeInst(G.selected); S.pick = null; break; }
     case 'dSell': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'sell') { S.pick = 'sell'; break; } sellSelected(); G.slotMenu = null; break; }
     case 'dKit': { const S = G.slotMenu, d = G.selected; if (!S || !S.def || !d || !GUN[d.type] || d.kit) break; if (S.pick !== 'kit') { S.pick = 'kit'; break; } if (spend(GUN[d.type].kitCost)) { d.kit = 1; d.spent += GUN[d.type].kitCost; SND.play('click'); toast(`${GUN[d.type].kit} : ${defLabel(d)}.`, 1500); if (G.mode === 'build') saveGame(); } S.pick = null; break; }
+    case 'lightUp': { if (G.light >= 3) break; const c = LIGHT_LV[G.light].cost; if (spend(c)) { G.light++; lightDirty = true; SND.play('click'); toast(`${LIGHT_LV[G.light - 1].n} : ${LIGHT_LV[G.light - 1].d}.`, 2600); if (G.mode === 'build') saveGame(); } break; }
     case 'modKit': { const id = ds.id, K = GUN[MOD_GUN[id]]; if (!K || !G.mods[id] || G.modKit[id]) break; if (spend(K.kitCost)) { G.modKit[id] = 1; SND.play('click'); toast(`${K.kit} : ${MODULES[id].name}.`, 1500); if (G.mode === 'build') saveGame(); } break; }
     case 'dTgt': { const d = G.selected; if (d && G.slotMenu) { const ks = Object.keys(TGT); d.tgt = ks[(ks.indexOf(d.tgt) + 1) % ks.length]; G.slotMenu.pick = null; } break; }
     case 'dInfo': G.slotMenu = null; G.tab = 'def'; G.panelOpen = true; break;
@@ -2408,7 +2420,8 @@ function sheetReport() {
       `<div class="stile gold"><b>+${fmt(R.bonus + (R.prime || 0))}</b><span>${R.prime ? 'primes + appel' : 'prime'}</span></div></div>`;
     h += `<div class="sect">Qui a tenu la ligne</div><div class="card">` +
       R.rows.map((r, i) => `<div class="rrow" ${r.def >= 0 ? `data-act="selDef" data-i="${r.def}"` : ''}><span class="rr">${i + 1}</span><span class="rn">${r.name}<small>${r.lv ? 'niv. ' + r.lv + ' · ' : ''}${r.k} élim.</small></span><span class="rbar"><i style="width:${r.pct}%"></i></span><span class="rp">${r.pct} %</span></div>`).join('') +
-      `<div class="note" style="margin-top:6px">Part des dégâts de la vague. Touchez une défense pour ouvrir sa fiche.</div></div>`;
+      `<div class="note" style="margin-top:6px">Part des dégâts de la vague. Touchez une défense pour ouvrir sa fiche.</div></div>` +
+      `<div class="card"><div class="row"><span style="font-size:12.5px">Tirs partis à côté cette nuit</span><b style="color:${R.miss >= 25 ? '#f08d74' : R.miss >= 15 ? '#e0a040' : '#9cc46b'}">${R.miss} %</b></div><div class="note">Obscurité, stress et fatigue des équipes. Éclairage, repos de jour et cartes réduisent les ratés.</div></div>`;
   }
   return h + nextWaveCard();
 }
@@ -2448,6 +2461,10 @@ function sheetBastion() {
     else { const n = NODE[id]; if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">Bonus : ${B.name}</span>${nodeBtn(id, 'Débloquer · ' + fmt(nodeCost(n)))}</div>`); }
   });
   if (rows.length) h += `<div class="sect">Modules et bonus</div><div class="card">${rows.join('')}</div>`;
+  // éclairage : une option du bastion, disponible dès le début (la nuit concerne tout le monde)
+  h += `<div class="sect">Éclairage de nuit</div><div class="card"><div class="br"><span style="flex:1;font-size:12px">${G.light ? LIGHT_LV[G.light - 1].n : 'Lampes de rue'} ${pips(G.light, 3)}</span>` +
+    (G.light < 3 ? `<button class="btn buy" data-act="lightUp" data-cost="${LIGHT_LV[G.light].cost}">${LIGHT_LV[G.light].n} · ${fmt(LIGHT_LV[G.light].cost)}</button>` : '<span class="tag">Max</span>') + '</div>' +
+    `<div class="note" style="margin-top:6px">${G.light < 3 ? 'Prochain niveau : ' + LIGHT_LV[G.light].d + '.' : 'Éclairage complet.'} Dans le noir, les tirs partent plus souvent à côté ; les zombies cassent les lampes en passant, réparées au lever du jour.</div></div>`;
   const cardIds = Object.keys(G.cards).filter(id => G.cards[id] > 0 && id !== 'ravit');
   h += `<div class="sect">Cartes de la partie</div>` + (cardIds.length
     ? `<div class="chips">${cardIds.map(id => `<span class="cchip" style="--c:${CAT_COL[CARDS[id].cat]}">${CARDS[id].name}${G.cards[id] > 1 ? ' x' + G.cards[id] : ''}</span>`).join('')}</div>` : '') +
@@ -2461,6 +2478,7 @@ function sheetDef() {
   if (d) {
     const D = DEF[d.type], L = effL(d.type, d.lv), N = D.levels[d.lv + 1] ? effL(d.type, d.lv + 1) : null;
     h += `<div class="sect">${D.name} · niveau ${d.lv + 1}</div><div class="card sel"><b>${L.n}</b><div class="stats">${defDesc(d.type, L)}</div>`;
+    if (D.place === 'side') h += `<div class="note">Équipe : stress ${Math.round(d.stress * 100)} %, fatigue ${Math.round(d.fat * 100)} % · précision ${crewPrec(d)} % (hors obscurité). Le jour repose l'équipe.</div>`;
     if (N) {
       h += G.defTech[d.type] > d.lv
         ? `<div class="br"><span style="flex:1;font-size:12px">Niv. ${d.lv + 2} · ${N.n} : ${defDesc(d.type, N)}</span></div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="upInst" data-cost="${N.cost}">Améliorer celle-ci : ${fmt(N.cost)}</button>`
@@ -2518,7 +2536,8 @@ function ammoText() {
   const s = ws(G.equipped), A = G.wst[G.equipped];
   if (G.mode !== 'wave' || !A) return s.mag === 1 ? 'un coup' : (WBY[G.equipped].kind === 'flame' ? 'réservoir plein' : `${s.mag}/${s.mag}`);
   if (A.rl > 0) return WBY[G.equipped].kind === 'flame' ? 'bouteilles...' : 'rechargement...';
-  return s.mag === 1 ? 'prêt' : WBY[G.equipped].kind === 'flame' ? `réservoir ${Math.round(A.n / s.mag * 100)} %` : `${A.n}/${s.mag}`;
+  const pr = crewPrec(G.crew), ps = pr < 92 ? ` · précision ${pr} %` : '';
+  return (s.mag === 1 ? 'prêt' : WBY[G.equipped].kind === 'flame' ? `réservoir ${Math.round(A.n / s.mag * 100)} %` : `${A.n}/${s.mag}`) + ps;
 }
 function renderWeaponBar() {
   const owned = WEAPONS.filter(w => G.weapons[w.id].owned), w = WBY[G.equipped];
@@ -2536,7 +2555,7 @@ function renderWaveBtn() {
   let sm, big, cls = '';
   if (G.mode === 'build') { sm = G.wave + 1 >= VICTORY && !G.won ? 'Dernière vague' : 'Lancer la vague'; big = `Vague ${G.wave + 1}`; cls = 'ready'; }
   else if (early) { sm = 'Appeler maintenant'; big = `Vague ${G.wave + 1} · +${fmt(earlyPrime())}`; cls = 'early'; }
-  else if (G.mode === 'wave') { sm = `Vague ${G.wave} en cours`; big = `${left} zombie${left > 1 ? 's' : ''} restant${left > 1 ? 's' : ''}`; cls = 'run'; }
+  else if (G.mode === 'wave') { sm = `Vague ${G.wave} · nuit`; big = `${left} zombie${left > 1 ? 's' : ''}`; cls = 'run'; }
   else { sm = ''; big = '...'; }
   b.disabled = !(G.mode === 'build' || early);
   ['ready', 'early', 'run'].forEach(c => b.classList.toggle(c, c === cls));
@@ -3038,7 +3057,8 @@ function drawLamp(l) {
   ctx.strokeStyle = '#1c1e22'; ctx.lineWidth = 2.2; seg(x, PY(y), x, top);
   ctx.lineWidth = 1.6; seg(x, top, ax, ay);
   ctx.fillStyle = '#2a2c30'; ctx.fillRect(ax - 3.5, ay - 1.5, 7, 3.5);
-  ctx.fillStyle = '#ffe3a0'; ctx.fillRect(ax - 2.5, ay + 1.5, 5, 1.6);
+  ctx.fillStyle = l.broken ? '#3a3330' : G.night > 0.3 ? '#ffe3a0' : '#b9b19a'; ctx.fillRect(ax - 2.5, ay + 1.5, 5, 1.6);
+  if (l.broken) { ctx.strokeStyle = '#6b5a3a'; ctx.lineWidth = 1; seg(ax - 3, ay + 4, ax + 2, ay + 7); }
 }
 function drawDecor(d) {
   const x = d.x, y = d.y;
@@ -3163,6 +3183,108 @@ function drawTower(d) {
   for (let i = 0; i <= lv; i++) { ctx.fillStyle = '#d6b85c'; ctx.fillRect(x - 6 + i * 5, PY(y) + 8, 3.5, 2.2); }
 }
 
+/* =========================================================
+   NUIT ET FACTEURS HUMAINS (V2.7)
+   Les vagues ont lieu la nuit, la construction le jour. Un tir peut partir à côté :
+   obscurité de la cible, stress de l'équipe (zombies proches, bastion touché), fatigue
+   (combat prolongé ; le jour la fait retomber, un appel anticipé l'en prive).
+   ========================================================= */
+const NIGHT_K = 0.76;
+const LIGHT_LV = [
+  { n: 'Lampes renforcées', cost: 250, d: 'lampes 30 % plus puissantes et trois fois plus solides' },
+  { n: 'Projecteurs', cost: 700, d: 'le bastion éclaire à 4 cases, chaque tour éclaire ses abords' },
+  { n: 'Fusées éclairantes', cost: 1600, d: 'une fusée éclaire la horde la plus proche toutes les 15 s' },
+];
+const lampR = () => 56 * (G.light >= 1 ? 1.3 : 1);
+const lampHP = () => G.light >= 1 ? 90 : 30;
+// niveau de lumière en un point (0 noir, 1 plein jour) pendant la nuit
+function lightAt(x, y) {
+  let L = 0;
+  const R = lampR();
+  for (const l of LAMPS) if (!l.broken) { const d = Math.hypot(x - l.lx, y - l.ly); if (d < R) L = Math.max(L, 1 - d / R * 0.6); }
+  const db = Math.hypot(x - BX, y - BY), bR = G.light >= 2 ? 160 : 72;
+  if (db < bR) L = Math.max(L, (G.light >= 2 ? 1 : 0.7) - db / bR * 0.5);
+  if (G.light >= 2) for (const d of G.defs) if (DEF[d.type].place === 'side' && Math.abs(x - d.x) < 44 && Math.abs(y - d.y) < 44) L = Math.max(L, 0.75);
+  for (const f of G.flares) { const d = Math.hypot(x - f.x, y - f.y); if (d < f.r) L = Math.max(L, 1 - d / f.r * 0.35); }
+  return Math.min(1, L);
+}
+// probabilité de rater la cible
+function missChance(c, t, base) {
+  const dark = t.burnT > 0 || G.mode !== 'wave' ? 0 : 1 - lightAt(t.x, t.y);   // les vagues ont toujours lieu la nuit
+  const p = (base == null ? 0.03 : base) + 0.22 * dark * (1 - 0.5 * cardN('nuit')) + 0.12 * c.stress + 0.15 * c.fat;
+  return clamp(p, 0, 0.65);
+}
+const crewPrec = c => Math.round((1 - clamp(0.03 + 0.12 * c.stress + 0.15 * c.fat, 0, 0.65)) * 100);
+// angle de tir : en cas de raté, le tir passe à côté (il peut toucher un autre zombie derrière)
+function aimAng(sx, sy, ang, t, c, base) {
+  G.shotW++;
+  if (rand() >= missChance(c, t, base)) return ang;
+  G.missW++;
+  const d = Math.max(20, Math.hypot(t.x - sx, t.y - sy));
+  return ang + (rand() < 0.5 ? -1 : 1) * Math.atan((t.r + 5 + rand() * 9) / d);
+}
+// point d'impact d'un tir explosif : en cas de raté, il tombe à côté
+function aimPt(p, t, c, r) {
+  G.shotW++;
+  if (rand() >= missChance(c, t)) return p;
+  G.missW++;
+  const a = rand() * Math.PI * 2, k = r * (1.1 + rand() * 0.9);
+  return { x: p.x + Math.cos(a) * k, y: p.y + Math.sin(a) * k };
+}
+// stress : monte vite quand les zombies approchent, retombe lentement ; fatigue : combat prolongé
+function crewTick(c, x, y, dt, engaged, reach) {
+  let threat = 0;
+  for (const z of G.zombies) if (!z.dead && Math.abs(z.x - x) < reach && Math.abs(z.y - y) < reach && Math.hypot(z.x - x, z.y - y) < reach) threat += z.type === 'boss' ? 4 : z.type === 'brute' ? 2 : 1;
+  // le noir fait peur : une équipe éclairée (projecteurs, lampes) encaisse mieux la pression
+  const target = Math.min(1, threat / 12) * (0.6 + 0.4 * (1 - lightAt(x, y))) * (1 - 0.4 * cardN('calme'));
+  c.stress += (target - c.stress) * Math.min(1, dt * (target > c.stress ? 1.0 : 0.35));
+  c.fat = Math.min(1, c.fat + dt * (engaged ? 0.006 : 0.0015) * (1 - 0.5 * cardN('rations')));
+}
+// lampes : les zombies qui passent les abîment, les Brutes et l'Abomination les arrachent
+function updateLamps(dt) {
+  const R2 = 30 * 30, hp = lampHP();
+  for (const l of LAMPS) {
+    if (l.broken) continue;
+    for (const z of G.zombies) {
+      if (z.dead) continue;
+      const dx = z.x - l.x, dy = z.y - l.y;
+      if (dx * dx + dy * dy > R2) continue;
+      l.dmg = (l.dmg || 0) + (z.type === 'boss' || z.type === 'brute' ? 80 : ZT[z.type].dmg * 0.5) * dt;
+    }
+    if ((l.dmg || 0) >= hp) {
+      l.broken = true; lightDirty = true; SND.play('click');
+      for (let i = 0; i < 10; i++) part(l.x + l.dc * 11, l.y + l.dr * 11, (rand() - 0.5) * 60, (rand() - 0.5) * 60, 0.5, '#ffe3a0', 1.6, 'spark', 30);
+    }
+  }
+}
+// fusées éclairantes (éclairage niveau 3)
+function updateFlares(dt) {
+  G.flares.forEach(f => { f.t += dt; });
+  G.flares = G.flares.filter(f => f.t < f.life);
+  if (G.light < 3) return;
+  G.flareT -= dt;
+  if (G.flareT > 0) return;
+  const live = G.zombies.filter(z => !z.dead && z.hp > 0);
+  if (!live.length) return;
+  live.sort((a, b) => Math.hypot(a.x - BX, a.y - BY) - Math.hypot(b.x - BX, b.y - BY));
+  const z = live[Math.min(live.length - 1, 2)];
+  G.flares.push({ x: z.x, y: z.y, r: 120, t: 0, life: 8 });
+  G.flareT = 15; SND.play('thump');
+}
+function nightTick(dt) {
+  updateLamps(dt); updateFlares(dt);
+  const eng = G.heroIdle < 1;
+  crewTick(G.crew, BX, BY, dt, eng, 70);
+  for (const d of G.defs) if (DEF[d.type].place === 'side') crewTick(d, d.x, d.y, dt, G.time - d.shotT < 1, 55);
+}
+// aube : lampes réparées, équipes reposées
+function dawn() {
+  LAMPS.forEach(l => { l.broken = false; l.dmg = 0; });
+  lightDirty = true; G.flares = []; G.flareT = 8;
+  G.crew.stress = 0; G.crew.fat *= 0.35;
+  G.defs.forEach(d => { d.stress = 0; d.fat = (d.fat || 0) * 0.35; });
+}
+
 /* ---------- Couronne de barbelés (V2.5) ----------
    Un carré qui suit le bord extérieur du fort : le bastion et ses 8 cases voisines (les nids d'angle et
    les pièges collés au bastion sont à l'intérieur). Il croise les routes là où l'effet commence
@@ -3205,6 +3327,15 @@ function gauge(x, y, k, col) {
 const heatCol = k => k > 0.8 ? '#ff4a2a' : k > 0.5 ? '#ff9a3a' : '#e8c060';
 function drawGauges() {
   const RING = { mgnest: '#ff6a3a', flamer: '#7ab8ff', sniper: '#d6b85c' };
+  // équipe stressée ou fatiguée : pastille au-dessus de la tour
+  for (const d of G.defs) {
+    if (DEF[d.type].place !== 'side') continue;
+    const pr = crewPrec(d); if (pr >= 82) continue;
+    const x = d.x + 13, y = PY(d.y, 34);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = pr < 65 ? '#ff5a3a' : '#e8a040'; ctx.beginPath(); ctx.arc(x, y, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#16181a'; ctx.fillRect(x - 0.6, y - 2.4, 1.2, 3); ctx.fillRect(x - 0.6, y + 1.2, 1.2, 1.2);
+  }
   for (const d of G.defs) {
     if (!GUN[d.type]) continue;
     const y = PY(d.y) + 12, hh = d.type === 'sniper' ? 50 : 26;
@@ -3365,13 +3496,16 @@ function buildLights() {
   m.globalCompositeOperation = 'destination-out';
   const ox = VIEW.bx * VIEW.dpr / 2, oy = VIEW.by * VIEW.dpr / 2;
   m.setTransform(s, 0, 0, s * K, ox, oy + TOP * s); g.setTransform(s, 0, 0, s * K, ox, oy + TOP * s);
+  const LR = lampR();
   LAMPS.forEach(l => {
-    lightHole(m, l.lx, l.ly, 56, 0.9);
-    const gr = g.createRadialGradient(l.lx, l.ly, 0, l.lx, l.ly, 44);
+    if (l.broken) return;
+    lightHole(m, l.lx, l.ly, LR, 0.9);
+    const gr = g.createRadialGradient(l.lx, l.ly, 0, l.lx, l.ly, LR * 0.8);
     gr.addColorStop(0, 'rgba(255,190,110,0.16)'); gr.addColorStop(1, 'rgba(255,190,110,0)');
-    g.fillStyle = gr; g.beginPath(); g.arc(l.lx, l.ly, 44, 0, Math.PI * 2); g.fill();
+    g.fillStyle = gr; g.beginPath(); g.arc(l.lx, l.ly, LR * 0.8, 0, Math.PI * 2); g.fill();
   });
-  lightHole(m, BX, BY, 80, 0.6);
+  lightHole(m, BX, BY, G.light >= 2 ? 170 : 80, G.light >= 2 ? 0.85 : 0.6);
+  if (G.light >= 2) G.defs.forEach(d => { if (DEF[d.type].place === 'side') lightHole(m, d.x, d.y, 48, 0.6); });
   SLOTS.forEach(([c, r]) => lightHole(m, c * T + T / 2, r * T + T / 2, 26, 0.25));
 }
 function drawLights() {
@@ -3393,11 +3527,14 @@ function drawLights() {
   let burn = 0;
   for (const z of G.zombies) { if (z.burnT > 0 && burn++ < 12) lightHole(lctx, z.x, PY(z.y, 10), 22, 0.55); }
   if (G.bunkerLv === 4) lightHole(lctx, BX, PY(BY + 23, 26), 34, 0.35);
+  G.flares.forEach(f => { const k = Math.min(1, (f.life - f.t) / 2); lightHole(lctx, f.x, PY(f.y), f.r * 1.3, 0.95 * k); glows.push([f.x, PY(f.y, 60 - f.t * 5), 10, 0.8 * k]); });
   lctx.globalCompositeOperation = 'source-over';
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = clamp(G.night, 0, 1);
   ctx.drawImage(LC, 0, 0, cv.width, cv.height);
   ctx.globalCompositeOperation = 'lighter';
   ctx.drawImage(GLOW, 0, 0, cv.width, cv.height);
+  ctx.globalAlpha = 1;
   screenT();
   glows.forEach(([x, y, r, a]) => {
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -3531,6 +3668,8 @@ function frame(now) {
     while (sim > 0 && G.mode === 'wave') { const s = Math.min(sim, 1 / 60); update(s); sim -= s; }
   } else if (G.mode !== 'wave') { G.time += dt; }
   if (!G.paused) updateFx(dt * (G.mode === 'wave' ? G.speed : 1));
+  const nightTgt = G.mode === 'wave' ? 1 : G.mode === 'build' ? 0 : 0.6;
+  G.night += (nightTgt - G.night) * Math.min(1, dt * 0.9);
   G.defs.forEach(d => { if (d.flash > 0) d.flash -= dt; if (d.on > 0) d.on -= dt; });
   draw();
   hudFrame();

@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.6)
+# DERNIER BASTION — document de conception (V2.7)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -38,7 +38,7 @@ Grille de 9 × 13 cases, bunker au centre.
 
 **Emplacements limités pour les pièges aussi.** Les pièges ne se posent plus que sur 13 cases peintes sur la route, aux virages et aux abords du bastion. Les tours gardent leurs 10 emplacements balisés.
 
-**Améliorations une à une.** L'arbre débloque les options : chaque défense a deux nœuds, niveau II et niveau III (par exemple Double MAG 58, puis M2 Browning 12,7). Ensuite, chaque défense posée s'améliore individuellement : on la touche sur la carte, puis « Améliorer celle-ci ». On peut ainsi ne faire évoluer que la mitrailleuse la mieux placée. Les prérequis qui demandaient un niveau de nid (Minimi, mitrailleuse 12,7 du bunker) pointent désormais vers ces nœuds d'option.
+**Améliorations une à une.** L'arbre débloque les options : chaque défense a deux nœuds, niveau II et niveau III (par exemple mitrailleuse jumelée, puis mitrailleuse lourde 12,7). Ensuite, chaque défense posée s'améliore individuellement : on la touche sur la carte, puis « Améliorer celle-ci ». On peut ainsi ne faire évoluer que la mitrailleuse la mieux placée. Les prérequis qui demandaient un niveau de nid (mitrailleuse légère, mitrailleuse 12,7 du bunker) pointent désormais vers ces nœuds d'option.
 
 **Armes de l'homme simplifiées.** Chaque arme a 3 améliorations uniques, au lieu de 3 × 5 :
 
@@ -52,7 +52,7 @@ Grille de 9 × 13 cases, bunker au centre.
 
 | Bonus | Branche de l'arbre | Effet | Rang 1 | Rang 2 | Rang 3 |
 |---|---|---|---|---|---|
-| Super tir | Tir, sous le Glock | Multiplie les dégâts de l'arme de l'homme | ×4 pendant 3 s, recharge 180 s | ×5 pendant 4 s | ×6 pendant 5 s, recharge 120 s |
+| Super tir | Tir, sous le pistolet | Multiplie les dégâts de l'arme de l'homme | ×4 pendant 3 s, recharge 180 s | ×5 pendant 4 s | ×6 pendant 5 s, recharge 120 s |
 | Frappe d'artillerie | Appui, sous le mortier | On touche une zone, des obus y tombent | 6 obus | 9 obus | 12 obus |
 | Réparation d'urgence | Fortification, sous le double muret | Rend une part des PV du bastion | 30 % | 45 % | 60 % |
 
@@ -75,6 +75,90 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 quindecies. Changement V2.7 : la nuit, les équipes et des noms génériques
+
+**Demande de Renan** : les zombies attaquent de nuit et le jour revient à la fin de chaque vague. Il veut un éclairage améliorable, des lumières que les zombies peuvent casser et une usure des tireurs (stress et fatigue) qui fait partir des tirs à côté. Les armes doivent aussi porter le nom de leur catégorie plutôt que celui d'un fabricant.
+
+**1. Le jour et la nuit.** On construit de jour et on se bat de nuit. Au lancement d'une vague, l'écran s'assombrit en une seconde environ et un bandeau annonce « La nuit tombe ». À la fin de la vague, un autre bandeau annonce « Le jour se lève » avec la prime. Un appel anticipé enchaîne deux nuits ; le bandeau prévient alors : « Pas de repos pour les équipes ». Le bouton de vague affiche « Vague N · nuit ».
+
+**2. L'éclairage.** Les lampes de la carte éclairent dans un rayon de 56 et le bastion dans un rayon de 72. Tout le reste est dans le noir. Trois améliorations s'achètent dans la fiche du bastion (section « Éclairage de nuit ») :
+
+| Niveau | Nom | Coût | Effet |
+|---|---|---|---|
+| 1 | Lampes renforcées | 250 | lampes 30 % plus puissantes et trois fois plus solides (90 PV au lieu de 30) |
+| 2 | Projecteurs | 700 | le bastion éclaire à 4 cases ; chaque tour éclaire ses abords |
+| 3 | Fusées éclairantes | 1 600 | toutes les 15 s, une fusée éclaire pendant 8 s la horde la plus proche du bastion |
+
+**3. Lampes cassables.** Un zombie à moins de 30 d'une lampe l'abîme à la moitié de ses dégâts par seconde ; les Brutes et l'Abomination l'abîment à 80 par seconde. Une lampe cassée lâche des étincelles et n'éclaire plus. Toutes les lampes sont réparées à l'aube. Une route sans lumière devient donc plus dure au fil de la nuit, et les lampes renforcées tiennent plus longtemps.
+
+**4. Stress et fatigue.** Deux sortes d'équipes s'usent : celle du bastion (l'homme et les armes du bastion) et celle de chaque tour.
+- **Stress** : il dépend de la menace dans un rayon d'environ une case et demie (Abomination 4, Brute 2, autres zombies 1, plafond à 12). Il est majoré dans le noir (facteur de 0,6 en pleine lumière à 1 dans le noir complet). Il monte vite et redescend lentement. Chaque coup reçu par le bastion ajoute 3 % au stress de son équipe.
+- **Fatigue** : elle augmente de 0,6 % par seconde quand l'équipe tire et de 0,15 % sinon. Elle ne retombe pas pendant la nuit.
+- **Aube** : le stress revient à zéro et la fatigue est réduite de 65 %. Enchaîner les vagues par appels anticipés coûte donc de la précision.
+
+**5. Tirs à côté.** À chaque tir, la probabilité de rater vaut :
+3 % de base (2 % pour le tireur d'élite)
++ 22 % × obscurité sur la cible
++ 12 % × stress + 15 % × fatigue,
+avec un plafond à 65 %.
+
+Le raté est simulé physiquement, sans tirage caché :
+- une balle part avec un angle qui la fait passer juste à côté du zombie visé, et peut toucher un autre zombie ;
+- la gerbe du fusil à pompe est déviée ;
+- l'obus, la grenade ou la roquette tombe à côté du point visé ;
+- les lance-flammes ne ratent pas ;
+- un zombie en feu se voit dans le noir et compte comme éclairé.
+
+**6. Ce que voit le joueur.**
+- Le sélecteur d'arme indique « précision X % » dès qu'elle passe sous 92 %.
+- L'en-tête du menu d'une tour donne sa précision pendant la vague.
+- La fiche d'une défense a une ligne « Équipe » : stress, fatigue, précision.
+- Une pastille d'alerte apparaît sur la carte quand une équipe passe sous 82 % de précision ; elle devient rouge sous 65 %.
+- Le bilan de vague affiche « Tirs partis à côté cette nuit ».
+- Les lampes ont trois états : ampoule éteinte le jour, halo la nuit, ampoule brisée.
+
+**7. Trois cartes de ravitaillement.**
+- Jumelles de vision nocturne : la pénalité d'obscurité est divisée par deux (1 exemplaire au plus).
+- Discipline de feu : le stress baisse de 40 % par carte (2 au plus).
+- Café et rations : la fatigue monte deux fois moins vite (1 au plus).
+
+**8. Noms génériques.** Plus aucun nom de fabricant ni de modèle dans le jeu.
+
+| Avant | Maintenant (nom court) |
+|---|---|
+| arme de départ | Pistolet 9 mm (Pistolet) |
+| PM | Pistolet-mitrailleur 9 mm (PM 9 mm) |
+| fusil à pompe | Fusil de combat calibre 12 (Fusil à pompe) |
+| fusil d'assaut | Fusil d'assaut 5,56 mm |
+| fusil de précision de l'homme | Fusil de précision 7,62 mm (Fusil 7,62) |
+| mitrailleuse légère | Mitrailleuse légère 5,56 mm |
+| lance-grenades | Lance-grenades 40 mm |
+| fusil lourd | Fusil anti-matériel 12,7 mm (Anti-matériel) |
+| lance-flammes de l'homme | Lance-flammes dorsal |
+| arme antichar | Canon sans recul 84 mm (Sans recul) |
+| arme finale | Lance-roquettes thermobarique (Thermobarique) |
+| nid de mitrailleuse, niv. 1 à 3 | Mitrailleuse 7,62, Mitrailleuse jumelée, Mitrailleuse lourde 12,7 |
+| tireur d'élite, niv. 1 à 3 | Fusil de précision, Fusil de précision semi-auto, Fusil anti-matériel |
+
+**9. Calibrage.** Le jeu reste joué par des joueurs automatiques qui achètent à chaque vague. Le joueur « équilibré » achète l'éclairage aux vagues 2, 5 et 8.
+- **Taux de ratés mesurés** : 23 à 30 % sans éclairage, 13 à 18 % avec les trois niveaux.
+- **Compensation** : sans elle, la nuit retirait 20 à 30 % de puissance de feu réelle. Le budget des hordes est donc multiplié par `NIGHT_K = 0,76` : à puissance égale, les hordes sont 24 % moins résistantes. Avec 0,85 puis 0,8, la partie Normal tombait aux vagues 13 à 26. Avec 0,76, elle tient jusqu'à 28 avec de lourdes pertes après la vague 20, comme en V2.6.
+- **Arrivée des Brutes** : la première Brute arrive désormais seule. Auparavant, trois Brutes arrivaient d'un coup, plus une quatrième toutes les 3 vagues. En Cauchemar, une partie sur deux mourait à la vague 9, sans aucun dégât avant. Ce défaut existait déjà en V2.6 (mesuré : 9 et 18). Depuis la correction, le Cauchemar tombe aux vagues 17 et 20, avec de premières pertes à la vague 9.
+- **Mission 1** : la résistance des hordes passe de 1,25 à 1,1. Le joueur automatique qui achète à chaque vague mourait une fois sur trois à la vague 11, d'un coup. Sur 8 parties, il gagne désormais 7 fois.
+
+| Cas | V2.6 | V2.7 |
+|---|---|---|
+| Normal, joueur équilibré | tient jusqu'à 28 | tient jusqu'à 28 (2 parties sur 2), pertes fréquentes après la vague 20, jusqu'à 98 % en une vague |
+| Cauchemar | morts aux vagues 9 et 18 | morts aux vagues 17 et 20 |
+| Mission 1 | 2 morts à la vague 9 (achats à chaque vague) | 7 victoires sur 8, défis Génie et mitrailleuses gagnés 2 sur 2 |
+| Mission 2 | 2 victoires sur 2 | 2 victoires sur 2 (1 étoile, 65 et 78 % de PV perdus) |
+| Mission 3 | 1 victoire sur 2 | 2 victoires sur 2 (1 et 2 étoiles, 56 à 69 % de PV perdus) ; défi Génie 2 sur 2 |
+
+**10. Limites connues.**
+- **Joueur humain** : le joueur automatique ne vise pas lui-même, il ne place pas ses lampes et ne fait pas de choix tactiques de nuit. Un humain qui éclaire les bonnes routes ratera moins ; un humain qui enchaîne les appels anticipés ratera plus. Le réglage de `NIGHT_K` reste à vérifier sur les retours de Renan.
+- **Spirale de stress** : quand une horde atteint le bastion, le stress monte, la précision baisse et la horde avance encore. Le joueur peut perdre beaucoup de PV en une seule vague. La pastille d'alerte et les fusées éclairantes donnent un signal d'alarme et un moyen d'agir, mais l'effet reste brutal.
+- **Mission 1** : quand elle tourne mal, la défaite tombe encore en une seule vague (la 11), sans dégâts avant.
 
 ## 2 quattuordecies. Changement V2.6 : moteur de cartes et campagne « Apocalypse »
 
@@ -204,13 +288,13 @@ Chaque nouvelle étoile rapporte 5 insignes, en plus des insignes gagnés par va
 Un niveau non débloqué affiche « arbre après la vague ». La règle « l'arbre débloque, la carte améliore » devient aussi une règle de rythme.
 
 **2. Tireurs d'élite : chargeurs.**
-- FR-F2 : 10 coups, rechargement en 3 s. SCAR-H PR : 20 coups, 2,8 s. Hécate II : 7 coups, 3,5 s.
+- Fusil de précision : 10 coups, rechargement en 3 s. Semi-auto : 20 coups, 2,8 s. Anti-matériel : 7 coups, 3,5 s.
 - Rechargement tactique quand la tour n'a plus de cible depuis 1 s et que son chargeur est entamé de 30 %.
 - Option « Grand chargeur » (350) : chargeur +50 %, rechargement 35 % plus rapide.
 - Sur la carte, une barre de munitions sous la tour, puis un cercle doré pendant le rechargement.
 
 **3. Armes du bastion : mêmes règles que les tours.**
-- La 12,7 du bastion se comporte comme la M2 Browning du nid : 70 tirs, puis canon changé en 5 s.
+- La 12,7 du bastion se comporte comme la mitrailleuse lourde du nid : 70 tirs, puis canon changé en 5 s.
 - Le lance-flammes fixe se comporte comme la tour lance-flammes du même niveau.
 - Les options « Canon de rechange » (300) et « Grand réservoir » (450) s'achètent dans la fiche Bastion.
 - Mêmes jauges que les tours.
@@ -258,23 +342,23 @@ Calibrage (joueurs automatiques) :
 
 | Arme | Chargeur | Rechargement |
 |---|---|---|
-| Glock 17 | 17 | 1,6 s |
-| MP5 | 30 | 2,2 s |
-| Benelli M4 | 7 | 3,5 s |
-| HK416F | 30 | 2,4 s |
-| SCAR-H PR | 20 | 2,8 s |
-| Minimi | bande de 200 | 6 s |
-| M32 | 6 | 4 s |
-| Hécate II | 7 | 3,5 s |
-| Lance-flammes M2 | réservoir de 8 s | 6 s |
-| Carl Gustaf, Shmel | 1 | 2,4 s, 3 s |
+| Pistolet 9 mm | 17 | 1,6 s |
+| PM 9 mm | 30 | 2,2 s |
+| Fusil à pompe | 7 | 3,5 s |
+| Fusil d'assaut | 30 | 2,4 s |
+| Fusil 7,62 | 20 | 2,8 s |
+| Mitrailleuse légère | bande de 200 | 6 s |
+| Lance-grenades | 6 | 4 s |
+| Anti-matériel | 7 | 3,5 s |
+| Lance-flammes dorsal | réservoir de 8 s | 6 s |
+| Sans recul, thermobarique | 1 | 2,4 s, 3 s |
 
 - Pendant une accalmie (aucune cible depuis 0,8 s), l'homme recharge de lui-même si son chargeur est entamé de plus de 30 %.
 - Une quatrième amélioration par arme, « Chargeur » (« Réservoir » pour le M2) : chargeur +50 % et rechargement 35 % plus rapide.
 - Sur la carte, une barre au-dessus de l'homme montre les munitions, et un cercle doré la progression du rechargement.
 
 **2. Surchauffe des mitrailleuses.**
-- Les nids de mitrailleuse surchauffent après 60 tirs pour la MAG 58, 100 pour la Double MAG et 70 pour la M2 Browning. Le canon est alors changé en 4 s, ou 5 s pour la M2.
+- Les nids de mitrailleuse surchauffent après 60 tirs pour la mitrailleuse 7,62, 100 pour la jumelée et 70 pour la lourde 12,7. Le canon est alors changé en 4 s, ou 5 s pour la 12,7.
 - Le canon refroidit dès que la tour cesse de tirer.
 - Achat par tour, dans son menu : « Canon de rechange » (300). La surchauffe survient 40 % plus tard et le canon est changé deux fois plus vite.
 - La mitrailleuse 12,7 du bastion suit la même règle : 80 tirs, puis 5 s d'arrêt.
@@ -286,7 +370,7 @@ Calibrage (joueurs automatiques) :
 - Le lance-flammes fixe du bastion tire 9 s, puis s'arrête 5 s.
 - Entre deux vagues, tout est rechargé, refroidi et rempli.
 
-Ces trois règles réduisent la puissance de feu réelle de 20 à 50 % selon l'arme (le M32 est le plus touché). Elles créent surtout des trous dans le tir pendant les grosses hordes : alterner les types de tours et les placer pour qu'elles se relaient devient utile. La puissance de feu affichée en tient compte, et le repère conseillé a été abaissé en conséquence (x0,8).
+Ces trois règles réduisent la puissance de feu réelle de 20 à 50 % selon l'arme (le lance-grenades est le plus touché). Elles créent surtout des trous dans le tir pendant les grosses hordes : alterner les types de tours et les placer pour qu'elles se relaient devient utile. La puissance de feu affichée en tient compte, et le repère conseillé a été abaissé en conséquence (x0,8).
 
 **4. Économie.** Les revenus sont réduits de 8 % au début, puis de 28 % dès la vague 19 (`eco(w)`). Cela vaut pour les primes par zombie, la prime de fin de vague, l'appel anticipé et la carte Ravitaillement. Le début de partie reste abordable, et la fin n'est plus saturée. En simulation, le joueur automatique dépense désormais tout son argent jusqu'à la vague 24.
 
@@ -338,7 +422,7 @@ Ces trois règles réduisent la puissance de feu réelle de 20 à 50 % selon l'a
 
 Insignes : +25 % par niveau. Le niveau se choisit sur l'écran de difficulté ; les records gardent le plus haut niveau gagné.
 
-**4. Dix défis secondaires**, récompensés une seule fois en insignes (5 à 20) : gagner en Normal, en Cauchemar, sans tireur d'élite, sans réparer le bastion, en Menace 3 ; achever une Abomination au lance-flammes ; appeler 10 vagues en avance ; tenir 8 vagues de suite sans perdre un PV ; atteindre la vague 8 avec le seul Glock ; terminer un défi du jour. Ils donnent des buts variés et poussent à essayer d'autres façons de jouer (théorie de l'autodétermination : sentiment de compétence et d'autonomie).
+**4. Dix défis secondaires**, récompensés une seule fois en insignes (5 à 20) : gagner en Normal, en Cauchemar, sans tireur d'élite, sans réparer le bastion, en Menace 3 ; achever une Abomination au lance-flammes ; appeler 10 vagues en avance ; tenir 8 vagues de suite sans perdre un PV ; atteindre la vague 8 avec le seul pistolet ; terminer un défi du jour. Ils donnent des buts variés et poussent à essayer d'autres façons de jouer (théorie de l'autodétermination : sentiment de compétence et d'autonomie).
 
 **5. Défi du jour.** La même partie pour tout le monde le même jour : composition des vagues tirée d'une graine liée à la date, une contrainte du jour parmi cinq (zombies rapides, bastion fragile, disette, grande meute, nuit des Abominations), difficulté Normal, sans les avantages du Quartier général. Le meilleur résultat du jour est conservé ; le bouton « Partager » envoie le résultat (partage du téléphone, sinon copie). Rater un jour ne fait rien perdre.
 
@@ -386,9 +470,9 @@ Constat de Renan : avec l'aperçu de portée, le mortier couvrait presque toute 
 | Palier | Portée | Défenses |
 |---|---|---|
 | Contact | 1,5 à 2 cases | lance-flammes (tour, module, M2), couronne de barbelés, Claymore |
-| Courte | 2,5 à 3 cases | nid de mitrailleuse, pistolets, MP5, Benelli |
-| Moyenne | 3,5 à 4,5 cases | mortier (avec zone morte de 1,4 à 1,6 case), mitrailleuse 12,7 du bastion, HK416, Minimi, M32 |
-| Longue | 4 à 5,5 cases | tireur d'élite, SCAR-H, Carl Gustaf, Shmel, lance-roquettes du bastion, Hécate II (la plus longue : 5,5 cases) |
+| Courte | 2,5 à 3 cases | nid de mitrailleuse, pistolets, PM 9 mm, fusil à pompe |
+| Moyenne | 3,5 à 4,5 cases | mortier (avec zone morte de 1,4 à 1,6 case), mitrailleuse 12,7 du bastion, fusil d'assaut, mitrailleuse légère, lance-grenades |
+| Longue | 4 à 5,5 cases | tireur d'élite, fusil 7,62, sans recul, thermobarique, lance-roquettes du bastion, anti-matériel (la plus longue : 5,5 cases) |
 
 | Élément | Avant (unités) | Après (unités) |
 |---|---|---|
@@ -399,11 +483,11 @@ Constat de Renan : avec l'aperçu de portée, le mortier couvrait presque toute 
 | Lance-roquettes du bastion | 260 / 280 / 300 | 170 / 185 / 200 |
 | Mitrailleuse 12,7 du bastion | 160 / 170 / 185 | 140 / 150 / 160 |
 | Claymore | 95 / 100 / 110 | 80 / 85 / 90 |
-| Hécate II (homme) | 420 | 220 |
-| SCAR-H, Carl Gustaf, Shmel (homme) | 260, 270, 290 | 190, 190, 200 |
-| M32, Minimi, HK416 (homme) | 210, 180, 175 | 170, 165, 160 |
+| Anti-matériel (homme) | 420 | 220 |
+| Fusil 7,62, sans recul, thermobarique (homme) | 260, 270, 290 | 190, 190, 200 |
+| Lance-grenades, mitrailleuse légère, fusil d'assaut (homme) | 210, 180, 175 | 170, 165, 160 |
 
-Le Benelli garde 110 : il doit atteindre le Cracheur, qui crache à 100 du bastion.
+Le fusil à pompe garde 110 : il doit atteindre le Cracheur, qui crache à 100 du bastion.
 
 **Recalibrage.** Les tours engagent moins longtemps, donc défendent moins. En simulation, le joueur automatique « achats toutes les 3 vagues » tombait 3 fois sur 6 avant la vague 40 (vagues 21, 21 et 30). Les PV des hordes ont donc été baissés de 16 % dans les trois difficultés. Résultat en Normal, sur 4 parties : fin entre les vagues 59 et 70, avec des pertes dans 7 à 11 vagues sur 40, comme en V1.6.
 
@@ -512,7 +596,7 @@ Cauchemar a ensuite été adouci à × 0,85. **Limite connue** : un joueur qui d
 
 ## 3. L'arbre d'évolution unique (V1.2)
 
-**Principe.** Au départ, un seul achat possible : le **nid de mitrailleuse**. L'homme a seulement son Glock 17 et des sacs de sable. Chaque nœud acheté ouvre ses enfants, et le joueur part dans la direction de son choix. À chaque étape, deux options :
+**Principe.** Au départ, un seul achat possible : le **nid de mitrailleuse**. L'homme a seulement son pistolet 9 mm et des sacs de sable. Chaque nœud acheté ouvre ses enfants, et le joueur part dans la direction de son choix. À chaque étape, deux options :
 - **Ouvrir** un nouvel élément : arme, tour, piège, niveau de bunker ou module.
 - **Améliorer** un élément déjà acquis, à l'intérieur de son nœud : cadence, puissance et zone pour une arme ; niveaux 2 et 3 pour une défense ou un module.
 
@@ -520,7 +604,7 @@ Cauchemar a ensuite été adouci à × 0,85. **Limite connue** : un joueur qui d
 
 | Direction | Contenu | Enchaînement |
 |---|---|---|
-| Tir | Les 11 armes de l'homme | Glock → MP5 → Benelli (puis M32, Lance-flammes M2) ou HK416 (puis SCAR-H, Minimi) → Carl Gustaf, Hécate, Shmel |
+| Tir | Les 11 armes de l'homme | pistolet → PM 9 mm → fusil à pompe (puis lance-grenades, lance-flammes dorsal) ou fusil d'assaut (puis fusil 7,62, mitrailleuse légère) → sans recul, anti-matériel, thermobarique |
 | Appui | Tours | Tireur d'élite → Mortier ; Tour lance-flammes |
 | Génie | Pièges | Barbelés → Mine, Fossé |
 | Fortification | Bunker et modules | Double muret → HESCO → Casemate → Blindé, avec un module greffé à chaque palier |
@@ -529,12 +613,12 @@ Cauchemar a ensuite été adouci à × 0,85. **Limite connue** : un joueur qui d
 
 | Nœud | Exige aussi |
 |---|---|
-| M32 | Mine |
-| Carl Gustaf | Mortier |
-| RPO-A Shmel | Lance-flammes M2 |
-| Lance-flammes M2 | Tour lance-flammes |
-| Hécate II | Tireur d'élite |
-| Minimi | Nid de mitrailleuse niveau 2 |
+| Lance-grenades | Mine |
+| Canon sans recul | Mortier |
+| Lance-roquettes thermobarique | Lance-flammes dorsal |
+| Lance-flammes dorsal | Tour lance-flammes |
+| Fusil anti-matériel | Tireur d'élite |
+| Mitrailleuse légère | Nid de mitrailleuse niveau 2 |
 | Mortier | Mine |
 | Tour lance-flammes | Fossé |
 | Couronne de barbelés | Barbelés |
@@ -581,21 +665,21 @@ Ouvrir l'arbre pendant une vague met le jeu en pause. L'onglet « Construire » 
 
 ## 4. L'homme et ses armes (11 armes, toutes portables par un fantassin)
 
-L'ordre suit la puissance. Chaque arme se débloque après la précédente. L'homme ne porte qu'une arme active à la fois et en change d'un appui. Le choix compte : fusil à pompe contre les foules proches, Hécate contre les blindés, etc.
+L'ordre suit la puissance. Chaque arme se débloque après la précédente. L'homme ne porte qu'une arme active à la fois et en change d'un appui. Le choix compte : fusil à pompe contre les foules proches, anti-matériel contre les blindés, etc.
 
 | # | Arme | Référence réelle | Rôle dans le jeu |
 |---|---|---|---|
-| 1 | Pistolet Glock 17 | Arme de poing réglementaire française (Gen 5 FR, livrée depuis fin 2020) | Arme de départ |
-| 2 | PM HK MP5 | Pistolet-mitrailleur 9 mm des unités d'intervention | Cadence élevée, courte portée |
-| 3 | Fusil à pompe Benelli M4 | Fusil de combat semi-automatique (M1014 aux États-Unis) | 6 plombs en éventail, dévastateur de près |
-| 4 | Fusil d'assaut HK416F | Fusil d'assaut réglementaire, remplace le FAMAS | Polyvalent |
-| 5 | FN SCAR-H PR | Fusil de précision semi-automatique 7,62 mm | Perforant (traverse 2 cibles) |
-| 6 | FN Minimi | Mitrailleuse légère 5,56 mm | Arrosage continu |
-| 7 | Lance-grenades M32 MGL | Revolver 40 mm à 6 coups | Dégâts de zone |
-| 8 | PGM Hécate II | Fusil anti-matériel 12,7 mm de l'armée française | Ignore l'essentiel de l'armure, traverse 4 cibles |
-| 9 | Lance-flammes M2 | Lance-flammes dorsal (portée efficace d'environ 20 m) | Cône de feu, brûlure, très courte portée |
-| 10 | Carl Gustaf M4 | Arme multirôle sans recul de 84 mm | Gros dégâts de zone |
-| 11 | RPO-A Shmel | Lance-roquettes thermobarique portable | Arme finale, souffle énorme et brûlure |
+| 1 | Pistolet 9 mm | Arme de poing réglementaire | Arme de départ |
+| 2 | Pistolet-mitrailleur 9 mm | Pistolet-mitrailleur 9 mm des unités d'intervention | Cadence élevée, courte portée |
+| 3 | Fusil de combat calibre 12 | Fusil à pompe semi-automatique | 6 plombs en éventail, dévastateur de près |
+| 4 | Fusil d'assaut 5,56 mm | Fusil d'assaut réglementaire | Polyvalent |
+| 5 | Fusil de précision 7,62 mm | Fusil de précision semi-automatique 7,62 mm | Perforant (traverse 2 cibles) |
+| 6 | Mitrailleuse légère 5,56 mm | Mitrailleuse légère 5,56 mm | Arrosage continu |
+| 7 | Lance-grenades 40 mm | Revolver 40 mm à 6 coups | Dégâts de zone |
+| 8 | Fusil anti-matériel 12,7 mm | Fusil de très longue portée | Ignore l'essentiel de l'armure, traverse 4 cibles |
+| 9 | Lance-flammes dorsal | Lance-flammes dorsal (portée efficace d'environ 20 m) | Cône de feu, brûlure, très courte portée |
+| 10 | Canon sans recul 84 mm | Arme multirôle | Gros dégâts de zone |
+| 11 | Lance-roquettes thermobarique | Lance-roquettes thermobarique portable | Arme finale, souffle énorme et brûlure |
 
 ### Améliorations d'une arme (dans son nœud)
 
@@ -628,7 +712,7 @@ L'armure réduit chaque coup reçu d'une valeur fixe.
 |---|---|---|
 | Barbelé concertina en couronne | niv. 2 | Anneau qui ralentit et blesse au contact du bunker |
 | Ceinture de Claymore | niv. 3 | Mine directionnelle (éventail de billes) qui se déclenche puis se réarme |
-| Mitrailleuse 12,7 M2 | niv. 3 | Tourelle automatique |
+| Mitrailleuse lourde 12,7 | niv. 3 | Tourelle automatique |
 | Lance-flammes fixe | niv. 4 | Cône de feu autour du bunker |
 | Lance-roquettes automatique | niv. 5 | Salves de roquettes sur les groupes |
 
@@ -650,8 +734,8 @@ Les mines se réarment après un délai.
 
 | Tour | Niv. 1 | Niv. 2 | Niv. 3 |
 |---|---|---|---|
-| Nid de mitrailleuse | MAG 58 | Double MAG | M2 Browning 12,7 |
-| Tireur d'élite | FR-F2 | SCAR-H PR | Hécate II (perce l'armure) |
+| Nid de mitrailleuse | Mitrailleuse 7,62 | Mitrailleuse jumelée | Mitrailleuse lourde 12,7 |
+| Tireur d'élite | Fusil de précision | Fusil de précision semi-auto | Fusil anti-matériel (perce l'armure) |
 | Mortier | 60 mm | 81 mm | 120 mm |
 | Lance-flammes | Léger | Lourd | Napalm |
 
@@ -667,7 +751,7 @@ Les types s'inspirent des grandes références du genre : les infectés spéciau
 | Coureur | vague 3 | Rapide, fragile | Barbelés, fossés |
 | Rampant | vague 5 | Passe sous les barbelés | Mines, lance-flammes |
 | Bouffi | vague 7 | Explose : blesse les zombies voisins s'il est tué, inflige un gros coup s'il atteint le bunker | À abattre tôt, au milieu des foules |
-| Blindé (ex-forces de l'ordre) | vague 8 | Armure élevée | Hécate, tireur d'élite, explosifs |
+| Blindé (ex-forces de l'ordre) | vague 8 | Armure élevée | Anti-matériel, tireur d'élite, explosifs |
 | Cracheur | vague 9 | S'arrête à distance et crache de l'acide sur le bunker | Portée longue, mortier |
 | Hurleur | vague 11 | Accélère les zombies autour de lui | Priorité de tir (appui sur lui) |
 | Brute | vague 12, puis toutes les 4 vagues | Énorme, encaisse beaucoup | Puissance concentrée |
@@ -691,7 +775,7 @@ Le principe retenu est la masse plutôt que la résistance individuelle.
 - **Lance-flammes M2** : retiré du service américain en 1978. Gardé parce qu'il est emblématique et que le jeu se passe après l'effondrement.
 - **Mines antipersonnel** : interdites par la convention d'Ottawa. Dans la fiction, c'est l'apocalypse.
 - **Minigun** : exclu, parce qu'il n'est pas portable à la main par un soldat. La demande était « toutes les armes qu'un soldat peut porter ».
-- **RPO-A Shmel en arme finale** : c'est l'arme portable non guidée au souffle le plus puissant de la liste (charge thermobarique). Un missile guidé comme l'Akeron MP ou le Javelin aurait moins de sens contre des zombies.
+- **Lance-roquettes thermobarique en arme finale** : c'est l'arme portable non guidée au souffle le plus puissant de la liste. Un missile guidé aurait moins de sens contre des zombies.
 
 ## 10. Calibrage (simulations automatiques)
 
@@ -716,14 +800,14 @@ Version 1.1 (hordes et emplacements) : un joueur automatique qui répartit ses a
 Ajustements faits pour les hordes :
 - Récompense par zombie réduite, puisqu'ils sont plus nombreux.
 - Argent de départ porté à 400.
-- Armure du Blindé ramenée de 6 à 4 : le MP5 ne lui faisait plus qu'un point de dégât par balle.
+- Armure du Blindé ramenée de 6 à 4 : le PM 9 mm ne lui faisait plus qu'un point de dégât par balle.
 - La pente des points de vie se durcit après la vague 15 : en simulation, le jeu devenait trop facile en fin de partie, avec 180 000 d'argent en banque à la vague 60.
 
 Version 1 :
 
 Ajustements faits après simulation :
 - Bouffi moins destructeur au contact.
-- Cracheur à portée de toutes les armes sauf le lance-flammes : le Benelli ne pouvait plus l'atteindre.
+- Cracheur à portée de toutes les armes sauf le lance-flammes : le fusil à pompe ne pouvait plus l'atteindre.
 - Premier boss allégé : il était quasi invulnérable aux armes disponibles à la vague 10.
 - Brute un peu moins résistante.
 
@@ -740,7 +824,7 @@ Ajustements faits après simulation :
 
 ---
 
-## Sources
+## Sources (modèles réels ayant servi de référence ; le jeu n'utilise que des noms génériques depuis la V2.7)
 
 - HK416F et FELIN : https://blog.roninsgrips.com/french-military-small-arms-modernization-overview/
 - Glock 17 Gen 5 FR, SCAR-H PR : https://www.janes.com/defence-news/french-army-details-vehicle-deliveries-and-upgrade-plans
