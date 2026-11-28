@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.5)
+# DERNIER BASTION — document de conception (V2.6)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,60 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 quattuordecies. Changement V2.6 : moteur de cartes et campagne « Apocalypse »
+
+**Décision de Renan** : rendre d'abord les cartes interchangeables, puis faire 3 missions d'essai de 12 à 15 vagues, avec des défis par mission. Le monde Far West viendra plus tard sur le même moteur, une fois les missions validées.
+
+**1. Moteur de cartes.** La carte n'est plus écrite en dur : `MAPS` décrit pour chaque carte le bastion, les routes (avec leur vague d'ouverture), les emplacements de tours, les emplacements de pièges et les graines du décor et du sol. `loadMap(id, ouvertures)` reconstruit routes, emplacements, décor, sol et lumières. La partie libre et le défi du jour restent sur « Le carrefour », identique à la V2.5.
+
+**Règles de dessin d'une carte** (rappelées dans le code) :
+- grille de 9 x 13 cases, routes en lignes droites qui finissent au bastion ;
+- coins du haut libres : une entrée par le haut seulement dans les colonnes 2 à 4, et une entrée par le bas à partir de la colonne 3 (le sélecteur d'arme occupe le coin bas gauche) ;
+- un fort de 3 x 3 cases autour du bastion ;
+- des pièges espacés d'au moins une case, aucun juste au-dessus du bastion ;
+- des tours au bord des routes, en privilégiant les cases qui couvrent deux routes.
+
+**2. Les trois missions**
+
+| Mission | Carte | Vagues | Routes | Nouveautés | Abominations |
+|---|---|---|---|---|---|
+| 1. Le poste avancé | bastion bas, longue route du nord en lacets, route de l'est à la vague 6 | 12 | 2 | arbre réduit : nid, tireur d'élite, barbelés, mines ; Coureurs, Rampants, Bouffis | 1 à la vague 12 |
+| 2. La raffinerie | bastion haut, routes ouest et est dès le départ, sud à la vague 7 | 14 | 3 | mortier, fossé, bunker à étage ; Blindés, Cracheurs | 1 à la vague 7, 2 à la vague 14 |
+| 3. Le carrefour | la carte de la partie libre, est à la vague 7 | 15 | 3 | tout l'arsenal ; Hurleurs, Brutes | 1 à la vague 8, 2 à la 12, 3 à la 15 |
+
+Chaque mission a sa propre échelle de difficulté :
+- `eff0` (point de départ) et `pace` (progression par vague), sur la même échelle que la partie libre ;
+- son argent de départ : 400, 700 et 1 000 ;
+- la résistance des hordes : 1,25, 1,0 et 0,64 ;
+- les nœuds de l'arbre absents, ainsi que tout ce qui en dépend.
+
+En mission, l'Abomination compte pour 55 % de son poids habituel dans le budget de la vague. Sans cela, les vagues ordinaires étaient triviales et toute la mission se jouait sur le boss final.
+
+**3. Étoiles.** Elles se calculent sur les PV perdus par le bastion sur toute la mission, rapportés à ses PV maximum en fin de mission :
+- 3 étoiles sous 20 % ;
+- 2 étoiles sous 60 % ;
+- 1 étoile au-delà.
+
+Chaque nouvelle étoile rapporte 5 insignes, en plus des insignes gagnés par vague. Une mission s'ouvre quand la précédente est gagnée.
+
+**4. Défis**, ouverts après une première victoire sur la mission (15 insignes la première fois) :
+- **Génie** : aucune tour. Pièges, bastion (couronne, Claymore) et l'homme. La racine de l'arbre est offerte. Les hordes y sont 15 % moins résistantes.
+- **Arsenal unique** : une seule sorte de tour (mitrailleuses en mission 1, mortiers en mission 2, tireurs d'élite en mission 3). Pièges et bastion permis.
+
+**5. Écrans.**
+- Titre : « Campagne » et « Partie libre ».
+- Campagne : une fiche par mission, avec son numéro, ses étoiles, les boutons Jouer ou Rejouer, les défis et l'état réussi.
+- Briefing : le contexte, « Au programme », la règle des étoiles ou celle du défi.
+- Fin de mission : grandes étoiles, ce qu'il faut pour l'étoile suivante, les récompenses, puis « Mission suivante », « Campagne », « Rejouer » et « Partager ».
+- En cas de défaite en mission : « Rejouer la mission » et « Campagne ».
+- Une mission en cours se sauvegarde et se reprend comme une partie libre.
+
+**Calibrage** (joueurs automatiques, 2 parties par cas) :
+- **Mission 1** (achats toutes les 2 vagues) : profil équilibré, 3 puis 2 étoiles. Défi Génie gagné 2 fois sur 2 (1 étoile). Mitrailleuses seules : 2 sur 2.
+- **Mission 2** (achats à chaque vague) : profil équilibré, 1 puis 2 étoiles. Défi Génie gagné 1 fois sur 2. Mortiers seuls : 2 sur 2, de justesse.
+- **Mission 3** (achats à chaque vague) : profil équilibré, 1 victoire (1 étoile) sur 2. Avec des achats toutes les 2 vagues, défaite aux vagues 8 à 10. Défi Génie gagné 1 fois sur 2. Tireurs d'élite seuls : 2 sur 2 (2 étoiles).
+- **Limite** : les vagues du début restent faciles pour un joueur qui construit vite. Les retours de Renan régleront la mission 1, qui sert d'apprentissage.
 
 ## 2 terdecies. Changement V2.5 : lisibilité autour du bastion
 

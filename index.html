@@ -449,6 +449,25 @@
   #toast{border-radius:12px;border:1px solid #3a3a2c;box-shadow:0 8px 20px rgba(0,0,0,.5);font-weight:600}
   #banner{border-radius:16px;padding:14px 26px;background:linear-gradient(180deg,rgba(26,29,31,.94),rgba(14,16,17,.94));box-shadow:0 12px 30px rgba(0,0,0,.55)}
   #banner b{font-weight:900;letter-spacing:.05em;font-size:26px;text-transform:uppercase}
+  .ov .kick{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a59f8b;margin-bottom:2px}
+  .ov h1.mw{font-size:32px}
+  .mcard{text-align:left;background:linear-gradient(180deg,var(--pan1),var(--pan2));border:1px solid var(--edge);border-radius:15px;padding:11px 12px;margin-top:9px}
+  .mcard.locked{opacity:.5}
+  .mcard .mh{display:flex;align-items:center;gap:10px}
+  .mcard .mn{flex:0 0 34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;background:linear-gradient(180deg,#38331f,#211f15);border:1px solid var(--khaki2);color:var(--gold1)}
+  .mcard .mt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+  .mcard .mt b{font-size:15px}
+  .mcard .mt span{font-size:11.5px;color:var(--mute)}
+  .mcard .mb{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+  .mcard .mb .btn{flex:1 1 auto;padding:9px 8px;font-size:12px}
+  .btn.done{color:#a8cf78;border-color:#3f5a2a;background:linear-gradient(180deg,#22301a,#1a2414)}
+  .stars{display:inline-flex;gap:2px}
+  .stars .star{width:16px;height:16px;fill:#33393c}
+  .stars .star.on{fill:var(--gold1);filter:drop-shadow(0 0 4px rgba(226,205,138,.5))}
+  .stars.lg{gap:8px;margin:10px 0 2px;justify-content:center;display:flex}
+  .stars.lg .star{width:46px;height:46px}
+  .ov .nl{margin:6px 0 8px;padding-left:18px}
+  .ov .nl li{margin:2px 0}
   @media (max-width:370px){#hud .rv small{display:none}#hud .res{padding:0 7px 0 5px}.hbtn{flex-basis:32px;width:32px;height:32px}}
 </style>
 </head>
@@ -501,11 +520,12 @@
    CONSTANTES ET DONNEES (equilibrage)
    ========================================================= */
 const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
-const BC = { c: 4, r: 6 }, BX = BC.c * T + T / 2, BY = BC.r * T + T / 2, BR = 21;
+const BC = { c: 4, r: 6 }, BR = 21;
+let BX = BC.c * T + T / 2, BY = BC.r * T + T / 2;   // changent avec la carte (loadMap)
 const SKEY = 'dernierBastion.save.v4', BKEY = 'dernierBastion.best', BKEY2 = 'dernierBastion.best.v6', MKEY = 'dernierBastion.meta.v1';
 // Progression permanente entre les parties : insignes gagnés à chaque vague, avantages modestes
 function loadMeta() {
-  const m = { ins: 0, perks: {}, menace: 0, menacePick: 0, done: {}, daily: null };
+  const m = { ins: 0, perks: {}, menace: 0, menacePick: 0, done: {}, daily: null, camp: {} };
   try { const j = JSON.parse(localStorage.getItem(MKEY) || 'null'); if (j) Object.assign(m, j, { ins: +j.ins || 0 }); } catch (e) {}
   return m;
 }
@@ -573,21 +593,45 @@ const PERKS = {
 };
 const PERK_ORDER = Object.keys(PERKS);
 
-const PATHS_DEF = [
-  { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
-  { id: 'S', name: 'Sud',  opens: 4,  wp: [[6,13],[6,11],[1,11],[1,8],[4,8],[4,6]] },
-  { id: 'E', name: 'Est',  opens: 9,  wp: [[9,11],[8,11],[8,9],[7,9],[7,7],[6,7],[6,6],[4,6]] },
-];
-
-// Emplacements de tours : les seules cases où une tour peut être posée
-const SLOTS = [[1,1],[4,2],[6,3],[3,5],[5,5],[3,7],[2,10],[5,10],[7,10],[8,8]];
-const SLOT_SET = new Set(SLOTS.map(([c, r]) => c + ',' + r));
-// Emplacements de pièges : cases peintes sur la route (virages et abords du bastion)
-// V2.5 : l'emplacement collé au bastion côté Nord (4,5), caché par le bâtiment, passe au virage (4,4) ;
-// les pièges de la route Nord sont espacés d'au moins une case : (7,2), (6,4), (4,4)
-const TRAP_SLOTS = [[2,1],[5,1],[7,2],[6,4],[4,4],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]];
-const TRAP_MOVED = { '4,5': [4, 4], '7,3': [7, 2], '5,4': [6, 4] };
-const TRAP_SET = new Set(TRAP_SLOTS.map(([c, r]) => c + ',' + r));
+/* =========================================================
+   CARTES (V2.6) : chaque carte est une donnée, chargée par loadMap.
+   Règles de dessin, à respecter pour toute nouvelle carte :
+   - grille de 9 x 13 cases ; routes en lignes droites, qui finissent au bastion ;
+   - coins du haut libres (rose des vents à gauche, pouvoirs à droite) : une entrée par le haut
+     seulement dans les colonnes 2 à 4 ; une entrée par le bas à partir de la colonne 3 (sélecteur d'arme) ;
+   - un « fort » de 3 x 3 cases autour du bastion (la couronne de barbelés en suit le bord) ;
+   - pièges espacés d'au moins une case sur une même route, aucun juste au-dessus du bastion
+     (le bâtiment le cache) ; emplacements de tours au bord des routes.
+   ========================================================= */
+const MAPS = {
+  carrefour: { name: 'Le carrefour', bc: [4, 6], seed: 4242, bg: 20261126,
+    paths: [
+      { id: 'N', name: 'Nord', opens: 1,  wp: [[2,-1],[2,1],[7,1],[7,4],[4,4],[4,6]] },
+      { id: 'S', name: 'Sud',  opens: 4,  wp: [[6,13],[6,11],[1,11],[1,8],[4,8],[4,6]] },
+      { id: 'E', name: 'Est',  opens: 9,  wp: [[9,11],[8,11],[8,9],[7,9],[7,7],[6,7],[6,6],[4,6]] } ],
+    slots: [[1,1],[4,2],[6,3],[3,5],[5,5],[3,7],[2,10],[5,10],[7,10],[8,8]],
+    // V2.5 : piège Nord collé au bastion (4,5) déplacé au virage (4,4) ; pièges Nord espacés : (7,2), (6,4), (4,4)
+    traps: [[2,1],[5,1],[7,2],[6,4],[4,4],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]] },
+  // Mission 1 : une longue route du nord qui serpente, puis une route de l'est
+  poste: { name: 'Le poste avancé', bc: [4, 8], seed: 717, bg: 20261201,
+    paths: [
+      { id: 'N', name: 'Nord', opens: 1, wp: [[3,-1],[3,2],[6,2],[6,5],[4,5],[4,8]] },
+      { id: 'E', name: 'Est',  opens: 6, wp: [[9,11],[7,11],[7,8],[4,8]] } ],
+    slots: [[2,1],[4,1],[5,3],[7,4],[3,5],[5,6],[3,7],[5,9],[8,10],[6,10]],
+    traps: [[3,1],[5,2],[6,4],[5,5],[4,6],[7,10],[6,8]] },
+  // Mission 2 : bastion haut, une route de l'ouest, une de l'est par le haut, une du sud
+  raffinerie: { name: 'La raffinerie', bc: [4, 4], seed: 9031, bg: 20261202,
+    paths: [
+      { id: 'O', name: 'Ouest', opens: 1, wp: [[-1,9],[2,9],[2,4],[4,4]] },
+      { id: 'E', name: 'Est',   opens: 1, wp: [[9,10],[8,10],[8,2],[4,2],[4,4]] },
+      { id: 'S', name: 'Sud',   opens: 7, wp: [[4,13],[4,10],[6,10],[6,7],[4,7],[4,4]] } ],
+    slots: [[1,8],[3,7],[1,5],[7,5],[7,8],[6,1],[3,2],[5,11],[3,3],[5,5]],
+    traps: [[1,9],[2,7],[2,5],[3,4],[8,8],[8,5],[7,2],[5,2],[4,11],[6,10],[6,8],[4,7],[4,5]] },
+};
+const PATHS_DEF = [], SLOTS = [], TRAP_SLOTS = [];
+const SLOT_SET = new Set(), TRAP_SET = new Set();
+const TRAP_MOVED = { '4,5': [4, 4], '7,3': [7, 2], '5,4': [6, 4] };   // carrefour : anciennes positions des pièges
+let CUR_MAP = null;
 
 // Armes de l'homme (ordre de progression)
 const WEAPONS = [
@@ -745,8 +789,57 @@ const ZTIP = {
 const hpMult  = w => Math.pow(1.07, w - 1) * Math.pow(1.06, Math.max(0, w - 15));
 /* Rythme : une partie se gagne en 25 vagues. Chaque vague vaut 1,6 vague de l'ancienne échelle de 40 :
    difficulté, taille des hordes et revenus suivent eff(w). */
-const PACE = 1.6;
-const eff = w => 1 + (w - 1) * PACE;
+let PACE = 1.6, EFF0 = 1;            // partie libre ; une mission fixe les siens (newGame)
+const eff = w => EFF0 + (w - 1) * PACE;
+const FREE_WAVES = 25;
+/* Campagne « Apocalypse » (V2.6) : trois missions courtes, chacune sur sa carte, avec une nouveauté.
+   eff0 et pace placent la mission sur l'échelle de difficulté ; hp règle la résistance des hordes ;
+   types : vague d'arrivée de chaque zombie ; boss : vague -> nombre d'Abominations ;
+   hide : nœuds de l'arbre absents de la mission (avec tout ce qui en dépend) ;
+   arsenal : la seule tour permise dans le défi « Arsenal unique ». */
+const MISSIONS = [
+  { id: 'm1', n: 1, name: 'Le poste avancé', map: 'poste', waves: 12, eff0: 1, pace: 1.35, money: 400, hp: 1.25,
+    opens: { N: 1, E: 6 }, types: { walker: 1, runner: 3, crawler: 6, bloater: 9 }, boss: { 12: 1 },
+    hide: ['mortar', 'ditch', 'flamer', 'casemate', 'mMg', 'mFlame', 'mRock', 'benelli', 'scar', 'minimi'], arsenal: 'mgnest',
+    brief: "Un poste isolé au nord de la ville. Une longue route qui serpente, puis une deuxième par l'est à la vague 6.",
+    news: ["Nid de mitrailleuse, tireur d'élite, barbelés et mines", 'Coureurs, Rampants, puis Bouffis', 'Une Abomination à la dernière vague'] },
+  { id: 'm2', n: 2, name: 'La raffinerie', map: 'raffinerie', waves: 14, eff0: 3, pace: 1.7, money: 700, hp: 1.0,
+    opens: { O: 1, E: 1, S: 7 }, types: { walker: 1, runner: 1, crawler: 2, bloater: 4, armored: 5, spitter: 8 }, boss: { 7: 1, 14: 2 },
+    hide: ['flamer', 'blinde', 'mFlame', 'mRock', 'm2flame'], arsenal: 'mortar',
+    brief: "La raffinerie tient la seule réserve de carburant. Deux routes dès le départ, une troisième par le sud à la vague 7.",
+    news: ['Mortier, fossé et Bunker à étage', 'Blindés, puis Cracheurs', 'Deux Abominations à la dernière vague'] },
+  { id: 'm3', n: 3, name: 'Le carrefour', map: 'carrefour', waves: 15, eff0: 4, pace: 2.0, money: 1000, hp: 0.64,
+    opens: { N: 1, S: 3, E: 7 }, types: { walker: 1, runner: 1, crawler: 1, bloater: 2, armored: 3, spitter: 5, screamer: 8, brute: 10 }, boss: { 8: 1, 12: 2, 15: 3 },
+    hide: [], arsenal: 'sniper',
+    brief: "Le carrefour au cœur de la ville : trois routes convergent sur le bastion, la troisième s'ouvre à la vague 7. C'est la carte de la partie libre.",
+    news: ["Tout l'arsenal, lance-flammes compris", 'Hurleurs et Brutes', 'Trois routes et trois Abominations à la fin'] },
+];
+const MIS = id => MISSIONS.find(m => m.id === id);
+const curMission = () => G && G.mission ? MIS(G.mission.id) : null;
+const zFrom = k => { const M = curMission(); return M ? (M.types[k] != null ? M.types[k] : 999) : ZT[k].from; };
+const bossCount = w => { const M = curMission(); return M ? (M.boss[w] || 0) : (w % 6 === 0 ? w / 6 : 0); };
+// défi Génie (aucune tour) : hordes 15 % moins résistantes pour rester faisable
+const hpMul = () => { const M = curMission(); return M ? M.hp * (G.mission.ch === 'genie' ? 0.85 : 1) : DIFF[G.diff].hp; };
+// en mission, l'Abomination pèse moins dans le budget de la vague : la pression vient des hordes, pas d'un seul monstre
+const bossK = () => { const M = curMission(); return M ? (M.bossK || 0.55) : 1; };
+let BRIEF = { id: 'm1', ch: null };
+// règles d'une mission et de ses défis : nœuds absents (hide), nœuds interdits (ban), tours interdites (noPlace)
+let HIDE_MEMO = {};
+function setRules(M, ch) {
+  G.hide = new Set(M ? M.hide : []); G.ban = new Set(); G.noPlace = new Set(); HIDE_MEMO = {};
+  if (ch === 'genie') {
+    ['mgnest', 'sniper', 'mortar', 'flamer'].forEach(t => G.noPlace.add(t));
+    ['sniper', 'mortar', 'flamer', 'mgnest2', 'mgnest3', 'mMg', 'mFlame', 'mRock'].forEach(x => G.ban.add(x));
+  } else if (ch === 'arsenal') {
+    ['mgnest', 'sniper', 'mortar', 'flamer'].filter(t => t !== M.arsenal).forEach(t => { G.noPlace.add(t); if (t !== 'mgnest') G.ban.add(t); G.ban.add(t + '2'); G.ban.add(t + '3'); });
+  }
+}
+const hiddenNode = n => {
+  if (!n || !G || !G.hide || !G.hide.size) return false;
+  if (n.id in HIDE_MEMO) return HIDE_MEMO[n.id];
+  HIDE_MEMO[n.id] = false;
+  return HIDE_MEMO[n.id] = G.hide.has(n.id) || nodeReqs(n).some(([p]) => hiddenNode(NODE[p]));
+};
 const dmgMult = w => (1 + 0.05 * (eff(w) - 1)) * (G ? DIFF[G.diff].dmg : 1);
 /* Économie (V2.2) : revenus réduits de 8 % au début à 28 % dès la vague 19. Le bastion complet
    n'est plus atteignable avant la fin, chaque achat reste un choix. */
@@ -755,7 +848,7 @@ const rewMult = w => eco(w) * PACE * (1 + 0.08 * (eff(w) - 1)) * (G ? DIFF[G.dif
 
 /* Difficulté : la horde suit une courbe fixe, identique à chaque partie.
    Victoire à la vague 25 (rythme ×1,6, voir eff), puis mode infini. */
-const VICTORY = 25;
+let VICTORY = 25;   // 25 en partie libre, la durée de la mission sinon
 const DIFF = {
   facile:    { name: 'Facile',    hp: 0.35, dmg: 0.85, rew: 1.1,  ins: 0.5, desc: 'Hordes allégées, primes plus fortes. Pour découvrir le jeu.' },
   normal:    { name: 'Normal',    hp: 0.72, dmg: 1,    rew: 1,    ins: 1,   desc: "L'équilibre prévu : la victoire se mérite." },
@@ -815,7 +908,14 @@ const repairRate = () => cardN('macon') ? 4 : 2;
 /* =========================================================
    CHEMINS
    ========================================================= */
-const PATHS = PATHS_DEF.map((p, idx) => {
+const PATHS = [];
+const PATH_CELLS = new Map();
+function buildPaths() {
+  PATHS.length = 0; PATH_CELLS.clear();
+  PATHS_DEF.forEach((p, idx) => PATHS.push(makePath(p, idx)));
+  PATHS.forEach(p => p.cells.forEach(k => { if (!PATH_CELLS.has(k)) PATH_CELLS.set(k, p.idx); }));
+}
+function makePath(p, idx) {
   const pts = p.wp.map(([c, r]) => ({ x: c * T + T / 2, y: r * T + T / 2 }));
   const segs = []; let total = 0;
   for (let i = 0; i < pts.length - 1; i++) {
@@ -833,9 +933,19 @@ const PATHS = PATHS_DEF.map((p, idx) => {
     }
   }
   return { ...p, idx, pts, segs, total, cells };
-});
-const PATH_CELLS = new Map();
-PATHS.forEach(p => p.cells.forEach(k => { if (!PATH_CELLS.has(k)) PATH_CELLS.set(k, p.idx); }));
+}
+// charge une carte : routes (avec les ouvertures propres à une mission), emplacements, décor, sol, lumières
+function loadMap(id, opens) {
+  const M = MAPS[id] || MAPS.carrefour;
+  CUR_MAP = MAPS[id] ? id : 'carrefour';
+  BC.c = M.bc[0]; BC.r = M.bc[1]; BX = BC.c * T + T / 2; BY = BC.r * T + T / 2;
+  PATHS_DEF.length = 0; M.paths.forEach(p => PATHS_DEF.push({ ...p, opens: opens && opens[p.id] != null ? opens[p.id] : p.opens }));
+  SLOTS.length = 0; M.slots.forEach(x => SLOTS.push(x)); SLOT_SET.clear(); SLOTS.forEach(([c, r]) => SLOT_SET.add(c + ',' + r));
+  TRAP_SLOTS.length = 0; M.traps.forEach(x => TRAP_SLOTS.push(x)); TRAP_SET.clear(); TRAP_SLOTS.forEach(([c, r]) => TRAP_SET.add(c + ',' + r));
+  buildPaths();
+  LAMPS.length = 0; DECOR.length = 0; GATES.length = 0;
+  genScene(M.seed); genBG(M.bg); clearDecals(); lightDirty = true;
+}
 
 function pathPos(p, d, off) {
   let s = p.segs[p.segs.length - 1];
@@ -877,7 +987,7 @@ function freshState() {
     shake: 0, time: 0, best: loadBest(), dirtyPanel: true, lastMoney: -1,
     diff: 'normal', won: false, next: null, waveFrom: 1, prime: 0, report: null, hp0: 0, defNo: {},
     cards: {}, draft: null, draftsDue: 0, nextDraft: DRAFT_EVERY, rerolls: 0, insRun: 0, slotMenu: null,
-    menace: 0, daily: null, mz: makeMz(0, null), draftN: 0, prevBest: 0,
+    menace: 0, daily: null, mz: makeMz(0, null), draftN: 0, prevBest: 0, mission: null, hide: new Set(), ban: new Set(), noPlace: new Set(), dmgTot: 0,
     trk: { sniper: false, repaired: false, early: 0, streak: 0 }, breach: { path: {}, type: {} }, bossLeft: 0,
     st: { hero: newSt(), arty: newSt(), wire: newSt(), claymore: newSt(), mg: newSt(), flame: newSt(), rockets: newSt() },
   };
@@ -1005,11 +1115,11 @@ const refPower = w => 85 + 5.5 * w * w;
 function hordeBudget(w) {
   G.power = firepower();
   const e = eff(w);
-  return lateMult(w) * DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * DIFF[G.diff].hp * G.mz.horde * G.pressure;
+  return lateMult(w) * DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * hpMul() * G.mz.horde * G.pressure;
 }
 // Puissance repère affichée au joueur pour la difficulté choisie
 // repère affiché : 0,8 depuis la V2.2 (chargeurs, surchauffe et réservoirs comptés dans la puissance de feu)
-const advisedPower = w => 0.8 * refPower(eff(w)) * Math.pow(DIFF[G.diff].hp * G.mz.horde * lateMult(w) / DIFF.cauchemar.hp, 1 / DIR.beta);
+const advisedPower = w => 0.8 * refPower(eff(w)) * Math.pow(hpMul() * G.mz.horde * lateMult(w) / DIFF.cauchemar.hp, 1 / DIR.beta);
 const bunkerMax = () => Math.round(BUNKER_LV[G.bunkerLv].hp * (1 + 0.2 * cardN('sacs')) * (1 + 0.1 * perk('reserve')) * G.mz.hp);
 const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor + 2 * cardN('blind');
 
@@ -1022,12 +1132,12 @@ function buildWave(w) {
   const rand = G && G.daily ? seeded(G.daily + ':v' + w) : Math.random;
   const we = eff(w);
   const count = Math.round(12 + we * 5 + 0.35 * Math.pow(we, 1.7));
-  const types = Object.keys(ZT).filter(k => !ZT[k].boss && ZT[k].from <= w);
+  const types = Object.keys(ZT).filter(k => !ZT[k].boss && zFrom(k) <= w);
   const weight = k => k === 'walker' ? Math.max(3, 10 - we * 0.3) : ZT[k].w;
   const tot = types.reduce((a, k) => a + weight(k), 0);
   const list = [];
   // les nouveaux types sont présentés en petit groupe
-  types.filter(k => ZT[k].from === w).forEach(k => { for (let i = 0; i < 3; i++) list.push(k); });
+  types.filter(k => zFrom(k) === w).forEach(k => { for (let i = 0; i < 3; i++) list.push(k); });
   while (list.length < count) {
     let r = rand() * tot, pick = types[0];
     for (const k of types) { r -= weight(k); if (r <= 0) { pick = k; break; } }
@@ -1035,7 +1145,7 @@ function buildWave(w) {
   }
   // mélange
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
-  if (we >= 12 && w % 3 === 0) for (let i = 0; i < 1 + Math.floor((we - 12) / 8); i++) list.push('brute');
+  if ((curMission() ? zFrom('brute') <= w : we >= 12) && w % 3 === 0) for (let i = 0; i < 1 + Math.floor(Math.max(0, we - 12) / 8); i++) list.push('brute');
   const paths = openPaths(w);
   // hordes : paquets serrés sur un chemin, séparés par de courtes accalmies
   const out = [], pause = Math.max(1.6, 5.5 - we * 0.13);
@@ -1046,14 +1156,15 @@ function buildWave(w) {
     for (let j = 0; j < size; j++, i++) out.push({ type: list[i], path: p, gap: j === size - 1 ? pause * (0.8 + rand() * 0.4) : 0.1 + rand() * 0.15 });
     h++;
   }
-  if (w % 6 === 0) for (let k = 0; k < w / 6 + G.mz.boss; k++) out.push({ type: 'boss', path: paths[k % paths.length].idx, gap: 2.5 });
+  const nb = bossCount(w);
+  if (nb) for (let k = 0; k < nb + G.mz.boss; k++) out.push({ type: 'boss', path: paths[k % paths.length].idx, gap: 2.5 });
   return out;
 }
 
 /* Fin de partie (V2.3) : en Normal, les hordes grossissent de 3,5 % par vague après la vague 19 (x1,21 à la vague 25) ;
    en Cauchemar, de 5 % par vague après la vague 12 (x1,15 à la vague 15, x1,65 à la vague 25). */
 const LATE = { facile: [99, 0], normal: [19, 0.035], cauchemar: [12, 0.05] };
-const lateMult = w => { const L = LATE[G.diff] || LATE.normal; return 1 + L[1] * Math.max(0, w - L[0]); };
+const lateMult = w => { if (curMission()) return 1; const L = LATE[G.diff] || LATE.normal; return 1 + L[1] * Math.max(0, w - L[0]); };
 const earlyPrime = () => Math.round(eco(G.wave + 1) * (50 + 15 * eff(G.wave + 1)) * 0.5 * PACE * DIFF[G.diff].rew * G.mz.money);
 const canEarly = () => G.mode === 'wave' && !G.queue.length && !G.paused;
 function statSources() {
@@ -1074,7 +1185,7 @@ function waveSummary(q, w) {
   q.forEach(it => { cnt[it.type] = (cnt[it.type] || 0) + 1; });
   const types = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(k => [k, cnt[k]]);
   const paths = [...new Set(q.map(it => PATHS[it.path].name))];
-  const fresh = Object.keys(ZT).filter(k => ZT[k].from === w).map(k => ZT[k].name);
+  const fresh = Object.keys(ZT).filter(k => !ZT[k].boss && zFrom(k) === w).map(k => ZT[k].name);
   return { types, paths, fresh, total: q.length, boss: !!cnt.boss };
 }
 function launchWave(early) {
@@ -1092,7 +1203,7 @@ function launchWave(early) {
     G.ms.clayCd = 0;
   }
   G.queue = q;
-  const baseSum = G.queue.reduce((a, it) => a + ZT[it.type].hp, 0);
+  const baseSum = G.queue.reduce((a, it) => a + ZT[it.type].hp * (it.type === 'boss' ? bossK() : 1), 0);
   G.budget = hordeBudget(G.wave); G.hpScale = G.budget / Math.max(1, baseSum);
   G.waveCount += G.queue.length; G.spawnT = early ? 0.5 : 2;
   G.mode = 'wave'; G.gateTip = null; G.panelOpen = false;
@@ -1101,9 +1212,9 @@ function launchWave(early) {
   const S0 = waveSummary(q, G.wave);
   banner(early ? `Vague ${G.wave} appelée` : `Vague ${G.wave}`,
     `${q.length} zombies · ${S0.paths.length > 1 ? 'routes' : 'route'} ${S0.paths.join(', ')}` + (np ? ` · la route ${np.name} s'ouvre` : '') + (S0.boss ? ' · Abomination' : '') + (G.wave === VICTORY && !G.won ? ' · dernière avant la victoire' : ''), true, 2300);
-  const fresh = Object.keys(ZTIP).filter(k => ZT[k].from === G.wave);
+  const fresh = Object.keys(ZTIP).filter(k => zFrom(k) === G.wave);
   fresh.forEach((k, i) => setTimeout(() => toast(`Nouveau : ${ZT[k].name}, ${ZTIP[k]}`, 4000), 2600 + i * 4200));
-  if (G.wave % 6 === 0) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2600 + fresh.length * 4200);
+  if (bossCount(G.wave)) setTimeout(() => toast("Une Abomination approche. Concentrez tout sur elle.", 3500), 2600 + fresh.length * 4200);
   SND.play('horn');
   G.panelOpen = false;
   renderAll();
@@ -1137,12 +1248,13 @@ function endWave() {
   if (!G.won && G.wave >= VICTORY) { G.won = true; victory = true; }
   recordBest();
   // insignes permanents : selon les vagues tenues et la difficulté
-  const ins = DIFF[G.diff].ins * (1 + 0.25 * G.menace) * (PACE * (G.wave - G.waveFrom + 1) + (victory ? 16 : 0));
+  const ins = DIFF[G.diff].ins * (1 + 0.25 * G.menace) * (PACE * (G.wave - G.waveFrom + 1) + (victory && !G.mission ? 16 : 0));
   META.ins += ins; G.insRun += ins; saveMeta();
   G.trk.streak = G.waveDmg > 0.5 ? 0 : G.trk.streak + (G.wave - G.waveFrom + 1);
   if (G.trk.streak >= 8) completeGoal('perfect8');
   if (G.wave >= 8 && WEAPONS.filter(x => G.weapons[x.id].owned).length === 1) completeGoal('glock8');
-  if (victory) {
+  if (victory && G.mission) missionWon();
+  if (victory && !G.mission) {
     const hard = G.diff !== 'facile';
     if (hard) completeGoal('win_n');
     if (G.diff === 'cauchemar') completeGoal('win_c');
@@ -1159,9 +1271,9 @@ function endWave() {
   banner(G.waveFrom < G.wave ? `Vagues ${G.waveFrom} à ${G.wave} repoussées` : `Vague ${G.wave} repoussée`, `Prime +${fmt(bonus)}` + (G.report.lost > 0 ? ` · bastion -${G.report.lost} %` : ' · bastion intact'), false, 1900);
   if (np) setTimeout(() => toast(`Attention : la route ${np.name} s'ouvre à la prochaine vague.`, 3500), 2000);
   G.panelOpen = false; G.selected = null; G.slotMenu = null;
-  saveGame();
+  if (!(victory && G.mission)) saveGame();
   renderAll();
-  if (victory) setTimeout(() => showOverlay('victory'), 700);
+  if (victory) setTimeout(() => showOverlay(G.mission ? 'mwin' : 'victory'), 700);
   else if (G.draft) showOverlay('draft');
 }
 function makeDraft(reroll) {
@@ -1194,7 +1306,7 @@ function spawnZombie(type, pi) {
   const Z = ZT[type], w = G.wave, p = PATHS[pi];
   const z = {
     type, path: p, d: 0, off: (rand() - 0.5) * 22,
-    hp: Z.hp * G.hpScale, maxHp: Z.hp * G.hpScale, armor: Z.boss ? Math.min(8, 2 + Math.floor(eff(w) / 5)) : Z.armor,
+    hp: Z.hp * G.hpScale * (Z.boss ? bossK() : 1), maxHp: Z.hp * G.hpScale * (Z.boss ? bossK() : 1), armor: Z.boss ? Math.min(8, 2 + Math.floor(eff(w) / 5)) : Z.armor,
     speed: Z.speed * (0.9 + rand() * 0.2) * G.mz.speed, dmg: Z.dmg * dmgMult(w),
     reward: Math.round(Z.reward * rewMult(w)), r: Z.r, atkT: 0.6, walk: rand() * 10,
     burnT: 0, burnDps: 0, hitT: 0, dead: false, x: 0, y: 0, ang: 0, atBase: false,
@@ -1232,6 +1344,7 @@ function kill(z, reward) {
 function bunkerHit(dmg, z) {
   const eff = Math.max(dmg * 0.2, dmg - bunkerArmor());
   G.hp -= eff; G.waveDmg += eff; G.shake = Math.min(6, G.shake + 1.2);
+  G.dmgTot = (G.dmgTot || 0) + eff;
   if (z) { const B = G.breach; B.path[z.path.idx] = (B.path[z.path.idx] || 0) + eff; B.type[z.type] = (B.type[z.type] || 0) + eff; }
   SND.play('thud');
   if (G.hp <= 0) { G.hp = 0; gameOver(); }
@@ -1606,6 +1719,7 @@ function gameOver() {
   G.bossLeft = boss ? boss.hp / boss.maxHp : 0;
   G.mode = 'over';
   if (G.daily) { recordDaily(); completeGoal('daily'); }
+  if (G.mission) { try { localStorage.removeItem(SKEY); } catch (e) {} }
   recordBest();
   try { localStorage.removeItem(SKEY); } catch (e) {}
   explodeFx(BX, BY, 70, true); G.shake = 10; SND.play('boom');
@@ -1689,6 +1803,7 @@ const rootOwned = () => !!G.unlocked[ROOT];
 function nodeReqs(n) { const r = n.parent ? [[n.parent, 1]] : []; return r.concat(n.req || []); }
 function nodeAvailable(n) {
   if (owned(n)) return false;
+  if (G.ban && G.ban.has(n.id)) return false;
   if (n.id !== ROOT && !rootOwned()) return false;
   return nodeReqs(n).every(([id, lv]) => nodeLevel(NODE[id]) >= lv);
 }
@@ -1735,20 +1850,37 @@ function loadBest() {
   return b;
 }
 function recordBest() {
-  if (G.daily) return;
+  if (G.daily || G.mission) return;
   const r = G.best[G.diff];
   if (G.wave > r.w) r.w = G.wave;
   if (G.won) { r.won = true; r.m = Math.max(r.m || 0, G.menace); }
   try { localStorage.setItem(BKEY2, JSON.stringify(G.best)); } catch (e) {}
 }
 const recText = b => DIFF_ORDER.filter(k => b[k].w > 0).map(k => `${DIFF[k].name} : vague ${b[k].w}${b[k].won ? ' (victoire' + (b[k].m ? ', Menace ' + b[k].m : '') + ')' : ''}`).join(' · ');
+// fin de mission : étoiles (PV perdus sur toute la mission), défis, récompenses ; la sauvegarde est effacée
+const starsOf = frac => frac <= 0.2 ? 3 : frac <= 0.6 ? 2 : 1;
+function missionWon() {
+  const M = curMission(), ch = G.mission.ch;
+  const P = META.camp[M.id] || (META.camp[M.id] = { stars: 0, genie: false, arsenal: false });
+  G.lostFrac = (G.dmgTot || 0) / bunkerMax(); G.stars = starsOf(G.lostFrac);
+  let bonus = 0;
+  if (!ch) { if (G.stars > P.stars) { bonus += 5 * (G.stars - P.stars); P.stars = G.stars; } }
+  else if (!P[ch]) { P[ch] = true; bonus += 15; }
+  G.missionBonus = bonus; META.ins += bonus; G.insRun += bonus; saveMeta();
+  try { localStorage.removeItem(SKEY); } catch (e) {}
+}
+const STAR = on => `<svg class="star ${on ? 'on' : ''}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.3l-5.8 3.1 1.2-6.5L2.6 9.4l6.5-.8z"/></svg>`;
+const starsHtml = (n, big) => `<span class="stars ${big ? 'lg' : ''}" aria-label="${n} étoile${n > 1 ? 's' : ''} sur 3">${[1, 2, 3].map(i => STAR(i <= n)).join('')}</span>`;
+const missionOpen = i => i === 0 || ((META.camp[MISSIONS[i - 1].id] || {}).stars || 0) > 0;
+const ARSENAL_LAB = { mgnest: 'Mitrailleuses seules', sniper: "Tireurs d'élite seuls", mortar: 'Mortiers seuls', flamer: 'Lance-flammes seuls' };
+const chName = (M, ch) => ch === 'genie' ? 'défi Génie' : ch === 'arsenal' ? `défi ${ARSENAL_LAB[M.arsenal].toLowerCase()}` : '';
 function recordDaily() {
   const key = G.daily; if (META.daily && META.daily.date > key) return;
   const cur = META.daily && META.daily.date === key ? META.daily : { date: key, best: 0, won: false };
   cur.best = Math.max(cur.best, G.wave); cur.won = cur.won || G.won; META.daily = cur; saveMeta();
 }
 function shareText() {
-  const what = G.daily ? `Défi du ${frDate(G.daily)} (${dailyMod(G.daily).name})` : `${DIFF[G.diff].name}${G.menace ? ', Menace ' + G.menace : ''}`;
+  const what = G.mission ? `Mission ${curMission().n}, ${curMission().name}${G.mission.ch ? ' (' + chName(curMission(), G.mission.ch) + ')' : ''}` : G.daily ? `Défi du ${frDate(G.daily)} (${dailyMod(G.daily).name})` : `${DIFF[G.diff].name}${G.menace ? ', Menace ' + G.menace : ''}`;
   return `Dernier Bastion · ${what} : ${G.won ? 'victoire, ' : ''}vague ${G.wave}/${VICTORY}. https://renanmoreau2-create.github.io/jeu-renan/`;
 }
 function shareResult() {
@@ -1790,7 +1922,7 @@ function saveGame() {
   try {
     localStorage.setItem(SKEY, JSON.stringify({ v:6, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods, modKit:G.modKit,
       weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure,
-      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, menace:G.menace, daily:G.daily, trk:G.trk, draftN:G.draftN, prevBest:G.prevBest, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
+      diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, menace:G.menace, daily:G.daily, trk:G.trk, draftN:G.draftN, prevBest:G.prevBest, mission:G.mission, dmgTot:G.dmgTot || 0, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
       defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt, kit:d.kit || 0 })) }));
   } catch (e) {}
 }
@@ -1799,10 +1931,16 @@ function loadSave() { try { const s = localStorage.getItem(SKEY); if (!s) return
 function newGame(fromSave, diff, opts) {
   G = freshState();
   opts = opts || {};
-  G.daily = (fromSave && fromSave.daily) || opts.daily || null;
-  G.menace = G.daily ? 0 : (fromSave ? (fromSave.menace || 0) : clamp(opts.menace || 0, 0, META.menace));
+  G.mission = (fromSave && fromSave.mission) || opts.mission || null;
+  const MS = G.mission ? MIS(G.mission.id) : null;
+  if (!MS) G.mission = null;
+  G.daily = G.mission ? null : (fromSave && fromSave.daily) || opts.daily || null;
+  G.menace = G.daily || G.mission ? 0 : (fromSave ? (fromSave.menace || 0) : clamp(opts.menace || 0, 0, META.menace));
   G.mz = makeMz(G.menace, G.daily);
-  G.diff = DIFF[(fromSave && fromSave.diff) || diff] ? ((fromSave && fromSave.diff) || diff) : 'normal';
+  G.diff = G.mission ? 'normal' : DIFF[(fromSave && fromSave.diff) || diff] ? ((fromSave && fromSave.diff) || diff) : 'normal';
+  VICTORY = MS ? MS.waves : FREE_WAVES; PACE = MS ? MS.pace : 1.6; EFF0 = MS ? MS.eff0 : 1;
+  loadMap(MS ? MS.map : 'carrefour', MS ? MS.opens : null);
+  setRules(MS, G.mission && G.mission.ch);
   clearDecals();
   if (fromSave) {
     const d = fromSave;
@@ -1812,24 +1950,27 @@ function newGame(fromSave, diff, opts) {
     G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {});
     G.pressure = clamp(d.pressure || 1, DIR.pMin, DIR.pMax); G.won = !!d.won;
     if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
-    d.defs.forEach(x => { const mv = TRAP_MOVED[x.c + ',' + x.r]; if (mv && DEF[x.type].place === 'path' && !d.defs.some(y => y.c === mv[0] && y.r === mv[1])) { x.c = mv[0]; x.r = mv[1]; }
+    d.defs.forEach(x => { const mv = CUR_MAP === 'carrefour' && TRAP_MOVED[x.c + ',' + x.r]; if (mv && DEF[x.type].place === 'path' && !d.defs.some(y => y.c === mv[0] && y.r === mv[1])) { x.c = mv[0]; x.r = mv[1]; }
       if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; if (x.kit) dd.kit = 1; } });
     if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
-    if (d.trk) G.trk = Object.assign(G.trk, d.trk); G.draftN = d.draftN || 0; G.prevBest = d.prevBest || 0;
+    if (d.trk) G.trk = Object.assign(G.trk, d.trk); G.draftN = d.draftN || 0; G.prevBest = d.prevBest || 0; G.dmgTot = d.dmgTot || 0;
     G.cards = d.cards || {}; G.draft = d.draft || null; G.draftsDue = d.draftsDue || (G.draft ? 1 : 0); G.rerolls = d.rerolls || 0; G.insRun = d.insRun || 0;
     G.nextDraft = d.nextDraft || (Math.floor(G.wave / DRAFT_EVERY) + 1) * DRAFT_EVERY;
   } else {
-    G.money += 100 * perk('tresor'); G.rerolls = perk('relance'); G.prevBest = G.daily ? 0 : G.best[G.diff].w;
+    if (MS) G.money = MS.money;
+    G.money += 100 * perk('tresor'); G.rerolls = perk('relance'); G.prevBest = G.daily || G.mission ? 0 : G.best[G.diff].w;
     if (perk('briefing')) { G.draftsDue = 1; makeDraft(false); }
   }
   EFF = {};
+  if (G.noPlace.has('mgnest')) G.unlocked.mgnest = true;   // défi : la racine de l'arbre est offerte, la tour reste interdite
   if (!fromSave) G.hp = bunkerMax();
   G.power = firepower(); G.next = buildWave(G.wave + 1);
   G.mode = 'build'; G.panelOpen = false; G.gateTip = null;
   hideOverlay();
   renderAll();
   if (G.draft) showOverlay('draft');
-  toast(fromSave ? `Partie reprise (${G.daily ? 'défi du jour' : DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : G.daily ? `Défi du ${frDate(G.daily)} : ${dailyMod(G.daily).name} (${dailyMod(G.daily).desc}). Sans avantages du Quartier général.` : `${DIFF[G.diff].name}${G.menace ? ' · Menace ' + G.menace : ''}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse.`, 3800);
+  if (G.mission) toast(fromSave ? `Mission ${MS.n} reprise : prochaine vague ${G.wave + 1}` : `Mission ${MS.n} · ${MS.name}${G.mission.ch ? ' · défi ' + (G.mission.ch === 'genie' ? 'Génie' : 'Arsenal unique') : ''}. Tenez ${MS.waves} vagues.`, 3800);
+  else toast(fromSave ? `Partie reprise (${G.daily ? 'défi du jour' : DIFF[G.diff].name}) : prochaine vague ${G.wave + 1}` : G.daily ? `Défi du ${frDate(G.daily)} : ${dailyMod(G.daily).name} (${dailyMod(G.daily).desc}). Sans avantages du Quartier général.` : `${DIFF[G.diff].name}${G.menace ? ' · Menace ' + G.menace : ''}. Ouvrez l'arbre : premier choix, le nid de mitrailleuse.`, 3800);
 }
 
 /* =========================================================
@@ -1898,10 +2039,11 @@ function renderSlotMenu() {
     placeSlotMenu(); return;
   }
   m.classList.remove('col');
-  const types = DEF_ORDER.filter(t => DEF[t].place === S.kind), avail = types.filter(t => G.unlocked[t]);
+  const types = DEF_ORDER.filter(t => DEF[t].place === S.kind && !G.noPlace.has(t) && !hiddenNode(NODE[t]) && !G.ban.has(t)), avail = types.filter(t => G.unlocked[t]);
   const locked = types.length - avail.length;
   let h = avail.map(t => { const c = placeCost(t), pk = S.pick === t; return `<button class="${pk ? 'pick' : ''}" data-act="build" data-type="${t}" data-cost="${c}" ${money < c ? 'disabled' : ''}><img src="${icon(t)}" alt="">${SHORT_DEF[t]}<span class="p">${pk ? 'Confirmer' : fmt(c)}</span></button>`; }).join('');
-  if (!avail.length) h = `<button class="sme" data-act="openTree">Aucun ${S.kind === 'side' ? 'type de tour' : 'piège'} débloqué. Ouvrir l'arbre</button>`;
+  if (!types.length) h = `<button class="sme" disabled>${S.kind === 'side' ? 'Aucune tour dans ce défi : pièges, bastion et l\'homme.' : 'Aucun piège dans cette mission.'}</button>`;
+  else if (!avail.length) h = `<button class="sme" data-act="openTree">Aucun ${S.kind === 'side' ? 'type de tour' : 'piège'} débloqué. Ouvrir l'arbre</button>`;
   else if (locked) h += `<button data-act="openTree" style="justify-content:center"><span style="font-size:11px">${locked} à débloquer</span><span class="p" style="font-weight:400">Arbre</span></button>`;
   m.innerHTML = h + '<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button>';
   m.classList.remove('hide');
@@ -1920,6 +2062,7 @@ function placeSlotMenu() {
   m.style.top = clamp(top, 6, Math.max(6, st.height - mh - 6)) + 'px';
 }
 function canPlace(type, c, r) {
+  if (G.noPlace && G.noPlace.has(type)) return false;
   if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return false;
   if (c === BC.c && r === BC.r) return false;
   const k = c + ',' + r;
@@ -1982,7 +2125,10 @@ function act(a, ds) {
     case 'tcenter': treeCenter(G.treeSel || ROOT); return;
     case 'new': showOverlay('diff'); return;
     case 'newDiff': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, ds.d, { menace: META.menacePick || 0 }); return; }
-    case 'replay': { const o = { menace: G.menace, daily: G.daily ? todayKey() : null }; try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, G.daily ? 'normal' : G.diff, o); return; }
+    case 'replay': { const o = { menace: G.menace, daily: G.daily ? todayKey() : null, mission: G.mission }; try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, G.daily || G.mission ? 'normal' : G.diff, o); return; }
+    case 'campaign': showOverlay('camp'); return;
+    case 'mBrief': BRIEF = { id: ds.id, ch: ds.ch || null }; showOverlay('brief'); return;
+    case 'mStart': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, 'normal', { mission: { id: BRIEF.id, ch: BRIEF.ch } }); return; }
     case 'daily': { try { localStorage.removeItem(SKEY); } catch (e) {} newGame(null, 'normal', { daily: todayKey() }); return; }
     case 'dailyInfo': showOverlay('daily'); return;
     case 'goals': showOverlay('goals'); return;
@@ -2230,7 +2376,7 @@ function treeDetail(n) {
     if (own && lv < 3) h += `<div class="br"><button class="btn buy" data-act="modUp" data-id="${n.ref}" data-cost="${m.levels[lv].cost}">Niv. ${lv + 1} : ${fmt(m.levels[lv].cost)}</button></div>`;
   }
   if (!own) h += av ? `<div class="br" style="margin-top:10px"><button class="btn buy wide" data-act="node" data-id="${n.id}" data-cost="${nodeCost(n)}">Débloquer · ${COIN(fmt(nodeCost(n)))}</button></div>`
-                   : `<div class="note" style="margin-top:6px">Requiert : ${reqText(n)}</div>`;
+                   : G.ban && G.ban.has(n.id) ? `<div class="note" style="margin-top:6px;color:#f0a08a">Interdit dans ce défi.</div>` : `<div class="note" style="margin-top:6px">Requiert : ${reqText(n)}</div>`;
   const kids = TREE.filter(x => nodeReqs(x).some(([p]) => p === n.id));
   if (kids.length) h += `<div class="note" style="margin-top:6px">Ouvre : ${kids.map(shortName).join(', ')}</div>`;
   return h + '</div>';
@@ -2461,18 +2607,46 @@ function showOverlay(kind) {
           (r < max ? `<button class="btn buy" data-act="perk" data-id="${id}" ${META.ins >= c ? '' : 'disabled'}>${c} insignes</button>` : '<span class="tag">Max</span>') + '</div>'; }).join('') +
       `<button class="big alt" data-act="back">Retour</button>`;
   } else if (kind === 'over') {
-    const lab = G.daily ? `Défi du ${frDate(G.daily)}` : `${DIFF[G.diff].name}${G.menace ? ' · Menace ' + G.menace : ''}`;
+    const MS = curMission();
+    const lab = MS ? `Mission ${MS.n} · ${MS.name}${G.mission.ch ? ' · ' + chName(MS, G.mission.ch) : ''}` : G.daily ? `Défi du ${frDate(G.daily)}` : `${DIFF[G.diff].name}${G.menace ? ' · Menace ' + G.menace : ''}`;
     h += `<h2>Le bastion est tombé</h2><div class="sub">${lab} : vague ${G.wave}${G.won ? ', après la victoire' : ` sur ${VICTORY}`}.</div>` + defeatHtml() + insLine() +
-      `<button class="big" data-act="replay">Rejouer · ${G.daily ? 'défi du jour' : DIFF[G.diff].name}</button>` +
-      `<div class="row2"><button class="big alt" data-act="new">Difficulté</button><button class="big alt" data-act="hq">Quartier général</button></div>` +
+      `<button class="big" data-act="replay">Rejouer · ${MS ? 'la mission' : G.daily ? 'défi du jour' : DIFF[G.diff].name}</button>` +
+      `<div class="row2"><button class="big alt" data-act="${MS ? 'campaign' : 'new'}">${MS ? 'Campagne' : 'Difficulté'}</button><button class="big alt" data-act="hq">Quartier général</button></div>` +
       `<button class="big alt" data-act="share">Partager le résultat</button>` + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
   } else if (kind === 'victory') {
     h += `<h1>VICTOIRE</h1><div class="sub">Vague ${VICTORY} tenue ${G.daily ? 'au défi du jour' : 'en ' + DIFF[G.diff].name + (G.menace ? ', Menace ' + G.menace : '')}. Le bastion tient toujours.</div>` +
       `<p>La partie peut continuer en mode infini : les hordes ne s'arrêtent plus, seul compte votre record.</p>` +
       insLine() + `<button class="big" data-act="endless">Continuer en mode infini</button><div class="row2"><button class="big alt" data-act="new">Nouvelle partie</button><button class="big alt" data-act="share">Partager</button></div>` +
       (!G.daily && G.diff !== 'facile' && META.menace > G.menace ? `<div class="rec">Nouveau niveau de menace disponible au lancement d'une partie : ${MENACE[META.menace - 1].name}.</div>` : '') + (rt ? `<div class="rec">Records · ${rt}</div>` : '');
+  } else if (kind === 'camp') {
+    h += `<div class="kick">Campagne</div><h2>Apocalypse</h2><div class="sub">Trois missions pour apprendre à tenir. Chacune apporte une nouveauté.</div>` +
+      MISSIONS.map((M, i) => {
+        const P = META.camp[M.id] || {}, open = missionOpen(i);
+        return `<div class="mcard ${open ? '' : 'locked'}"><div class="mh"><span class="mn">${M.n}</span><div class="mt"><b>${M.name}</b><span>${M.waves} vagues · ${MAPS[M.map].paths.length} routes</span></div>${starsHtml(P.stars || 0)}</div>` +
+          (open ? `<div class="mb"><button class="btn buy" data-act="mBrief" data-id="${M.id}">${P.stars ? 'Rejouer' : 'Jouer'}</button>` +
+            (P.stars ? `<button class="btn ${P.genie ? 'done' : ''}" data-act="mBrief" data-id="${M.id}" data-ch="genie">${P.genie ? 'Génie réussi' : 'Défi Génie'}</button><button class="btn ${P.arsenal ? 'done' : ''}" data-act="mBrief" data-id="${M.id}" data-ch="arsenal">${P.arsenal ? 'Arsenal réussi' : ARSENAL_LAB[M.arsenal]}</button>` : '') + '</div>'
+            : `<div class="note" style="margin-top:6px">Gagnez la mission ${M.n - 1} pour l'ouvrir.</div>`) + '</div>';
+      }).join('') +
+      `<div class="rec">Les défis s'ouvrent après une première victoire : « Génie » sans aucune tour, ou une seule sorte de tour.</div>` +
+      (save ? `<div class="rec">Lancer une mission efface la partie en cours (vague ${save.wave + 1}).</div>` : '') +
+      `<button class="big alt" data-act="back" data-to="title">Retour</button>`;
+  } else if (kind === 'brief') {
+    const M = MIS(BRIEF.id), ch = BRIEF.ch;
+    h += `<div class="kick">Mission ${M.n}${ch ? ' · défi' : ''}</div><h2>${ch === 'genie' ? 'Défi Génie' : ch === 'arsenal' ? 'Arsenal unique' : M.name}</h2><div class="sub">${M.name} · ${M.waves} vagues</div>` +
+      `<div class="why">${M.brief}</div>` +
+      (ch ? `<div class="why"><b>Règle du défi</b> : ${ch === 'genie' ? "aucune tour. Pièges, bastion (couronne, Claymore) et l'homme." : `une seule sorte de tour, ${DEF[M.arsenal].name.toLowerCase()}. Pièges et bastion permis.`}<br><b>Récompense</b> : 15 insignes la première fois.</div>`
+        : `<div class="why"><b>Au programme</b><ul class="nl">${M.news.map(x => `<li>${x}</li>`).join('')}</ul><b>Étoiles</b> : 3 si le bastion perd moins de 20 % de ses PV sur toute la mission, 2 sous 60 %, 1 sinon. Chaque nouvelle étoile : 5 insignes.</div>`) +
+      `<button class="big" data-act="mStart">Lancer la mission</button><button class="big alt" data-act="campaign">Retour</button>`;
+  } else if (kind === 'mwin') {
+    const M = curMission(), ch = G.mission.ch, next = MISSIONS[M.n];
+    h += `<div class="kick">Mission ${M.n}</div><h1 class="mw">Mission accomplie</h1><div class="sub">${M.name}${ch ? ' · ' + chName(M, ch) + ' réussi' : ''}</div>` +
+      (ch ? '' : starsHtml(G.stars, true) + `<div class="rec" style="margin-top:6px">Bastion : ${Math.round(G.lostFrac * 100)} % de ses PV perdus sur la mission.${G.stars < 3 ? ` Pour ${G.stars + 1} étoiles : moins de ${G.stars === 1 ? 60 : 20} %.` : ''}</div>`) +
+      insLine() + (G.missionBonus ? `<div class="rec">Dont ${G.missionBonus} insignes de récompense.</div>` : '') +
+      (next && !ch ? `<button class="big" data-act="mBrief" data-id="${next.id}">Mission suivante · ${next.name}</button>` : '') +
+      `<button class="big ${next && !ch ? 'alt' : ''}" data-act="campaign">Campagne</button>` +
+      `<div class="row2"><button class="big alt" data-act="replay">Rejouer</button><button class="big alt" data-act="share">Partager</button></div>`;
   } else if (kind === 'diff') {
-    h += `<h2 style="color:var(--khaki)">Choisir la difficulté</h2><div class="sub">Victoire à la vague ${VICTORY}, puis mode infini.</div>` +
+    h += `<h2 style="color:var(--khaki)">Partie libre</h2><div class="sub">Choisissez la difficulté. Victoire à la vague ${FREE_WAVES}, puis mode infini.</div>` +
       DIFF_ORDER.map(k => `<button class="big diff ${k === 'normal' ? '' : 'alt'}" data-act="newDiff" data-d="${k}"><b>${DIFF[k].name}</b><span>${DIFF[k].desc}${best[k].w ? ` Record : vague ${best[k].w}${best[k].won ? ', victoire' : ''}.` : ''}</span></button>`).join('') +
       (META.menace > 0 ? `<div class="rec" style="margin-top:12px">Niveau de menace</div><div class="mz">${Array.from({ length: META.menace + 1 }, (_, l) => `<button class="wchip ${(META.menacePick || 0) === l ? 'eq' : ''}" data-act="mzPick" data-l="${l}">${l ? 'M' + l : 'Aucune'}</button>`).join('')}</div>` +
         `<div class="rec">${META.menacePick ? MENACE.slice(0, META.menacePick).map(x => x.desc).join(' · ') + ` · insignes +${25 * META.menacePick} %` : 'Sans contrainte supplémentaire.'}</div>` : '') +
@@ -2492,9 +2666,10 @@ function showOverlay(kind) {
       `<button class="big alt" data-act="back" data-to="title">Retour</button>`;
   } else {
     h += `<h1>DERNIER BASTION</h1><div class="sub">Tenez le bastion. Aussi longtemps que possible.</div>` +
-      `<p>Les hordes suivent les chemins jusqu'au bastion central. Tenez ${VICTORY} vagues pour gagner. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
+      `<p>Les hordes suivent les chemins jusqu'au bastion central. En partie libre, tenez ${FREE_WAVES} vagues pour gagner. L'homme tire tout seul ; touchez un zombie pour lui désigner une cible prioritaire.<br><br>` +
       `Tout se développe dans un arbre unique : on commence par un nid de mitrailleuse, puis chaque choix ouvre de nouvelles branches (armes, tours, pièges, bunker). Toutes les ${DRAFT_EVERY} vagues, une carte de ravitaillement au choix change la partie. Entre les parties, les insignes gagnés achètent des avantages permanents au Quartier général.</p>` +
-      (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1}, ${save.daily ? 'défi du jour' : DIFF[save.diff || 'normal'].name})</button><button class="big alt" data-act="new">Nouvelle partie</button>` : `<button class="big" data-act="new">Commencer</button>`) +
+      (save ? `<button class="big" data-act="continue">Continuer (vague ${save.wave + 1}, ${save.mission && MIS(save.mission.id) ? 'mission ' + MIS(save.mission.id).n : save.daily ? 'défi du jour' : DIFF[save.diff || 'normal'].name})</button>` : '') +
+      `<button class="big ${save ? 'alt' : ''}" data-act="campaign">Campagne</button><button class="big alt" data-act="new">Partie libre</button>` +
       `<button class="big alt" data-act="dailyInfo">Défi du jour${META.daily && META.daily.date === todayKey() ? ' · vague ' + META.daily.best : ''}</button>` +
       `<div class="row2"><button class="big alt" data-act="hq">Quartier général · ${fmt(META.ins)}</button><button class="big alt" data-act="goals">Défis ${GOALS.filter(g => META.done[g.id]).length}/${GOALS.length}</button></div>` +
       (rt ? `<div class="rec">Records · ${rt}</div>` : '');
@@ -2573,7 +2748,7 @@ const GLABEL = { superTir: 'Super tir', arty: 'Frappe d\'artillerie', repair: 'R
 const GMIN_X = Math.min(...Object.values(GPOS).map(p => p[0])), GMIN_Y = Math.min(...Object.values(GPOS).map(p => p[1]));
 const gpx = id => [(GPOS[id][0] - GMIN_X) * GUX + GM, (GPOS[id][1] - GMIN_Y) * GUY + GM];
 const ICON_OF = n => n.kind === 'tech' ? n.ref : n.id;
-const nodeVisible = n => n.id === ROOT || (rootOwned() && owned(NODE[n.parent]));
+const nodeVisible = n => !hiddenNode(n) && (n.id === ROOT || (rootOwned() && owned(NODE[n.parent])));
 
 function treeViewApply() {
   const v = G.tv; $('treeWorld').style.transform = `translate(${v.x}px,${v.y}px) scale(${v.s})`;
@@ -2728,8 +2903,8 @@ setInterval(() => { if (!G || G.paused) return; dctx.save(); dctx.globalComposit
 
 /* ---------- Décor statique : lampadaires, épaves, portails ---------- */
 const LAMPS = [], DECOR = [], GATES = [];
-function genScene() {
-  const R = mulberry(4242);
+function genScene(seed) {
+  const R = mulberry(seed || 4242);
   const nearB = (c, r) => Math.abs(c - BC.c) <= 1 && Math.abs(r - BC.r) <= 1;
   const free = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS && !PATH_CELLS.has(c + ',' + r) && !SLOT_SET.has(c + ',' + r) && !nearB(c, r);
   const cand = [];
@@ -2763,9 +2938,9 @@ function genScene() {
 }
 
 /* ---------- Sol (pré-calculé) ---------- */
-function genBG() {
+function genBG(seed) {
   const b = BG.getContext('2d'); b.setTransform(2, 0, 0, 2, MX * 2, MY * 2);
-  const R = mulberry(20261126);
+  const R = mulberry(seed || 20261126);
   b.fillStyle = '#2b2721'; b.fillRect(-MX, -MY, W + 2 * MX, H + 2 * MY);
   for (let i = 0; i < 150; i++) {
     const x = -MX + R() * (W + 2 * MX), y = -MY + R() * (H + 2 * MY), r = 14 + R() * 46;
@@ -3412,8 +3587,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && G &
 /* =========================================================
    DEMARRAGE
    ========================================================= */
-genScene();
-genBG();
+loadMap('carrefour');
 treeInput();
 G = freshState();
 renderAll();
@@ -3423,7 +3597,7 @@ requestAnimationFrame(frame);
 
 // Accès pour les tests automatisés
 window.__DB = {
-  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, showOverlay, kill, MAG, GUN, firepower, advisedPower, bunkerMax, PACE, eff, GOALS, MENACE, completeGoal, seeded, todayKey, dailyMod, defeatHtml, openSlotMenu, openDefMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
+  get G() { return G; }, view: () => VIEW, newGame, startWave, update, act, ws, WEAPONS, DEF, MODULES, BUNKER_LV, PATHS, canPlace, addDef, buildWave, upCost, PATH_CELLS, SLOTS, SLOT_SET, TREE, NODE, buyNode, nodeAvailable, nodeLevel, upgradeInst, placeCost, openTree, closeTree, firepower, hordeBudget, DIR, TRAP_SLOTS, TRAP_SET, BONUS, useBonus, artyStrike, DIFF, VICTORY, refPower, advisedPower, earlyPrime, canEarly, statSources, TGT, renderAll, showOverlay, kill, MISSIONS, MAPS, loadMap, MIS, missionWon, setRules, MAG, GUN, firepower, advisedPower, bunkerMax, PACE, eff, GOALS, MENACE, completeGoal, seeded, todayKey, dailyMod, defeatHtml, openSlotMenu, openDefMenu, buildAt, CARDS, pickCard, makeDraft, effL, get META() { return META; }, PERKS, cardN,
 };
 })();
 </script>

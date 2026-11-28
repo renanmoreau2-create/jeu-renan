@@ -7,7 +7,8 @@ Tower defense post-apocalyptique pour téléphone, en vue 3/4 de nuit : un homme
 - Un arbre d'évolution unique : on démarre par un nid de mitrailleuse, puis on part en Tir (11 armes réelles, du Glock 17 au RPO-A Shmel), Appui (tours), Génie (pièges) ou Fortification (bunker et modules).
 - Tours et pièges uniquement sur des emplacements balisés : on touche un emplacement libre pour construire directement.
 - Des hordes : neuf types de zombies, une Abomination toutes les 6 vagues, trois chemins qui s'ouvrent au fil des vagues.
-- Trois difficultés, victoire à la vague 25 puis mode infini, records par difficulté.
+- Campagne « Apocalypse » : trois missions de 12 à 15 vagues sur trois cartes, étoiles, défis « Génie » (sans tour) et « Arsenal unique ».
+- Partie libre : trois difficultés, victoire à la vague 25 puis mode infini, records par difficulté.
 - Après une victoire, cinq niveaux de menace cumulables, mieux payés en insignes.
 - Aperçu de la prochaine vague, appel anticipé contre une prime, bilan des dégâts par défense, priorité de tir réglable par tour.
 - Réalisme des armes : chargeurs et rechargement pour l'homme et les tireurs d'élite, surchauffe des mitrailleuses, réservoirs des lance-flammes, mêmes règles pour les armes du bastion, avec jauges sur la carte.
