@@ -41,17 +41,60 @@
     background:rgba(15,17,18,.94);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:12px;width:max-content;max-width:94%}
   #placeBar.show{display:flex}
   /* Weapon bar */
-  #weaponBar{position:absolute;left:8px;right:72px;bottom:8px;z-index:3;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-  #weaponBar::-webkit-scrollbar{display:none}
+  /* sélecteur d'arme de l'homme : un bouton, une liste qui se déroule vers le haut */
+  #weaponBar{position:absolute;left:8px;bottom:8px;z-index:4}
   #weaponBar.hide{display:none}
+  .wsel{display:flex;align-items:center;gap:9px;height:42px;padding:0 10px 0 6px;border-radius:13px;background:rgba(19,22,24,.93);border:1px solid var(--khaki2);color:var(--txt);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+  .wsel .wic{width:30px;height:30px;border-radius:9px;background:#2a2719;display:flex;align-items:center;justify-content:center;color:var(--khaki)}
+  .wsel .wic svg{width:20px;height:20px}
+  .wsel .wtx{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1}
+  .wsel .wtx b{font-size:14px}
+  .wsel .wtx span{font-size:10.5px;color:var(--khaki);font-variant-numeric:tabular-nums}
+  .wsel .wtx span.rl{color:#ff9a3a}
+  .wsel .chev{width:14px;height:14px;color:var(--mute);transition:transform .15s}
+  .wsel.open .chev{transform:rotate(180deg)}
+  .wlist{position:absolute;left:0;bottom:50px;width:min(300px,calc(100vw - 16px));max-height:min(360px,55vh);overflow-y:auto;background:rgba(17,20,22,.97);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.6)}
+  .wlist .wh{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:4px 8px 6px}
+  .wopt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:8px 10px;border-radius:10px;background:transparent;border-left:3px solid transparent}
+  .wopt+.wopt{margin-top:2px}
+  .wopt:active{background:#22272a}
+  .wopt b{font-size:14px}
+  .wopt .k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--khaki);margin-left:8px}
+  .wopt span{font-size:11px;color:var(--mute)}
+  .wopt.eq{background:#25231a;border-left-color:var(--khaki)}
   .wchip{flex:0 0 auto;background:#1f2427;border:1px solid var(--line);border-radius:16px;padding:5px 11px;font-size:12px;color:var(--mute)}
   .wchip.eq{border-color:var(--khaki);color:var(--txt);background:#2a2a20}
   /* Tabs */
-  #tabs{position:relative;z-index:8;display:flex;gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
-  .tab{flex:1;background:#22272a;border-radius:8px;padding:9px 4px;font-size:13px;color:var(--mute)}
-  .tab.on{background:#2e3330;color:var(--txt);box-shadow:inset 0 -2px 0 var(--khaki)}
-  #btnWave{flex:1.6;background:var(--khaki);color:#16140c;border-radius:8px;padding:9px 6px;font-weight:700;font-size:13px}
-  #btnWave:disabled{background:#3a3628;color:#9a9278}
+  /* barre de commandement : deux onglets à icône, un grand bouton d'action à droite (pouce) */
+  #tabs{position:relative;z-index:8;display:flex;align-items:stretch;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#181b1d,#0e1011);border-top:1px solid #2a2f32;box-shadow:0 -6px 16px rgba(0,0,0,.35)}
+  .tab{position:relative;flex:0 0 66px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;background:#1c2023;border:1px solid #2c3236;border-radius:13px;color:#9aa19a;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:transform .08s,background .15s,color .15s}
+  .tab .ti{display:block;width:24px;height:24px}
+  .tab .ti svg{width:24px;height:24px;display:block}
+  .tab:active{transform:translateY(1px)}
+  .tab.on{background:linear-gradient(180deg,#302c1e,#211e15);border-color:var(--khaki2);color:var(--khaki)}
+  .tab.on::before{content:'';position:absolute;top:-1px;left:18px;right:18px;height:3px;border-radius:0 0 3px 3px;background:var(--khaki)}
+  .tab .lk{display:none;position:absolute;top:5px;right:6px;width:13px;height:13px;color:#d0c7ae}
+  .tab .lk svg{width:13px;height:13px;display:block}
+  .tab.lock{color:#5d645d;background:#171a1c}
+  .tab.lock .lk{display:block}
+  .tab .badge{position:absolute;top:-6px;right:-6px;margin:0;box-shadow:0 0 0 2px #121416}
+  #btnWave{position:relative;overflow:hidden;flex:1;min-width:0;height:56px;display:flex;align-items:center;gap:10px;padding:0 14px 0 9px;border-radius:15px;background:linear-gradient(180deg,#dcc684,#b29a55);color:#1b170c;box-shadow:0 3px 0 #75633a,inset 0 1px 0 rgba(255,255,255,.35);text-align:left;transition:transform .08s}
+  #btnWave:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #75633a,inset 0 1px 0 rgba(255,255,255,.35)}
+  #btnWave .wi{position:relative;z-index:1;flex:0 0 38px;height:38px;border-radius:50%;background:#2a2416;display:flex;align-items:center;justify-content:center}
+  #btnWave .wi svg{width:22px;height:22px}
+  #btnWave .wt{position:relative;z-index:1;display:flex;flex-direction:column;line-height:1.12;min-width:0}
+  #btnWave .wt small{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #btnWave .wt b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #btnWave #wFill{display:none;position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(192,57,43,.38),rgba(208,138,58,.32));transition:width .3s}
+  #btnWave.ready{animation:wpulse 2.4s ease-in-out infinite}
+  @keyframes wpulse{0%,100%{box-shadow:0 3px 0 #75633a,0 0 0 0 rgba(220,198,132,0)}50%{box-shadow:0 3px 0 #75633a,0 0 0 6px rgba(220,198,132,.16)}}
+  @media (prefers-reduced-motion:reduce){#btnWave.ready{animation:none}}
+  #btnWave.run,#btnWave.run:disabled{background:#1d2124;color:var(--txt);box-shadow:inset 0 0 0 1px #30363a}
+  #btnWave.run .wi{background:#3a1a14}
+  #btnWave.run #wFill{display:block}
+  #btnWave.early{background:linear-gradient(180deg,#e6a95b,#c27c34);color:#1b120a;box-shadow:0 3px 0 #7d4c1c,inset 0 1px 0 rgba(255,255,255,.3)}
+  #btnWave.early .wi{background:#3a2412}
+  #btnWave:disabled:not(.run){background:#2b2a22;color:#8d8670;box-shadow:none}
   /* Panel */
   #panel{position:absolute;left:0;right:0;bottom:0;z-index:7;max-height:66%;height:auto;border-radius:14px 14px 0 0;box-shadow:0 -10px 26px rgba(0,0,0,.55);transition:transform .22s ease,visibility 0s;overflow-y:auto;background:var(--panel);padding:4px 8px 10px;
     -webkit-overflow-scrolling:touch}
@@ -264,9 +307,9 @@
     <section id="panel" class="closed"></section>
   </div>
   <nav id="tabs">
-    <button class="tab" data-tab="arbre">Arbre<span id="treeBadge" class="badge hide"></span></button>
-    <button class="tab" data-tab="bastion">Bastion</button>
-    <button id="btnWave">Lancer vague 1</button>
+    <button class="tab" data-tab="arbre" aria-label="Arbre d'évolution"><span class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19v-6.5M12 12.5 6.5 8M12 12.5 17.5 8M6.5 8V5.5M17.5 8V5.5"/></g><circle cx="12" cy="19.5" r="2.4" fill="currentColor"/><circle cx="12" cy="12.5" r="2.1" fill="currentColor"/><circle cx="6.5" cy="5" r="2.4" fill="currentColor"/><circle cx="17.5" cy="5" r="2.4" fill="currentColor"/></svg></span><span class="tl">Arbre</span><span class="lk"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 7V5.2a3 3 0 0 1 6 0V7" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.5" y="7" width="9" height="7" rx="1.6" fill="currentColor"/></svg></span><span id="treeBadge" class="badge hide"></span></button>
+    <button class="tab" data-tab="bastion" aria-label="Fiche du bastion"><span class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8h2.6V5h2.6v3h1.5V5h2.6v3h1.5V5h2.6v3H20v13h-5.5v-4.2a2.5 2.5 0 0 0-5 0V21z" fill="currentColor"/></svg></span><span class="tl">Bastion</span></button>
+    <button id="btnWave"><span class="wi" id="wIcon"></span><span class="wt"><small id="wSmall">Lancer</small><b id="wBig">Vague 1</b></span><i id="wFill"></i></button>
   </nav>
 </div>
 <div id="tree" class="hide">
@@ -1728,7 +1771,8 @@ function closeTree() {
 function act(a, ds) {
   SND.init(); SND.play('click');
   switch (a) {
-    case 'equip': if (G.weapons[ds.id].owned) { G.equipped = ds.id; G.heroCd = Math.min(G.heroCd, 0.2); } break;
+    case 'equip': if (G.weapons[ds.id].owned) { G.equipped = ds.id; G.heroCd = Math.min(G.heroCd, 0.2); } G.wpOpen = false; break;
+    case 'wpToggle': G.wpOpen = !G.wpOpen; G.slotMenu = null; G.selected = null; break;
     case 'node': buyNode(ds.id); break;
     case 'upW': { const w = WBY[ds.id], b = +ds.b, st = G.weapons[w.id]; if (rootOwned() && st.owned && !st.up[b] && spend(upCost(w, b))) st.up[b] = 1; break; }
     case 'upInst': upgradeInst(G.selected); break;
@@ -1795,6 +1839,7 @@ function onTap(wx, wy, sx, sy) {
   const c = Math.floor(wx / T), r = Math.floor(wy / T), k = c + ',' + r;
   if (G.aim === 'arty' && G.mode === 'wave') { artyStrike(wx, wy); renderAll(); return; }
   // une feuille ou une bulle ouverte : l'appui sur la carte la referme seulement
+  if (G.wpOpen) { G.wpOpen = false; renderAll(); return; }
   if (G.panelOpen) { if (G.tab === 'def') G.selected = null; G.panelOpen = false; renderAll(); return; }
   if (G.gateTip !== null) { G.gateTip = null; renderGates(); return; }
   const prev = G.slotMenu;
@@ -2120,18 +2165,38 @@ function refreshAfford(force) {
   if (G.treeOpen) $('treeMoney').textContent = fmt(G.money);
   renderTreeBadge();
 }
+const GUN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9h15l1.5-2H22v4h-3l-1 1h-4l-1.5 2H10l-1.6 5H4.6l1.2-5H4l-2-2z" fill="currentColor"/></svg>';
+const CHEV = '<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function ammoText() {
+  const s = ws(G.equipped), A = G.wst[G.equipped];
+  if (G.mode !== 'wave' || !A) return s.mag === 1 ? 'un coup' : (WBY[G.equipped].kind === 'flame' ? 'réservoir plein' : `${s.mag}/${s.mag}`);
+  if (A.rl > 0) return WBY[G.equipped].kind === 'flame' ? 'bouteilles...' : 'rechargement...';
+  return s.mag === 1 ? 'prêt' : WBY[G.equipped].kind === 'flame' ? `réservoir ${Math.round(A.n / s.mag * 100)} %` : `${A.n}/${s.mag}`;
+}
 function renderWeaponBar() {
-  const owned = WEAPONS.filter(w => G.weapons[w.id].owned);
-  $('weaponBar').innerHTML = owned.map(w => `<button class="wchip ${G.equipped === w.id ? 'eq' : ''}" data-act="equip" data-id="${w.id}">${w.short}</button>`).join('');
+  const owned = WEAPONS.filter(w => G.weapons[w.id].owned), w = WBY[G.equipped];
+  let h = `<button class="wsel ${G.wpOpen ? 'open' : ''}" data-act="wpToggle" aria-expanded="${!!G.wpOpen}" aria-label="Arme de l'homme : ${w.name}"><span class="wic">${GUN_ICON}</span><span class="wtx"><b>${w.short}</b><span id="wAmmo">${ammoText()}</span></span>${CHEV}</button>`;
+  if (G.wpOpen) h += `<div class="wlist"><div class="wh">Arme de l'homme</div>` + owned.map(x => {
+    const st = ws(x.id);
+    return `<button class="wopt ${G.equipped === x.id ? 'eq' : ''}" data-act="equip" data-id="${x.id}"><div><b>${x.name}</b>${G.equipped === x.id ? '<span class="k">équipée</span>' : ''}</div><span>${statLine(x, st)}</span></button>`;
+  }).join('') + (owned.length < WEAPONS.length ? `<div class="wh" style="padding-top:8px">${G.mode === 'wave' ? "Autres armes : dans l'arbre, entre deux vagues" : "Autres armes : dans l'arbre"}</div>` : '') + '</div>';
+  $('weaponBar').innerHTML = h;
 }
 function renderWaveBtn() {
   const b = $('btnWave');
-  const early = canEarly() && G.next;
-  b.classList.toggle('early', !!early);
-  if (G.mode === 'build') { b.disabled = false; b.textContent = `Lancer vague ${G.wave + 1}`; }
-  else if (early) { b.disabled = false; b.textContent = `Vague ${G.wave + 1} maintenant +${fmt(earlyPrime())}`; }
-  else if (G.mode === 'wave') { b.disabled = true; b.textContent = `Restants : ${G.queue.length + G.zombies.length}`; }
-  else { b.disabled = true; b.textContent = '...'; }
+  if (!$('wIcon').firstChild) $('wIcon').innerHTML = SKULL;
+  const early = canEarly() && G.next, left = G.queue.length + G.zombies.length;
+  let sm, big, cls = '';
+  if (G.mode === 'build') { sm = G.wave + 1 >= VICTORY && !G.won ? 'Dernière vague' : 'Lancer la vague'; big = `Vague ${G.wave + 1}`; cls = 'ready'; }
+  else if (early) { sm = 'Appeler maintenant'; big = `Vague ${G.wave + 1} · +${fmt(earlyPrime())}`; cls = 'early'; }
+  else if (G.mode === 'wave') { sm = `Vague ${G.wave} en cours`; big = `${left} zombie${left > 1 ? 's' : ''} restant${left > 1 ? 's' : ''}`; cls = 'run'; }
+  else { sm = ''; big = '...'; }
+  b.disabled = !(G.mode === 'build' || early);
+  ['ready', 'early', 'run'].forEach(c => b.classList.toggle(c, c === cls));
+  if ($('wSmall').textContent !== sm) $('wSmall').textContent = sm;
+  if ($('wBig').textContent !== big) $('wBig').textContent = big;
+  $('wFill').style.width = G.mode === 'wave' ? clamp((G.waveCount - left) / Math.max(1, G.waveCount) * 100, 0, 100) + '%' : '0';
+  b.setAttribute('aria-label', `${sm} : ${big}`);
 }
 function renderPlaceBar() {
   const pb = $('placeBar');
@@ -2164,7 +2229,11 @@ function hud(force) {
   if (gk !== hud.gk) { hud.gk = gk; renderGates(); }
   refreshAfford(false);
 }
-function hudFrame() { hud(false); renderBonusBar(false); }
+function hudFrame() {
+  hud(false); renderBonusBar(false);
+  const a = $('wAmmo'); if (a) { const t = ammoText(); if (a.textContent !== t) { a.textContent = t; a.classList.toggle('rl', /\.\.\./.test(t)); } }
+  if (G.mode === 'wave') renderWaveBtn();
+}
 
 function showOverlay(kind) {
   const o = $('overlay'), save = loadSave(), best = G ? G.best : loadBest(), rt = recText(best);

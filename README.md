@@ -10,7 +10,8 @@ Tower defense post-apocalyptique pour téléphone, en vue 3/4 de nuit : un homme
 - Trois difficultés, victoire à la vague 25 puis mode infini, records par difficulté.
 - Après une victoire, cinq niveaux de menace cumulables, mieux payés en insignes.
 - Aperçu de la prochaine vague, appel anticipé contre une prime, bilan des dégâts par défense, priorité de tir réglable par tour.
-- Réalisme des armes : chargeurs et rechargement pour l'homme, surchauffe des mitrailleuses, réservoirs des lance-flammes, avec jauges sur la carte.
+- Réalisme des armes : chargeurs et rechargement pour l'homme et les tireurs d'élite, surchauffe des mitrailleuses, réservoirs des lance-flammes, mêmes règles pour les armes du bastion, avec jauges sur la carte.
+- L'arbre s'ouvre entre deux vagues ; pendant l'assaut, on achète sur la carte ce qui est déjà débloqué.
 - Toutes les 3 vagues, une carte de ravitaillement parmi 3. Entre les parties, des insignes à dépenser au Quartier général.
 - Dix défis secondaires récompensés en insignes, et un défi du jour identique pour tous, à partager.
 - Écran de défaite utile : ce qui a percé, ce qu'il manquait, et « Rejouer » en un appui.

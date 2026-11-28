@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.2)
+# DERNIER BASTION — document de conception (V2.3)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,70 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 undecies. Changement V2.3 : rythme des achats, réalisme étendu, nouvelle barre de commande
+
+**Retours de Renan** (victoire en Normal en V2.2, avec quelques dégâts rattrapés par les réparations) :
+- l'arbre ne doit s'ouvrir qu'entre deux vagues, mais ce qui est déjà débloqué doit rester achetable pendant l'assaut ;
+- les tireurs d'élite doivent recharger, et les armes du bastion suivre les mêmes règles que les tours ;
+- le texte de l'option du lance-flammes débordait du bouton ;
+- les pouvoirs doivent aller en haut à droite, et cet endroit doit rester libre sur les cartes futures ;
+- la fin de partie doit punir un mauvais placement en Normal, et le Cauchemar doit éliminer, dur dès la vague 15 ;
+- la fiche du bas recouvrait à moitié les trois boutons ;
+- l'arme de l'homme doit se choisir dans un menu déroulant, et la barre du bas doit être plus belle, sur le modèle des bons jeux mobiles.
+
+**1. L'arbre seulement entre deux vagues.** Pendant une vague, l'onglet Arbre affiche un cadenas et refuse de s'ouvrir avec un message. Tout achat de nœud est refusé : étage du bastion, installation d'un module, déblocage d'un bonus ou d'une arme. Reste achetable pendant l'assaut tout ce qui est déjà débloqué :
+- construire une défense débloquée ;
+- monter une défense jusqu'au niveau débloqué ;
+- les options par tour (canon, réservoir, chargeur) ;
+- les améliorations de l'arme de l'homme ;
+- les niveaux des modules et les rangs des bonus ;
+- la réparation.
+
+Un niveau non débloqué affiche « arbre après la vague ». La règle « l'arbre débloque, la carte améliore » devient aussi une règle de rythme.
+
+**2. Tireurs d'élite : chargeurs.**
+- FR-F2 : 10 coups, rechargement en 3 s. SCAR-H PR : 20 coups, 2,8 s. Hécate II : 7 coups, 3,5 s.
+- Rechargement tactique quand la tour n'a plus de cible depuis 1 s et que son chargeur est entamé de 30 %.
+- Option « Grand chargeur » (350) : chargeur +50 %, rechargement 35 % plus rapide.
+- Sur la carte, une barre de munitions sous la tour, puis un cercle doré pendant le rechargement.
+
+**3. Armes du bastion : mêmes règles que les tours.**
+- La 12,7 du bastion se comporte comme la M2 Browning du nid : 70 tirs, puis canon changé en 5 s.
+- Le lance-flammes fixe se comporte comme la tour lance-flammes du même niveau.
+- Les options « Canon de rechange » (300) et « Grand réservoir » (450) s'achètent dans la fiche Bastion.
+- Mêmes jauges que les tours.
+
+**4. Menus.** Les options par tour ont des libellés courts (« Canon de rechange », « Réservoir +50 % », « Chargeur +50 % »). Les boutons du menu d'une défense se partagent la largeur et le menu reste dans l'écran.
+
+**5. Pouvoirs en haut à droite**, sous la barre du haut, au-dessus de la carte. Leur taille s'adapte (34 à 46 px).
+- **Règle pour les cartes futures** : garder libre le coin haut droit, c'est-à-dire la bande au-dessus de la rangée 0, colonnes 5 à 8. Aucune entrée de route ni aucun emplacement à cet endroit.
+
+**6. Fin de partie** : PV des hordes multipliés en fin de partie (`lateMult`).
+
+| Difficulté | Base | Montée en fin de partie | Effet |
+|---|---|---|---|
+| Normal | 0,72 | +3,5 % par vague après la vague 19 | x1,21 à la vague 25, x1,32 à la vague 28 |
+| Cauchemar | 0,79 | +5 % par vague après la vague 12 | x1,15 à la vague 15, x1,40 à la vague 20, x1,65 à la vague 25 |
+| Facile | 0,35 | aucune | |
+
+Calibrage (joueurs automatiques) :
+- **Normal**, achats à chaque vague : 2 parties sur 2 tenues jusqu'à la vague 28. Chacune a 6 vagues à plus de 20 % de pertes à partir de la vague 18, avec des pics à 41 et 48 %.
+- **Normal**, achats toutes les 2 vagues : balayé aux vagues 11 et 12.
+- Un essai à 0,74 avec la montée dès la vague 18 faisait tomber le joueur automatique fort aux vagues 22 et 25. C'était plus qu'une hausse légère, donc ce réglage n'a pas été retenu.
+- **Cauchemar**, achats à chaque vague : éliminé aux vagues 17 et 19.
+- **Facile**, achats toutes les 2 vagues : victoire, sans perte ou presque.
+
+**7. Fiche du bas.** Fermée, la fiche glissait sous la carte et recouvrait la barre du bas. C'est corrigé : la scène découpe ce qui dépasse, et la fiche est masquée une fois fermée. On peut aussi la fermer en glissant son en-tête vers le bas.
+
+**8. Barre de commande** (inspirée de Kingdom Rush, de Bloons TD 6 et des barres de navigation de Clash Royale) :
+- **Deux onglets à icône** à gauche, l'Arbre (nœuds reliés) et le Bastion (tour crénelée). L'onglet actif est souligné et coloré en kaki. L'Arbre porte une pastille (nombre de déblocages abordables) ou un cadenas pendant la vague.
+- **Un grand bouton d'action** à droite, sous le pouce, avec le crâne des entrées de route. Il a quatre états :
+  - « Lancer la vague / Vague 7 », kaki, avec un léger battement (supprimé si l'appareil demande moins d'animations) ;
+  - « Dernière vague » avant la victoire ;
+  - pendant la vague, « Vague 7 en cours / 95 zombies restants », sombre, avec le remplissage de la progression ;
+  - « Appeler maintenant / Vague 8 · +prime », orange.
+- **Sélecteur d'arme de l'homme** : un bouton en bas à gauche (icône, nom, munitions en direct ou « rechargement... »). Il déroule vers le haut la liste des armes possédées avec leurs caractéristiques, l'arme équipée en kaki. Un appui sur la carte referme la liste.
 
 ## 2 decies. Changement V2.2 : réalisme des armes et difficulté relevée
 
