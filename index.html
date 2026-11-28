@@ -583,8 +583,10 @@ const PATHS_DEF = [
 const SLOTS = [[1,1],[4,2],[6,3],[3,5],[5,5],[3,7],[2,10],[5,10],[7,10],[8,8]];
 const SLOT_SET = new Set(SLOTS.map(([c, r]) => c + ',' + r));
 // Emplacements de pièges : cases peintes sur la route (virages et abords du bastion)
-// V2.5 : l'emplacement collé au bastion côté Nord (4,5), caché par le bâtiment, passe au virage (4,4)
-const TRAP_SLOTS = [[2,1],[5,1],[7,3],[5,4],[4,4],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]];
+// V2.5 : l'emplacement collé au bastion côté Nord (4,5), caché par le bâtiment, passe au virage (4,4) ;
+// les pièges de la route Nord sont espacés d'au moins une case : (7,2), (6,4), (4,4)
+const TRAP_SLOTS = [[2,1],[5,1],[7,2],[6,4],[4,4],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]];
+const TRAP_MOVED = { '4,5': [4, 4], '7,3': [7, 2], '5,4': [6, 4] };
 const TRAP_SET = new Set(TRAP_SLOTS.map(([c, r]) => c + ',' + r));
 
 // Armes de l'homme (ordre de progression)
@@ -1810,7 +1812,7 @@ function newGame(fromSave, diff, opts) {
     G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {});
     G.pressure = clamp(d.pressure || 1, DIR.pMin, DIR.pMax); G.won = !!d.won;
     if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
-    d.defs.forEach(x => { if (x.c === 4 && x.r === 5 && !d.defs.some(y => y.c === 4 && y.r === 4)) x.r = 4;
+    d.defs.forEach(x => { const mv = TRAP_MOVED[x.c + ',' + x.r]; if (mv && DEF[x.type].place === 'path' && !d.defs.some(y => y.c === mv[0] && y.r === mv[1])) { x.c = mv[0]; x.r = mv[1]; }
       if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; if (x.kit) dd.kit = 1; } });
     if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
     if (d.trk) G.trk = Object.assign(G.trk, d.trk); G.draftN = d.draftN || 0; G.prevBest = d.prevBest || 0;

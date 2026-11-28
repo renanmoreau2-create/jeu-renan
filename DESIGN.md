@@ -92,6 +92,7 @@ Grille de 9 × 13 cases, bunker au centre.
   - Elle croise les routes à 60 unités du centre, là où commence son effet (rayon de ralentissement de 60 à 68).
   - Une seule bande, posée sur la limite des cases, avec des piquets hors des routes : elle ne déborde plus sur les emplacements voisins. Le niveau se lit à la densité des spires (1 à 3 brins).
 - **Emplacement de piège Nord déplacé** de la case collée au bastion (4,5), cachée par le bâtiment dès qu'il grandit, au virage de la route Nord (4,4). Une partie sauvegardée avec un piège en (4,5) le retrouve en (4,4).
+- **Pièges de la route Nord espacés** (retour de Renan : deux cases collées après le déplacement). Ils passent en (5,1), (7,2), (6,4) et (4,4), toujours séparés d'au moins une case. Les pièges des parties sauvegardées suivent.
 - **Barre du haut** : la vie du bastion affiche le nombre seul (la barre montre la proportion) pour ne plus être coupée au-delà de 1 000 PV.
 
 ## 2 duodecies. Changement V2.4 : refonte visuelle
