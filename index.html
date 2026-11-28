@@ -176,6 +176,9 @@
   .hint{font-size:12px;color:var(--mute);margin:2px 2px 8px}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   #bonusBar{position:absolute;right:6px;top:4px;display:flex;flex-direction:row;gap:8px;z-index:3}
+  #compass{position:absolute;left:6px;top:6px;width:var(--bs,46px);height:var(--bs,46px);z-index:3;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+  #compass svg{width:100%;height:100%;display:block}
+  #compass.hide{display:none}
   .bbtn{position:relative;width:var(--bs,46px);height:var(--bs,46px);border-radius:50%;background:#15181a;border:2px solid #4c5357;padding:0;overflow:visible;display:flex;align-items:center;justify-content:center}
   .bbtn.full{opacity:.4}
   .bbtn img{width:calc(var(--bs,46px) - 12px);height:calc(var(--bs,46px) - 12px);border-radius:50%}
@@ -462,6 +465,7 @@
     <canvas id="cv"></canvas>
     <div id="toast"></div>
     <div id="bonusBar"></div>
+    <div id="compass" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22.5" fill="rgba(16,18,20,.86)" stroke="#5a4f30" stroke-width="1.5"/><circle cx="24" cy="24" r="15" fill="none" stroke="#2f3437" stroke-width="1"/><path d="M24 3.5v4M24 40.5v4M3.5 24h4M40.5 24h4" stroke="#5a4f30" stroke-width="1.4"/><path d="M24 11.5 27.2 24 24 22 20.8 24z" fill="#e2cd8a"/><path d="M24 36.5 20.8 24 24 26 27.2 24z" fill="#6b716b"/><circle cx="24" cy="24" r="1.8" fill="#16181a" stroke="#e2cd8a" stroke-width="1"/><g font-family="system-ui,sans-serif" font-weight="800" text-anchor="middle" fill="#a59f8b" font-size="7.5"><text x="24" y="10" fill="#e2cd8a">N</text><text x="24" y="44.2">S</text><text x="41" y="26.7">E</text><text x="7" y="26.7">O</text></g></svg></div>
     <div id="placeBar"><span id="placeTxt"></span><button class="btn" data-act="stopPlace">Terminer</button></div>
     <div id="slotMenu" class="sm hide"></div>
     <div id="weaponBar"></div>
@@ -579,7 +583,8 @@ const PATHS_DEF = [
 const SLOTS = [[1,1],[4,2],[6,3],[3,5],[5,5],[3,7],[2,10],[5,10],[7,10],[8,8]];
 const SLOT_SET = new Set(SLOTS.map(([c, r]) => c + ',' + r));
 // Emplacements de pièges : cases peintes sur la route (virages et abords du bastion)
-const TRAP_SLOTS = [[2,1],[5,1],[7,3],[5,4],[4,5],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]];
+// V2.5 : l'emplacement collé au bastion côté Nord (4,5), caché par le bâtiment, passe au virage (4,4)
+const TRAP_SLOTS = [[2,1],[5,1],[7,3],[5,4],[4,4],[6,11],[3,11],[1,9],[3,8],[4,7],[8,10],[7,8],[6,6]];
 const TRAP_SET = new Set(TRAP_SLOTS.map(([c, r]) => c + ',' + r));
 
 // Armes de l'homme (ordre de progression)
@@ -1805,7 +1810,8 @@ function newGame(fromSave, diff, opts) {
     G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {});
     G.pressure = clamp(d.pressure || 1, DIR.pMin, DIR.pMax); G.won = !!d.won;
     if (d.st) Object.keys(G.st).forEach(k => { if (d.st[k]) G.st[k] = Object.assign(newSt(), d.st[k]); });
-    d.defs.forEach(x => { if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; if (x.kit) dd.kit = 1; } });
+    d.defs.forEach(x => { if (x.c === 4 && x.r === 5 && !d.defs.some(y => y.c === 4 && y.r === 4)) x.r = 4;
+      if (G.unlocked[x.type]) { const dd = addDef(x.type, x.c, x.r, x.lv || 0, x.spent); if (x.st) dd.st = Object.assign(newSt(), x.st); if (x.no) dd.no = x.no; if (x.tgt && TGT[x.tgt]) dd.tgt = x.tgt; if (x.kit) dd.kit = 1; } });
     if (d.defNo) G.defNo = Object.assign(G.defNo, d.defNo);
     if (d.trk) G.trk = Object.assign(G.trk, d.trk); G.draftN = d.draftN || 0; G.prevBest = d.prevBest || 0;
     G.cards = d.cards || {}; G.draft = d.draft || null; G.draftsDue = d.draftsDue || (G.draft ? 1 : 0); G.rerolls = d.rerolls || 0; G.insRun = d.insRun || 0;
@@ -2087,12 +2093,12 @@ function renderGates() {
   const show = G.next && !G.treeOpen && !G.panelOpen && (G.mode === 'build' || canEarly());
   if (!show) { box.innerHTML = ''; tip.classList.add('hide'); return; }
   const by = gateCounts(), early = G.mode === 'wave';
-  box.innerHTML = Object.keys(by).map(p => `<button class="gt ${early ? 'early' : ''}" data-act="gate" data-p="${p}"><span class="gc">${SKULL}${by[p]}</span><span class="gn">${PATHS[p].name}${early ? ' · +' + fmt(earlyPrime()) : ''}</span></button>`).join('');
+  box.innerHTML = Object.keys(by).map(p => `<button class="gt ${early ? 'early' : ''}" data-act="gate" data-p="${p}" aria-label="Route ${PATHS[p].name} : ${by[p]} zombies"><span class="gc">${SKULL}${by[p]}</span></button>`).join('');
   if (G.gateTip !== null && by[G.gateTip]) {
     const p = G.gateTip, items = G.next.filter(it => it.path === p), cnt = {};
     items.forEach(it => { cnt[it.type] = (cnt[it.type] || 0) + 1; });
     const types = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
-    tip.innerHTML = `<b>Vague ${G.wave + 1} · route ${PATHS[p].name}</b><div class="zl" style="margin-top:5px">${types.map(k => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} x${cnt[k]}</span>`).join('')}</div>` +
+    tip.innerHTML = `<b>Vague ${G.wave + 1} · route ${PATHS[p].name}</b><div class="zl" style="margin-top:5px">${types.map(k => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} <b>${cnt[k]}</b></span>`).join('')}</div>` +
       `<div class="note">${G.next.length} zombies au total sur ${Object.keys(by).length} route${Object.keys(by).length > 1 ? 's' : ''}.</div>` +
       `<div class="row"><button class="btn buy" data-act="startWave">${early ? `Appeler maintenant +${fmt(earlyPrime())}` : `Lancer la vague ${G.wave + 1}`}</button><button class="btn" data-act="openReport">Détails</button></div>`;
     tip.classList.remove('hide');
@@ -2111,6 +2117,12 @@ function positionGates() {
     bb.style.top = Math.round(VIEW.by >= bs + 10 ? 6 : VIEW.by + Math.max(2, (TOP * sc - bs) / 2)) + 'px';
     bb.style.right = Math.max(4, st.width - (VIEW.bx + COLS * T * sc) + 4) + 'px';
   }
+  // rose des vents : coin haut gauche, à gauche de l'entrée Nord (colonne 2)
+  const cp = $('compass'), cs = Math.round(clamp(TOP * sc - 10, 32, 42));
+  cp.style.setProperty('--bs', cs + 'px');
+  cp.style.left = Math.max(4, VIEW.bx + 5) + 'px';
+  cp.style.top = Math.round(VIEW.by >= cs + 10 ? 6 : VIEW.by + Math.max(2, (TOP * sc - cs) / 2)) + 'px';
+  cp.classList.toggle('hide', !(G.mode === 'build' || G.mode === 'wave'));
   document.querySelectorAll('#gates .gt').forEach(b => {
     const [c, r] = gateCell(+b.dataset.p);
     b.style.left = clamp(VIEW.bx + (c * T + T / 2) * sc, 26, st.width - 26) + 'px';
@@ -2409,7 +2421,7 @@ function hud(force) {
   $('hudWave').textContent = G.won || G.mode === 'title' ? G.wave : `${G.wave}/${VICTORY}`;
   $('hudMoney').textContent = fmt(G.money);
   $('hpFill').style.width = clamp(G.hp / max * 100, 0, 100) + '%';
-  $('hpText').innerHTML = `${fmt(Math.ceil(G.hp))}<small>/ ${fmt(max)}</small>`;
+  $('hpText').textContent = fmt(Math.ceil(G.hp));
   $('hpWrap').classList.toggle('low', G.hp < max * 0.35 && G.mode === 'wave');
   $('hpWrap').setAttribute('aria-label', `Bastion : ${fmt(Math.ceil(G.hp))} PV sur ${fmt(max)}`);
   if (!$('icoWave').firstChild) { $('icoWave').innerHTML = SKULL; $('icoMoney').innerHTML = ICO.coin; $('icoHp').innerHTML = ICO.shield; }
@@ -2974,6 +2986,36 @@ function drawTower(d) {
   for (let i = 0; i <= lv; i++) { ctx.fillStyle = '#d6b85c'; ctx.fillRect(x - 6 + i * 5, PY(y) + 8, 3.5, 2.2); }
 }
 
+/* ---------- Couronne de barbelés (V2.5) ----------
+   Un carré qui suit le bord extérieur du fort : le bastion et ses 8 cases voisines (les nids d'angle et
+   les pièges collés au bastion sont à l'intérieur). Il croise les routes là où l'effet commence
+   (60 unités du centre, soit le rayon de ralentissement). Un rang de concertina par niveau. */
+function drawCrown() {
+  // une seule bande, posée sur la limite des cases (60 unités) : le niveau se lit à la densité des spires
+  const lv = G.mods.wire, h = T * 1.5, rc = 7, amp = 2.6 + lv * 0.5, pts = [];
+  const corner = (cx, cy, a0) => { for (let i = 0; i <= 6; i++) { const a = a0 + i / 6 * Math.PI / 2; pts.push([cx + Math.cos(a) * rc, cy + Math.sin(a) * rc]); } };
+  const seg = (x0, y0, x1, y1) => { const n = Math.max(2, Math.round(Math.hypot(x1 - x0, y1 - y0) / 2.8)); for (let i = 1; i < n; i++) pts.push([x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n]); };
+  const L = BX - h, R = BX + h, U = BY - h, D = BY + h;
+  corner(R - rc, D - rc, 0); seg(R - rc, D, L + rc, D); corner(L + rc, D - rc, Math.PI / 2); seg(L, D - rc, L, U + rc);
+  corner(L + rc, U + rc, Math.PI); seg(L + rc, U, R - rc, U); corner(R - rc, U + rc, Math.PI * 1.5); seg(R, U + rc, R, D - rc);
+  const strand = (phase, dy, col, w) => {
+    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath();
+    pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length], nx = -(q[1] - p[1]), ny = q[0] - p[0], l = Math.hypot(nx, ny) || 1, o = ((i + phase) % 2 ? amp : -amp); const x = p[0] + nx / l * o, y = p[1] + ny / l * o + dy; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.closePath(); ctx.stroke();
+  };
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  strand(0, 1.3, 'rgba(20,22,24,0.55)', 2.4);                       // ombre
+  for (let k = 0; k < lv; k++) strand(k, -k * 0.6, k === lv - 1 ? 'rgba(200,204,208,0.92)' : 'rgba(150,156,162,0.75)', 0.95);
+  // piquets aux angles et au milieu des côtés, jamais sur une route
+  ctx.fillStyle = '#5a4a32';
+  [[-1, -1], [1, -1], [-1, 1], [1, 1], [-1, 0], [0, -1], [0, 1], [1, 0]].forEach(([a, b]) => {
+    const x = BX + a * h, y = BY + b * h;
+    if (onPathCell(x + a * 2, y + b * 2) || onPathCell(x - a * 2, y - b * 2)) return;
+    ctx.fillRect(x - 1.6, y - 1.6, 3.2, 3.2);
+  });
+}
+const onPathCell = (x, y) => PATH_CELLS && PATH_CELLS.has(Math.floor(x / T) + ',' + Math.floor(y / T));
+
 /* ---------- Jauges : chaleur des mitrailleuses, réservoirs, chargeur de l'homme ---------- */
 function ring(x, y, r, k, col) {
   ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
@@ -3208,15 +3250,7 @@ function draw() {
     ctx.beginPath(); ctx.moveTo(a0.x + (a0.x - n0.x) / l0 * 300, a0.y + (a0.y - n0.y) / l0 * 300); p.pts.slice(0, -1).forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
   });
   G.defs.forEach(d => { if (DEF[d.type].place === 'path') drawTrap(d); });
-  if (G.mods.wire) {
-    const L = MODULES.wire.levels[G.mods.wire - 1];
-    ctx.strokeStyle = 'rgba(175,180,184,0.8)'; ctx.lineWidth = 0.9;
-    for (let ring = 0; ring < G.mods.wire; ring++) {
-      const rr = L.r - ring * 5; ctx.beginPath();
-      for (let i = 0; i <= 80; i++) { const a = i / 80 * Math.PI * 2, o = i % 2 ? 2.6 : -2.6; const px = BX + Math.cos(a) * (rr + o), py = BY + Math.sin(a) * (rr + o); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
-      ctx.stroke();
-    }
-  }
+  if (G.mods.wire) drawCrown();
   for (const b of G.booms) { const k = b.t / b.life; ctx.fillStyle = `rgba(255,${Math.round(190 - 110 * k)},70,${0.45 * (1 - k)})`; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * (0.4 + 0.7 * k), 0, Math.PI * 2); ctx.fill(); }
 
   // 2. Objets debout, triés en profondeur

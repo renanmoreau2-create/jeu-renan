@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.4)
+# DERNIER BASTION — document de conception (V2.5)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,24 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 terdecies. Changement V2.5 : lisibilité autour du bastion
+
+**Retours de Renan** :
+- un texte restait sous les compteurs de zombies des routes ;
+- une rose des vents aiderait à s'orienter ;
+- les deux emplacements de pièges collés au bastion (routes Nord et Sud) et les trois nids autour du bastion se mélangeaient visuellement avec la couronne de barbelés.
+
+**Corrections.**
+- **Compteurs des routes** : seulement le crâne et le nombre. Le nom de la route reste lu par les lecteurs d'écran et apparaît dans la bulle quand on touche le compteur.
+- **Rose des vents** dans le coin haut gauche (N, S, E, O ; le Nord en doré), en face des pouvoirs en haut à droite. Elle ne capte pas les appuis.
+  - *Règle pour les cartes futures* : garder libre le coin haut gauche (colonnes 0 et 1, au-dessus de la rangée 0) comme le coin haut droit.
+- **Couronne de barbelés redessinée.** Ce n'est plus un cercle de 1,5 case qui traversait les nids et les pièges. C'est un carré aux coins arrondis qui suit le bord extérieur du « fort » : le bastion et ses 8 cases voisines.
+  - Les trois nids d'angle et le piège collé au Sud sont à l'intérieur ; la couronne passe derrière les sacs de sable.
+  - Elle croise les routes à 60 unités du centre, là où commence son effet (rayon de ralentissement de 60 à 68).
+  - Une seule bande, posée sur la limite des cases, avec des piquets hors des routes : elle ne déborde plus sur les emplacements voisins. Le niveau se lit à la densité des spires (1 à 3 brins).
+- **Emplacement de piège Nord déplacé** de la case collée au bastion (4,5), cachée par le bâtiment dès qu'il grandit, au virage de la route Nord (4,4). Une partie sauvegardée avec un piège en (4,5) le retrouve en (4,4).
+- **Barre du haut** : la vie du bastion affiche le nombre seul (la barre montre la proportion) pour ne plus être coupée au-delà de 1 000 PV.
 
 ## 2 duodecies. Changement V2.4 : refonte visuelle
 
