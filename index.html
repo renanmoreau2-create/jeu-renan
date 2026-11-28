@@ -31,7 +31,7 @@
   .hbtn{background:#22272a;border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12px;min-width:34px}
   .hbtn.on{border-color:var(--khaki2);color:var(--khaki)}
   /* Stage */
-  #stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;background:#0a0b0c}
+  #stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;background:#0a0b0c;overflow:hidden}
   #cv{display:block;touch-action:none;position:absolute;left:0;top:0}
   #toast{position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(15,17,18,.92);
     border:1px solid var(--khaki2);color:var(--txt);padding:7px 12px;border-radius:8px;font-size:13px;
@@ -47,15 +47,17 @@
   .wchip{flex:0 0 auto;background:#1f2427;border:1px solid var(--line);border-radius:16px;padding:5px 11px;font-size:12px;color:var(--mute)}
   .wchip.eq{border-color:var(--khaki);color:var(--txt);background:#2a2a20}
   /* Tabs */
-  #tabs{display:flex;gap:4px;padding:6px 8px;background:var(--panel);border-top:1px solid var(--line)}
+  #tabs{position:relative;z-index:8;display:flex;gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
   .tab{flex:1;background:#22272a;border-radius:8px;padding:9px 4px;font-size:13px;color:var(--mute)}
   .tab.on{background:#2e3330;color:var(--txt);box-shadow:inset 0 -2px 0 var(--khaki)}
   #btnWave{flex:1.6;background:var(--khaki);color:#16140c;border-radius:8px;padding:9px 6px;font-weight:700;font-size:13px}
   #btnWave:disabled{background:#3a3628;color:#9a9278}
   /* Panel */
-  #panel{position:absolute;left:0;right:0;bottom:0;z-index:7;max-height:66%;height:auto;border-radius:14px 14px 0 0;box-shadow:0 -10px 26px rgba(0,0,0,.55);transition:transform .22s ease;overflow-y:auto;background:var(--panel);padding:4px 8px calc(10px + env(safe-area-inset-bottom));
+  #panel{position:absolute;left:0;right:0;bottom:0;z-index:7;max-height:66%;height:auto;border-radius:14px 14px 0 0;box-shadow:0 -10px 26px rgba(0,0,0,.55);transition:transform .22s ease,visibility 0s;overflow-y:auto;background:var(--panel);padding:4px 8px 10px;
     -webkit-overflow-scrolling:touch}
-  #panel.closed{transform:translateY(106%);pointer-events:none;box-shadow:none}
+  #panel.closed{transform:translateY(106%);pointer-events:none;box-shadow:none;visibility:hidden;transition:transform .22s ease,visibility 0s .22s}
+  #panel.drag{transition:none}
+  .shead{touch-action:none}
   .shead{position:sticky;top:-4px;z-index:2;display:flex;align-items:center;gap:8px;margin:0 -8px;padding:10px 10px 8px;background:var(--panel);border-bottom:1px solid var(--line)}
   .shead b{flex:1;font-size:15px}
   .shead .grab{position:absolute;left:50%;top:3px;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#3a4044}
@@ -130,10 +132,10 @@
   .bcard:disabled{opacity:.45}
   .hint{font-size:12px;color:var(--mute);margin:2px 2px 8px}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
-  #bonusBar{position:absolute;left:6px;top:40%;display:flex;flex-direction:column;gap:8px;z-index:3}
-  .bbtn{position:relative;width:46px;height:46px;border-radius:50%;background:#15181a;border:2px solid #4c5357;padding:0;overflow:visible}
+  #bonusBar{position:absolute;right:6px;top:4px;display:flex;flex-direction:row;gap:8px;z-index:3}
+  .bbtn{position:relative;width:var(--bs,46px);height:var(--bs,46px);border-radius:50%;background:#15181a;border:2px solid #4c5357;padding:0;overflow:visible;display:flex;align-items:center;justify-content:center}
   .bbtn.full{opacity:.4}
-  .bbtn img{width:34px;height:34px;margin-top:4px;border-radius:50%}
+  .bbtn img{width:calc(var(--bs,46px) - 12px);height:calc(var(--bs,46px) - 12px);border-radius:50%}
   .bbtn:after{content:"";position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(rgba(0,0,0,.72) var(--p), transparent 0);pointer-events:none}
   .bbtn.ready{border-color:var(--khaki);box-shadow:0 0 12px rgba(214,184,92,.55)}
   .bbtn.aim{border-color:#ff5a3a;box-shadow:0 0 14px rgba(255,90,58,.8)}
@@ -207,7 +209,10 @@
   .sm button.pick .p{color:#fff2c4}
   .sm button .l{font-size:11.5px;font-weight:600}
   .sm button .n{font-size:10px;color:var(--mute)}
-  .sm .smr button{justify-content:center;min-height:58px}
+  .sm .smr button{justify-content:center;min-height:58px;flex:1 1 0;min-width:0;width:auto;max-width:76px}
+  .sm button .l,.sm button .n{max-width:100%;overflow-wrap:break-word;text-align:center}
+  .sm{max-width:calc(100% - 12px)}
+  .tab.lock{opacity:.45}
   .dcard{display:block;width:100%;text-align:left;margin-top:10px;padding:12px 12px 12px 14px;border-radius:10px;background:#1c2124;border:1px solid var(--line);border-left:5px solid var(--c);color:var(--txt)}
   .dcard .dk{font-size:11px;color:var(--c);text-transform:uppercase;letter-spacing:.06em}
   .dcard b{display:block;font-size:16px;margin:2px 0 3px}
@@ -401,19 +406,28 @@ const MAG = { glock:[17,1.6], mp5:[30,2.2], benelli:[7,3.5], hk416:[30,2.4], sca
 /* Tours : surchauffe des nids de mitrailleuse (tirs avant changement de canon), réservoir des
    tours lance-flammes (secondes de flamme). Après l'arrêt forcé, la tour repart froide ou pleine. */
 const GUN = {
-  mgnest: { cap: [60, 100, 70], down: [4, 4, 5], cool: 0.12, kitCap: 1.4, kitDown: 0.5, kit: 'Canon de rechange', kitCost: 300,
-            kitDesc: 'surchauffe 40 % plus tard, canon changé 2 fois plus vite', stop: 'changement de canon' },
-  flamer: { cap: [7, 8, 9], down: [5, 5, 5.5], cool: 0.1, kitCap: 1.5, kitDown: 0.65, kit: 'Réservoir supplémentaire', kitCost: 450,
-            kitDesc: 'réservoir +50 %, remplissage 35 % plus rapide', stop: 'remplissage du réservoir' },
+  mgnest: { cap: [60, 100, 70], down: [4, 4, 5], cool: 0.12, kitCap: 1.4, kitDown: 0.5, kit: 'Canon de rechange', kitCost: 300, kitL: 'Canon', kitN: 'de rechange',
+            kitDesc: 'chauffe moins vite', kitLong: 'surchauffe 40 % plus tard, canon changé 2 fois plus vite' },
+  flamer: { cap: [7, 8, 9], down: [5, 5, 5.5], cool: 0.1, kitCap: 1.5, kitDown: 0.65, kit: 'Grand réservoir', kitCost: 450, kitL: 'Réservoir', kitN: '+50 %',
+            kitDesc: '+50 %', kitLong: 'réservoir +50 %, remplissage 35 % plus rapide' },
+  // tireurs d'élite : chargeur (FR-F2 10 coups, SCAR-H PR 20, Hécate II 7) ; rechargement si la tour n'a plus de cible
+  sniper: { cap: [10, 20, 7], down: [3, 2.8, 3.5], mag: true, cool: 0, kitCap: 1.5, kitDown: 0.65, kit: 'Grand chargeur', kitCost: 350, kitL: 'Chargeur', kitN: '+50 %',
+            kitDesc: '+50 %', kitLong: 'chargeur +50 %, rechargement 35 % plus rapide' },
 };
-const MOD_GUN = { mg: { cap: 80, down: 5, cool: 0.12 }, flame: { cap: 9, down: 5, cool: 0.1 } };
+/* Modules du bastion : mêmes règles et mêmes options que les tours équivalentes.
+   12,7 M2 du bastion = M2 Browning du nid (70 tirs, 5 s) ; lance-flammes fixe = tour lance-flammes du même niveau. */
+const MOD_GUN = { mg: 'mgnest', flame: 'flamer' };
+const modCap = id => { const K = GUN[MOD_GUN[id]]; return (id === 'mg' ? K.cap[2] : K.cap[Math.max(0, G.mods[id] - 1)]) * (G.modKit[id] ? K.kitCap : 1); };
+const modDown = id => { const K = GUN[MOD_GUN[id]]; return (id === 'mg' ? K.down[2] : K.down[Math.max(0, G.mods[id] - 1)]) * (G.modKit[id] ? K.kitDown : 1); };
 const gunCap = d => GUN[d.type].cap[d.lv] * (d.kit ? GUN[d.type].kitCap : 1);
 const gunDown = d => GUN[d.type].down[d.lv] * (d.kit ? GUN[d.type].kitDown : 1);
 // g : { heat 0..1, oh = arrêt forcé restant, idle = temps sans tirer }
-function gunReady(g, dt, cool) {
+function gunReady(g, dt, cool, tac) {
   if (g.oh > 0) { g.oh -= dt; if (g.oh <= 0) { g.oh = 0; g.heat = 0; } return false; }
   g.idle = (g.idle || 0) + dt;
   if (g.idle > 0.6 && g.heat > 0) g.heat = Math.max(0, g.heat - cool * dt);
+  // chargeur : rechargement tactique quand la tour n'a plus de cible depuis 1 s
+  if (tac && g.idle > 1 && g.heat >= 0.3) { g.oh = tac; return false; }
   return true;
 }
 function gunShot(g, inc, down) {
@@ -423,7 +437,7 @@ function gunShot(g, inc, down) {
 }
 // part du temps passée à tirer en engagement continu (pour la puissance de feu affichée)
 const dutyMag = s => { const f = s.mag / s.rate; return f / (f + s.reload); };
-const dutyGun = d => { const f = d.type === 'mgnest' ? gunCap(d) / effL(d.type, d.lv).rate : gunCap(d); return f / (f + gunDown(d)); };
+const dutyGun = d => { const f = d.type === 'flamer' ? gunCap(d) : gunCap(d) / effL(d.type, d.lv).rate; return f / (f + gunDown(d)); };
 const magLabel = w => w.kind === 'flame' ? 'Réservoir' : 'Chargeur';
 const magDesc = w => w.kind === 'flame' ? 'réservoir +50 %, bouteilles changées 35 % plus vite' : MAG[w.id][0] === 1 ? 'rechargement 35 % plus rapide' : 'chargeur +50 %, rechargement 35 % plus rapide';
 
@@ -634,7 +648,7 @@ function freshState() {
   WEAPONS.forEach(w => weapons[w.id] = { owned: w.id === 'glock', up: [0, 0, 0] });
   return {
     mode: 'title', wave: 0, money: 400, bunkerLv: 0, hp: BUNKER_LV[0].hp,
-    mods: { wire: 0, claymore: 0, mg: 0, flame: 0, rockets: 0 },
+    mods: { wire: 0, claymore: 0, mg: 0, flame: 0, rockets: 0 }, modKit: { mg: 0, flame: 0 },
     ms: { clayCd: 0, clayFlash: 0, clayAng: 0, mgCd: 0, mgAng: -1, flameT: 0, flameAng: 0, flameOn: 0, rocketCd: 0, mgG: { heat: 0, oh: 0, idle: 0 }, flG: { heat: 0, oh: 0, idle: 0 } },
     weapons, equipped: 'glock', heroCd: 0, heroAng: -Math.PI / 2, flash: 0,
     defs: [], defMap: new Map(),
@@ -749,7 +763,7 @@ function firepower() {
     const L = effL(d.type, d.lv);
     switch (d.type) {
       case 'mgnest': P += L.dmg * L.rate * dutyGun(d); break;
-      case 'sniper': P += L.dmg * L.rate * (1 + 0.35 * (L.pierce - 1)); break;
+      case 'sniper': P += L.dmg * L.rate * (1 + 0.35 * (L.pierce - 1)) * dutyGun(d); break;
       case 'mortar': P += L.dmg * L.rate * (1 + L.r / 25); break;
       case 'flamer': P += L.dps * 2.8 * dutyGun(d); break;
       case 'wire': P += L.dps * 2 + L.slow * 25; break;
@@ -760,8 +774,8 @@ function firepower() {
   const M = G.mods, ml = id => modL(id);
   if (M.wire) P += ml('wire').dps * 3 + ml('wire').slow * 30;
   if (M.claymore) P += ml('claymore').dmg / ml('claymore').cd * 5;
-  if (M.mg) { const f = MOD_GUN.mg.cap / ml('mg').rate; P += ml('mg').dmg * ml('mg').rate * f / (f + MOD_GUN.mg.down); }
-  if (M.flame) P += ml('flame').dps * 2.8 * MOD_GUN.flame.cap / (MOD_GUN.flame.cap + MOD_GUN.flame.down);
+  if (M.mg) { const f = modCap('mg') / ml('mg').rate; P += ml('mg').dmg * ml('mg').rate * f / (f + modDown('mg')); }
+  if (M.flame) P += ml('flame').dps * 2.8 * modCap('flame') / (modCap('flame') + modDown('flame'));
   if (M.rockets) { const L = ml('rockets'); P += L.n * L.dmg / L.cd * (1 + L.radius / 25); }
   return Math.round(P);
 }
@@ -775,11 +789,11 @@ const refPower = w => 85 + 5.5 * w * w;
 function hordeBudget(w) {
   G.power = firepower();
   const e = eff(w);
-  return DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * DIFF[G.diff].hp * G.mz.horde * G.pressure;
+  return lateMult(w) * DIR.K * Math.pow(refPower(e), DIR.beta) * (1 + DIR.gamma * (e - 1)) * (1 + DIR.ramp * Math.max(0, e - 10)) * DIFF[G.diff].hp * G.mz.horde * G.pressure;
 }
 // Puissance repère affichée au joueur pour la difficulté choisie
 // repère affiché : 0,8 depuis la V2.2 (chargeurs, surchauffe et réservoirs comptés dans la puissance de feu)
-const advisedPower = w => 0.8 * refPower(eff(w)) * Math.pow(DIFF[G.diff].hp * G.mz.horde / DIFF.cauchemar.hp, 1 / DIR.beta);
+const advisedPower = w => 0.8 * refPower(eff(w)) * Math.pow(DIFF[G.diff].hp * G.mz.horde * lateMult(w) / DIFF.cauchemar.hp, 1 / DIR.beta);
 const bunkerMax = () => Math.round(BUNKER_LV[G.bunkerLv].hp * (1 + 0.2 * cardN('sacs')) * (1 + 0.1 * perk('reserve')) * G.mz.hp);
 const bunkerArmor = () => BUNKER_LV[G.bunkerLv].armor + 2 * cardN('blind');
 
@@ -820,6 +834,10 @@ function buildWave(w) {
   return out;
 }
 
+/* Fin de partie (V2.3) : en Normal, les hordes grossissent de 3,5 % par vague après la vague 19 (x1,21 à la vague 25) ;
+   en Cauchemar, de 5 % par vague après la vague 12 (x1,15 à la vague 15, x1,65 à la vague 25). */
+const LATE = { facile: [99, 0], normal: [19, 0.035], cauchemar: [12, 0.05] };
+const lateMult = w => { const L = LATE[G.diff] || LATE.normal; return 1 + L[1] * Math.max(0, w - L[0]); };
 const earlyPrime = () => Math.round(eco(G.wave + 1) * (50 + 15 * eff(G.wave + 1)) * 0.5 * PACE * DIFF[G.diff].rew * G.mz.money);
 const canEarly = () => G.mode === 'wave' && !G.queue.length && !G.paused;
 function statSources() {
@@ -851,7 +869,7 @@ function launchWave(early) {
     G.waveFrom = G.wave; G.prime = 0; G.hp0 = G.hp; G.report = null; G.breach = { path: {}, type: {} };
     G.waveDmg = 0; G.depthSum = 0; G.depthN = 0; G.waveCount = 0; G.killed = 0;
     statSources().forEach(s => { s.st.wd = 0; s.st.wk = 0; });
-    G.placing = null; G.selected = null; G.slotMenu = null;
+    G.placing = null; G.selected = null; G.slotMenu = null; G.treeOpen = false; G.treePaused = false;
     // entre deux vagues : armes rechargées, canons refroidis, réservoirs pleins
     G.defs.forEach(d => { d.cd = 0; d.heat = 0; d.oh = 0; });
     G.wst = {}; G.ms.mgG = { heat: 0, oh: 0, idle: 0 }; G.ms.flG = { heat: 0, oh: 0, idle: 0 };
@@ -1198,8 +1216,8 @@ function updateDefs(dt) {
     if (D.place === 'path') continue;
     SRC = d.st;
     if (d.type === 'mgnest' || d.type === 'sniper') {
-      const mg = d.type === 'mgnest';
-      if (mg && !gunReady(d, dt, GUN.mgnest.cool)) continue;   // canon en cours de remplacement
+      const K = GUN[d.type];
+      if (!gunReady(d, dt, K.cool, K.mag ? gunDown(d) : 0)) continue;   // canon changé ou chargeur remplacé
       const t = pickTarget(d.x, d.y, L.range, 0, d.tgt);
       if (!t) continue;
       d.ang = Math.atan2(t.y - d.y, t.x - d.x);
@@ -1207,7 +1225,7 @@ function updateDefs(dt) {
         hitscan(d.x, d.y, d.ang, L.range, L.dmg, L.pierce || 1, L.ap || 0, d.type === 'sniper' ? '#f6efd0' : '#ffd98a', d.type === 'sniper' ? 1.8 : 1.1, d.type === 'sniper' ? 33 + d.lv * 5 : 11);
         d.cd += 1 / L.rate; if (d.cd < 0) d.cd = 0;
         d.flash = 0.05; SND.play(d.type === 'sniper' ? 'heavy' : 'shot');
-        if (mg && gunShot(d, 1 / gunCap(d), gunDown(d))) SND.play('click');
+        if (gunShot(d, 1 / gunCap(d), gunDown(d))) SND.play('click');
       }
     } else if (d.type === 'mortar') {
       if (d.cd > 0) continue;
@@ -1250,19 +1268,19 @@ function updateModules(dt) {
   if (M.mg) {
     const L = MODULES.mg.levels[M.mg - 1];
     S.mgCd -= dt;
-    const t = gunReady(S.mgG, dt, MOD_GUN.mg.cool) ? pickTarget(BX, BY, L.range) : null;
+    const t = gunReady(S.mgG, dt, GUN.mgnest.cool) ? pickTarget(BX, BY, L.range) : null;
     if (t) {
       S.mgAng = Math.atan2(t.y - (BY - 10), t.x - (BX + 10));
-      if (S.mgCd <= 0) { SRC = G.st.mg; hitscan(BX + 13, BY + 9, S.mgAng, L.range, L.dmg, 1, L.ap, '#ffd98a', 1.4, roofH() + 6); SRC = null; S.mgCd += 1 / L.rate; if (S.mgCd < 0) S.mgCd = 0; SND.play('shot'); gunShot(S.mgG, 1 / MOD_GUN.mg.cap, MOD_GUN.mg.down); }
+      if (S.mgCd <= 0) { SRC = G.st.mg; hitscan(BX + 13, BY + 9, S.mgAng, L.range, L.dmg, 1, L.ap, '#ffd98a', 1.4, roofH() + 6); SRC = null; S.mgCd += 1 / L.rate; if (S.mgCd < 0) S.mgCd = 0; SND.play('shot'); if (gunShot(S.mgG, 1 / modCap('mg'), modDown('mg'))) SND.play('click'); }
     } else if (S.mgCd < 0) S.mgCd = 0;
   }
   if (M.flame) {
     const L = modL('flame');
     S.flameT -= dt; if (S.flameOn > 0) S.flameOn -= dt;
-    const t = gunReady(S.flG, dt, 1 / (MOD_GUN.flame.down * 2)) ? pickTarget(BX, BY, L.range) : null;
+    const t = gunReady(S.flG, dt, 1 / (modDown('flame') * 2)) ? pickTarget(BX, BY, L.range) : null;
     if (t) {
       S.flameAng = Math.atan2(t.y - BY, t.x - BX); S.flameOn = 0.15;
-      if (S.flameT <= 0) { SRC = G.st.flame; cone(BX, BY, S.flameAng, L.range, 0.5, L.dps * 0.1, L.burn); SRC = null; flameFx(BX, BY + 20, S.flameAng, L.range, 0.5, Math.max(8, roofH() * 0.45)); S.flameT = 0.1; SND.play('flame'); gunShot(S.flG, 0.1 / MOD_GUN.flame.cap, MOD_GUN.flame.down); }
+      if (S.flameT <= 0) { SRC = G.st.flame; cone(BX, BY, S.flameAng, L.range, 0.5, L.dps * 0.1, L.burn); SRC = null; flameFx(BX, BY + 20, S.flameAng, L.range, 0.5, Math.max(8, roofH() * 0.45)); S.flameT = 0.1; SND.play('flame'); gunShot(S.flG, 0.1 / modCap('flame'), modDown('flame')); }
     }
   }
   if (M.rockets) {
@@ -1465,6 +1483,7 @@ function reqText(n) {
 const placeCost = type => Math.round(DEF[type].levels[0].cost * (1 - 0.15 * cardN('intend')));
 
 function buyNode(id) {
+  if (G.mode === 'wave') { toast(TREE_LOCK_MSG, 2600); return false; }
   const n = NODE[id];
   if (!n || !nodeAvailable(n)) return false;
   if (!spend(nodeCost(n))) return false;
@@ -1553,7 +1572,7 @@ function defeatHtml() {
 function saveGame() {
   if (G.mode !== 'build') return;
   try {
-    localStorage.setItem(SKEY, JSON.stringify({ v:6, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods,
+    localStorage.setItem(SKEY, JSON.stringify({ v:6, wave:G.wave, money:G.money, bunkerLv:G.bunkerLv, hp:G.hp, mods:G.mods, modKit:G.modKit,
       weapons:G.weapons, equipped:G.equipped, unlocked:G.unlocked, defTech:G.defTech, bonus:G.bonus, pressure:G.pressure,
       diff:G.diff, won:G.won, st:G.st, defNo:G.defNo, menace:G.menace, daily:G.daily, trk:G.trk, draftN:G.draftN, prevBest:G.prevBest, cards:G.cards, draft:G.draft, draftsDue:G.draftsDue, nextDraft:G.nextDraft, rerolls:G.rerolls, insRun:G.insRun,
       defs:G.defs.map(d => ({ type:d.type, c:d.c, r:d.r, lv:d.lv, spent:d.spent, st:d.st, no:d.no, tgt:d.tgt, kit:d.kit || 0 })) }));
@@ -1571,7 +1590,7 @@ function newGame(fromSave, diff, opts) {
   clearDecals();
   if (fromSave) {
     const d = fromSave;
-    G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods);
+    G.wave = d.wave; G.money = d.money; G.bunkerLv = d.bunkerLv; G.hp = d.hp; G.mods = Object.assign(G.mods, d.mods); G.modKit = Object.assign(G.modKit, d.modKit || {});
     WEAPONS.forEach(w => { if (d.weapons[w.id]) G.weapons[w.id] = d.weapons[w.id]; });
     G.equipped = G.weapons[d.equipped] && G.weapons[d.equipped].owned ? d.equipped : 'glock';
     G.unlocked = d.unlocked || {}; G.defTech = Object.assign(G.defTech, d.defTech || {}); G.bonus = Object.assign(G.bonus, d.bonus || {});
@@ -1634,13 +1653,13 @@ function defMenuHtml(S, money) {
   let up;
   if (!N) up = `<button disabled><span class="l">Niveau</span><span class="p">max</span></button>`;
   else if (G.defTech[d.type] > d.lv) { const c = N.cost; up = `<button class="${S.pick === 'up' ? 'pick' : ''}" data-act="dUp" data-cost="${c}" ${money < c ? 'disabled' : ''}><span class="l">${S.pick === 'up' ? 'Confirmer' : 'Améliorer'}</span><span class="n">niv. ${d.lv + 2}</span><span class="p">${fmt(c)}</span></button>`; }
-  else up = `<button data-act="openNode" data-id="${d.type}${d.lv + 2}"><span class="l">Niv. ${d.lv + 2}</span><span class="n">à débloquer</span><span class="p">Arbre</span></button>`;
+  else up = G.mode === 'wave' ? `<button disabled><span class="l">Niv. ${d.lv + 2}</span><span class="n">arbre après la vague</span></button>` : `<button data-act="openNode" data-id="${d.type}${d.lv + 2}"><span class="l">Niv. ${d.lv + 2}</span><span class="n">à débloquer</span><span class="p">Arbre</span></button>`;
   const tg = side ? `<button data-act="dTgt"><span class="l">Cible</span><span class="n">touchez pour changer</span><span class="p">${TGT[d.tgt]}</span></button>` : '';
   const sell = `<button class="${S.pick === 'sell' ? 'pick' : ''}" data-act="dSell"><span class="l">${S.pick === 'sell' ? 'Confirmer' : 'Vendre'}</span><span class="p">+${fmt(d.spent * 0.6)}</span></button>`;
   const info = `<button data-act="dInfo"><span class="l">Détails</span><span class="n">bilan, stats</span></button>`;
   const K = GUN[d.type];
-  const kit = !K ? '' : d.kit ? `<button disabled><span class="l">${K.kit}</span><span class="p">acquis</span></button>`
-    : `<button class="${S.pick === 'kit' ? 'pick' : ''}" data-act="dKit" data-cost="${K.kitCost}" ${money < K.kitCost ? 'disabled' : ''}><span class="l">${S.pick === 'kit' ? 'Confirmer' : K.kit}</span><span class="n">${K.kitDesc}</span><span class="p">${fmt(K.kitCost)}</span></button>`;
+  const kit = !K ? '' : d.kit ? `<button disabled><span class="l">${K.kitL}</span><span class="n">${K.kitN}, acquis</span></button>`
+    : `<button class="${S.pick === 'kit' ? 'pick' : ''}" data-act="dKit" data-cost="${K.kitCost}" ${money < K.kitCost ? 'disabled' : ''}><span class="l">${S.pick === 'kit' ? 'Confirmer' : K.kitL}</span><span class="n">${K.kitN}</span><span class="p">${fmt(K.kitCost)}</span></button>`;
   return `<div class="smt"><b>${defLabel(d)}</b> · niv. ${d.lv + 1} · ${D.levels[d.lv].n}<span>${fmt(d.st.kills)} élim.</span></div><div class="smr">${up}${kit}${tg}${sell}${info}<button class="smx" data-act="closeSlot" aria-label="Fermer">×</button></div>`;
 }
 function buildAt(type, c, r) {
@@ -1693,8 +1712,9 @@ function canPlace(type, c, r) {
 }
 function spend(n) { if (G.money < n) { toast('Pas assez d\'argent.'); return false; } G.money -= n; return true; }
 
+const TREE_LOCK_MSG = "L'arbre s'ouvre entre deux vagues. Pendant l'assaut, achetez sur la carte ce qui est déjà débloqué.";
 function openTree(sel) {
-  if (G.mode === 'wave' && !G.paused) { G.paused = true; G.treePaused = true; }
+  if (G.mode === 'wave') { toast(TREE_LOCK_MSG, 2600); return; }
   G.treeOpen = true; G.treeSel = sel || null; G.placing = null; G.slotMenu = null;
   renderAll();
   requestAnimationFrame(() => { if (sel) treeCenter(sel); else if (!G.tvInit) treeCenter(ROOT); });
@@ -1722,6 +1742,7 @@ function act(a, ds) {
     case 'dUp': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'up') { S.pick = 'up'; break; } upgradeInst(G.selected); S.pick = null; break; }
     case 'dSell': { const S = G.slotMenu; if (!S || !S.def) break; if (S.pick !== 'sell') { S.pick = 'sell'; break; } sellSelected(); G.slotMenu = null; break; }
     case 'dKit': { const S = G.slotMenu, d = G.selected; if (!S || !S.def || !d || !GUN[d.type] || d.kit) break; if (S.pick !== 'kit') { S.pick = 'kit'; break; } if (spend(GUN[d.type].kitCost)) { d.kit = 1; d.spent += GUN[d.type].kitCost; SND.play('click'); toast(`${GUN[d.type].kit} : ${defLabel(d)}.`, 1500); if (G.mode === 'build') saveGame(); } S.pick = null; break; }
+    case 'modKit': { const id = ds.id, K = GUN[MOD_GUN[id]]; if (!K || !G.mods[id] || G.modKit[id]) break; if (spend(K.kitCost)) { G.modKit[id] = 1; SND.play('click'); toast(`${K.kit} : ${MODULES[id].name}.`, 1500); if (G.mode === 'build') saveGame(); } break; }
     case 'dTgt': { const d = G.selected; if (d && G.slotMenu) { const ks = Object.keys(TGT); d.tgt = ks[(ks.indexOf(d.tgt) + 1) % ks.length]; G.slotMenu.pick = null; } break; }
     case 'dInfo': G.slotMenu = null; G.tab = 'def'; G.panelOpen = true; break;
     case 'closeSheet': if (G.tab === 'def') G.selected = null; G.panelOpen = false; break;
@@ -1854,9 +1875,15 @@ function renderGates() {
 function positionGates() {
   if (!G || !VIEW) return;
   const sc = VIEW.sc, st = stage.getBoundingClientRect();
-  // bonus : colonne gauche, entre la route Nord (rangée 1) et la route Sud (rangée 8), zone sans chemin ni emplacement
+  // pouvoirs : en haut à droite, dans la bande au-dessus de la rangée 0 (règle des cartes : aucune entrée de route à cet endroit)
   const bb = $('bonusBar');
-  if (bb.offsetHeight) { bb.style.left = Math.max(4, VIEW.bx + 3) + 'px'; bb.style.top = Math.round(VIEW.by + (5.5 * T * K + TOP) * sc - bb.offsetHeight / 2) + 'px'; }
+  if (bb.offsetHeight) {
+    const bs = Math.round(clamp(TOP * sc - 8, 34, 46));
+    bb.style.setProperty('--bs', bs + 'px');
+    // tout en haut si la carte laisse de la place au-dessus d'elle, sinon dans la bande au-dessus de la rangée 0
+    bb.style.top = Math.round(VIEW.by >= bs + 10 ? 6 : VIEW.by + Math.max(2, (TOP * sc - bs) / 2)) + 'px';
+    bb.style.right = Math.max(4, st.width - (VIEW.bx + COLS * T * sc) + 4) + 'px';
+  }
   document.querySelectorAll('#gates .gt').forEach(b => {
     const [c, r] = gateCell(+b.dataset.p);
     b.style.left = clamp(VIEW.bx + (c * T + T / 2) * sc, 26, st.width - 26) + 'px';
@@ -1872,7 +1899,7 @@ function positionGates() {
   }
 }
 function renderTreeBadge() {
-  const m = Math.floor(G.money), n = G.mode === 'build' || G.mode === 'wave' ? TREE.filter(x => nodeVisible(x) && nodeAvailable(x) && nodeCost(x) <= m).length : 0;
+  const m = Math.floor(G.money), n = G.mode === 'build' ? TREE.filter(x => nodeVisible(x) && nodeAvailable(x) && nodeCost(x) <= m).length : 0;
   const b = $('treeBadge'); b.textContent = n; b.classList.toggle('hide', !n);
 }
 function toast(s, ms) { const t = $('toast'); t.textContent = s; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200); }
@@ -1911,7 +1938,8 @@ function defDesc(type, L) {
     case 'wire': return `Ralentit de ${Math.round(L.slow * 100)} % · ${L.dps} dégâts/s · les rampants passent dessous`;
     case 'mine': return `${L.dmg} dégâts sur ${cases(L.r)} case · réarmement ${L.cd} s`;
     case 'ditch': return `Ralentit de ${Math.round(L.slow * 100)} %` + (L.dps ? ` · ${L.dps} dégâts/s` : '') + (L.burn ? ' · brûle' : '');
-    case 'mgnest': case 'sniper': return `${L.dmg} dégâts · ${pr(L.rate)} tirs/s · portée ${cases(L.range)}` + (L.pierce > 1 ? ` · traverse ${L.pierce}` : '') + (L.ap >= 0.5 ? ' · perce-armure' : '') + (type === 'mgnest' ? (i => ` · surchauffe après ${GUN.mgnest.cap[i]} tirs, canon changé en ${GUN.mgnest.down[i]} s`)(Math.max(0, DEF.mgnest.levels.findIndex(x => x.n === L.n))) : '');
+    case 'sniper': { const i = Math.max(0, DEF.sniper.levels.findIndex(x => x.n === L.n)); return `${L.dmg} dégâts · ${pr(L.rate)} tirs/s · portée ${cases(L.range)}` + (L.pierce > 1 ? ` · traverse ${L.pierce}` : '') + (L.ap >= 0.5 ? ' · perce-armure' : '') + ` · chargeur ${GUN.sniper.cap[i]}, rechargement ${String(GUN.sniper.down[i]).replace('.', ',')} s`; }
+    case 'mgnest': return `${L.dmg} dégâts · ${pr(L.rate)} tirs/s · portée ${cases(L.range)}` + (L.pierce > 1 ? ` · traverse ${L.pierce}` : '') + (L.ap >= 0.5 ? ' · perce-armure' : '') + (type === 'mgnest' ? (i => ` · surchauffe après ${GUN.mgnest.cap[i]} tirs, canon changé en ${GUN.mgnest.down[i]} s`)(Math.max(0, DEF.mgnest.levels.findIndex(x => x.n === L.n))) : '');
     case 'mortar': return `${L.dmg} dégâts de zone · portée ${cases(L.range)} · ne tire pas au contact`;
     case 'flamer': { const i = Math.max(0, DEF.flamer.levels.findIndex(x => x.n === L.n)); return `${L.dps} dégâts/s en cône · portée ${cases(L.range)} · brûlure · réservoir ${GUN.flamer.cap[i]} s, rempli en ${String(GUN.flamer.down[i]).replace('.', ',')} s`; }
   }
@@ -1993,15 +2021,16 @@ function sheetReport() {
   return h + nextWaveCard();
 }
 function sheetBastion() {
-  const money = Math.floor(G.money);
+  const money = Math.floor(G.money), lockT = G.mode === 'wave';
+  const nodeBtn = (id, label) => lockT ? `<button class="btn" disabled>Après la vague</button>` : `<button class="btn buy" data-act="node" data-id="${id}" data-cost="${nodeCost(NODE[id])}">${label}</button>`;
   let h = sheetHead(`Bastion · ${BUNKER_LV[G.bunkerLv].name}`);
   const max = bunkerMax(), miss = Math.ceil(max - G.hp), cost = Math.ceil(miss / repairRate());
   h += `<div class="card"><div class="row"><div style="flex:1"><b>${fmt(G.hp)} / ${fmt(max)} PV</b><div class="note">Armure ${bunkerArmor()}.</div></div>` +
     (miss > 0 ? `<button class="btn buy" data-act="repair" data-cost="1">Réparer ${fmt(cost)}</button>` : '<span class="tag">Intact</span>') + '</div>';
   const nb = ['muret', 'hesco', 'casemate', 'blinde'].map(id => NODE[id]).find(n => !owned(n));
   if (!nb) h += '<div class="note" style="margin-top:6px">Bastion au dernier étage.</div>';
-  else if (nodeAvailable(nb)) { const B = BUNKER_LV[nb.ref], c = nodeCost(nb); h += `<div class="br"><span style="flex:1;font-size:12px">Étage suivant : <b>${B.name}</b> · ${fmt(B.hp)} PV, armure ${B.armor}</span><button class="btn buy" data-act="node" data-id="${nb.id}" data-cost="${c}">${fmt(c)}</button></div>`; }
-  else h += `<div class="br"><span class="note" style="flex:1">Étage suivant : ${nodeName(nb)}, après ${reqText(nb)}.</span><button class="btn" data-act="openNode" data-id="${nb.id}">Arbre</button></div>`;
+  else if (nodeAvailable(nb)) { const B = BUNKER_LV[nb.ref], c = nodeCost(nb); h += `<div class="br"><span style="flex:1;font-size:12px">Étage suivant : <b>${B.name}</b> · ${fmt(B.hp)} PV, armure ${B.armor}</span>${nodeBtn(nb.id, fmt(c))}</div>`; }
+  else h += `<div class="br"><span class="note" style="flex:1">Étage suivant : ${nodeName(nb)}, après ${reqText(nb)}.</span>${lockT ? '' : `<button class="btn" data-act="openNode" data-id="${nb.id}">Arbre</button>`}</div>`;
   h += '</div>';
   // l'homme : arme équipée et ses trois améliorations
   const w = WBY[G.equipped], st = G.weapons[w.id], ownedW = WEAPONS.filter(x => G.weapons[x.id].owned);
@@ -2017,13 +2046,14 @@ function sheetBastion() {
   const rows = [];
   MOD_ORDER.forEach(id => {
     const lv = G.mods[id], M = MODULES[id];
-    if (lv >= 1) rows.push(`<div class="br"><span style="flex:1;font-size:12px">${M.name} ${pips(lv, 3)}</span>${lv < 3 ? `<button class="btn buy" data-act="modUp" data-id="${id}" data-cost="${M.levels[lv].cost}">Niv. ${lv + 1} · ${fmt(M.levels[lv].cost)}</button>` : '<span class="tag">Max</span>'}</div>`);
-    else { const n = TREE.find(x => x.kind === 'module' && x.ref === id); if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">${M.name}</span><button class="btn buy" data-act="node" data-id="${n.id}" data-cost="${nodeCost(n)}">Installer · ${fmt(nodeCost(n))}</button></div>`); }
+    if (lv >= 1) rows.push(`<div class="br"><span style="flex:1;font-size:12px">${M.name} ${pips(lv, 3)}${G.modKit[id] ? ' · ' + GUN[MOD_GUN[id]].kit.toLowerCase() : ''}</span>${lv < 3 ? `<button class="btn buy" data-act="modUp" data-id="${id}" data-cost="${M.levels[lv].cost}">Niv. ${lv + 1} · ${fmt(M.levels[lv].cost)}</button>` : '<span class="tag">Max</span>'}</div>`);
+    else { const n = TREE.find(x => x.kind === 'module' && x.ref === id); if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">${M.name}</span>${nodeBtn(n.id, 'Installer · ' + fmt(nodeCost(n)))}</div>`); }
+    if (lv >= 1 && MOD_GUN[id] && !G.modKit[id]) { const K = GUN[MOD_GUN[id]]; rows.push(`<div class="br"><span class="note" style="flex:1">${M.name} : ${K.kit.toLowerCase()} (${K.kitLong})</span><button class="btn buy" data-act="modKit" data-id="${id}" data-cost="${K.kitCost}">${fmt(K.kitCost)}</button></div>`); }
   });
   ['superTir', 'arty', 'repair'].forEach(id => {
     const lv = G.bonus[id], B = BONUS[id];
     if (lv >= 1) rows.push(`<div class="br"><span style="flex:1;font-size:12px">Bonus : ${B.name} ${pips(lv, 3)}</span>${lv < 3 ? `<button class="btn buy" data-act="upB" data-id="${id}" data-cost="${B.levels[lv].cost}">Rang ${lv + 1} · ${fmt(B.levels[lv].cost)}</button>` : '<span class="tag">Max</span>'}</div>`);
-    else { const n = NODE[id]; if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">Bonus : ${B.name}</span><button class="btn buy" data-act="node" data-id="${id}" data-cost="${nodeCost(n)}">Débloquer · ${fmt(nodeCost(n))}</button></div>`); }
+    else { const n = NODE[id]; if (n && nodeAvailable(n)) rows.push(`<div class="br"><span style="flex:1;font-size:12px">Bonus : ${B.name}</span>${nodeBtn(id, 'Débloquer · ' + fmt(nodeCost(n)))}</div>`); }
   });
   if (rows.length) h += `<div class="sect">Modules et bonus</div><div class="card">${rows.join('')}</div>`;
   const cardIds = Object.keys(G.cards).filter(id => G.cards[id] > 0 && id !== 'ravit');
@@ -2042,7 +2072,7 @@ function sheetDef() {
     if (N) {
       h += G.defTech[d.type] > d.lv
         ? `<div class="br"><span style="flex:1;font-size:12px">Niv. ${d.lv + 2} · ${N.n} : ${defDesc(d.type, N)}</span></div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="upInst" data-cost="${N.cost}">Améliorer celle-ci : ${fmt(N.cost)}</button>`
-        : `<div class="note" style="margin-top:6px">Niveau ${d.lv + 2} (${N.n}) : option à débloquer dans l'arbre.</div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="openNode" data-id="${d.type}${d.lv + 2}">Voir dans l'arbre</button>`;
+        : `<div class="note" style="margin-top:6px">Niveau ${d.lv + 2} (${N.n}) : option à débloquer dans l'arbre${G.mode === 'wave' ? ', entre deux vagues' : ''}.</div><div class="row" style="margin-top:6px">` + (G.mode === 'wave' ? '' : `<button class="btn buy" data-act="openNode" data-id="${d.type}${d.lv + 2}">Voir dans l'arbre</button>`);
     } else h += '<div class="row" style="margin-top:6px"><span class="tag">Niveau max</span>';
     h += `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div>`;
     if (D.place === 'side') h += `<div class="tgt"><span class="bl">Priorité de tir</span>${Object.keys(TGT).map(m => `<button class="wchip ${d.tgt === m ? 'eq' : ''}" data-act="tgt" data-m="${m}">${TGT[m]}</button>`).join('')}</div>`;
@@ -2074,6 +2104,7 @@ function renderBonusBar(force) {
 function renderPanel() {
   panel.classList.toggle('closed', !G.panelOpen);
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === 'arbre' ? G.treeOpen : G.panelOpen && G.tab === 'bastion'));
+  document.querySelector('.tab[data-tab="arbre"]').classList.toggle('lock', G.mode === 'wave');
   if (!G.panelOpen) return;
   const top = G.selected && G.selected !== renderPanel.lastSel ? 0 : panel.scrollTop;
   renderPanel.lastSel = G.selected;
@@ -2687,16 +2718,18 @@ function gauge(x, y, k, col) {
 }
 const heatCol = k => k > 0.8 ? '#ff4a2a' : k > 0.5 ? '#ff9a3a' : '#e8c060';
 function drawGauges() {
+  const RING = { mgnest: '#ff6a3a', flamer: '#7ab8ff', sniper: '#d6b85c' };
   for (const d of G.defs) {
     if (!GUN[d.type]) continue;
-    const y = PY(d.y) + 12;
-    if (d.oh > 0) ring(d.x, PY(d.y, 26), 6, 1 - d.oh / gunDown(d), d.type === 'mgnest' ? '#ff6a3a' : '#7ab8ff');
+    const y = PY(d.y) + 12, hh = d.type === 'sniper' ? 50 : 26;
+    if (d.oh > 0) ring(d.x, PY(d.y, hh), 6, 1 - d.oh / gunDown(d), RING[d.type]);
     else if (d.type === 'mgnest' && d.heat > 0.15) gauge(d.x, y, d.heat, heatCol(d.heat));
     else if (d.type === 'flamer' && d.heat > 0.05) gauge(d.x, y, 1 - d.heat, '#ff9a3a');
+    else if (d.type === 'sniper' && d.heat > 0) gauge(d.x, y, 1 - d.heat, '#d6b85c');
   }
-  const S = G.ms;
-  if (G.mods.mg && S.mgG.oh > 0) ring(BX + 13, PY(BY + 9, roofH() + 18), 5, 1 - S.mgG.oh / MOD_GUN.mg.down, '#ff6a3a');
-  if (G.mods.flame && S.flG.oh > 0) ring(BX - 13, PY(BY + 9, roofH() + 18), 5, 1 - S.flG.oh / MOD_GUN.flame.down, '#7ab8ff');
+  const S = G.ms, mx = BX + 13, my = PY(BY + 9, roofH() + 18), fx = BX - 13;
+  if (G.mods.mg) { if (S.mgG.oh > 0) ring(mx, my, 5, 1 - S.mgG.oh / modDown('mg'), '#ff6a3a'); else if (S.mgG.heat > 0.15) gauge(mx, my + 6, S.mgG.heat, heatCol(S.mgG.heat)); }
+  if (G.mods.flame) { if (S.flG.oh > 0) ring(fx, my, 5, 1 - S.flG.oh / modDown('flame'), '#7ab8ff'); else if (S.flG.heat > 0.05) gauge(fx, my + 6, 1 - S.flG.heat, '#ff9a3a'); }
   const s = ws(G.equipped), A = G.wst[G.equipped], hy = PY(BY, roofH() + 30);
   if (A && A.rl > 0) ring(BX, hy, 7, 1 - A.rl / s.reload, '#d6b85c');
   else if (A && s.mag > 1 && A.n < s.mag) gauge(BX, hy, A.n / s.mag, A.n / s.mag < 0.25 ? '#ff9a3a' : '#d6b85c');
@@ -3049,6 +3082,18 @@ document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () =>
 }));
 $('tree').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act, b.dataset); });
 $('btnWave').addEventListener('click', () => { SND.init(); startWave(); });
+// fiche : glisser l'en-tête vers le bas pour la fermer
+(() => {
+  let y0 = null, dy = 0;
+  panel.addEventListener('touchstart', e => { if (!e.target.closest('.shead') || e.target.closest('button')) return; y0 = e.touches[0].clientY; dy = 0; panel.classList.add('drag'); }, { passive: true });
+  panel.addEventListener('touchmove', e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); panel.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  const end = () => {
+    if (y0 === null) return;
+    panel.classList.remove('drag'); panel.style.transform = ''; y0 = null;
+    if (dy > 60) { if (G.tab === 'def') G.selected = null; G.panelOpen = false; renderAll(); }
+  };
+  panel.addEventListener('touchend', end); panel.addEventListener('touchcancel', end);
+})();
 $('btnSpeed').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; renderButtons(); });
 $('btnPause').addEventListener('click', () => { G.paused = !G.paused; renderButtons(); });
 $('btnSound').addEventListener('click', () => { SND.init(); SND.on = !SND.on; renderButtons(); });
