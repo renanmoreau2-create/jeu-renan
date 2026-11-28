@@ -280,17 +280,183 @@
   .tgt{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
   .tgt .bl{font-size:11px;color:var(--mute);margin-right:2px}
   .tgt .wchip{padding:4px 9px;font-size:11px}
+
+  /* =========================================================
+     THÈME V2.4 : un seul langage visuel (barre du haut, barre du bas, fiches, arbre, écrans)
+     Repères : ressources en icône + chiffre dans les coins (Bloons TD 6, Kingdom Rush),
+     boutons épais à biseau (Clash Royale), panneaux sombres à liseré, une couleur d'action (kaki).
+     ========================================================= */
+  :root{--gold1:#e2cd8a;--gold2:#b0974f;--gold3:#75633a;--ember:#d9822f;--pan1:#1d2124;--pan2:#15181a;--edge:#2d3337}
+  /* barre du haut */
+  #hud{position:relative;z-index:8;gap:6px;padding:7px 8px;background:linear-gradient(180deg,#1a1d1f,#111315);border-bottom:1px solid #2a2f32;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+  #hud .res{display:flex;align-items:center;gap:5px;height:40px;padding:0 8px 0 5px;border-radius:12px;background:linear-gradient(180deg,#21262a,#1a1e21);border:1px solid #2e3438;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);min-width:0}
+  #hud .ri{flex:0 0 24px;width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  #hud .ri svg{width:17px;height:17px}
+  #hud .rv{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+  #hud .rv small{font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+  #hud .rv b{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--txt)}
+  #hud .rw .ri{background:#3d1a13}
+  #hud .rm .ri{background:#2f2914;color:var(--gold1)}
+  #hud .rm b{color:var(--gold1)}
+  #hud .rh{flex:1;padding-right:9px}
+  #hud .rh .ri{background:#3d1a13;color:#f08d74}
+  #hud .rh .rv{flex:1}
+  #hud .rh .rv b{overflow:hidden;text-overflow:ellipsis}
+  #hud .rh .rv b small{font-size:10px;font-weight:600;color:var(--mute);letter-spacing:0;text-transform:none;margin-left:2px}
+  #hpBar{height:6px;margin-top:3px;border-radius:3px;background:#3a1d17;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+  #hpFill{background:linear-gradient(90deg,#a3301f,#ec6a4a);transition:width .3s}
+  #hpWrap.low b{color:#ff8f70}
+  #hpWrap.low #hpFill{animation:hplow .8s ease-in-out infinite alternate}
+  @keyframes hplow{from{opacity:1}to{opacity:.45}}
+  .hbtn{flex:0 0 36px;width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:11px;background:linear-gradient(180deg,#272c2f,#1d2124);border:1px solid #353c40;color:#c9c4b4;font-weight:800;font-size:12.5px;min-width:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 #0b0c0d}
+  .hbtn svg{width:18px;height:18px;display:block}
+  .hbtn:active{transform:translateY(1px)}
+  .hbtn.on{border-color:var(--khaki2);color:var(--khaki);background:linear-gradient(180deg,#322e1f,#221f16)}
+  #wprog{height:3px;background:rgba(255,255,255,.05)}
+  #wprog i{background:linear-gradient(90deg,#c0392b,#e08a3a);box-shadow:0 0 8px rgba(224,112,79,.7)}
+  /* boutons */
+  .btn{background:linear-gradient(180deg,#2b3134,#22272a);border:1px solid #3a4247;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;color:var(--txt);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 #0c0e0f;transition:transform .08s}
+  .btn:active:not(:disabled){transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .btn.buy{background:linear-gradient(180deg,#d9c37f,#b0974f);border-color:#7d6a3c;color:#1d180b;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 0 var(--gold3)}
+  .btn.red{background:linear-gradient(180deg,#4a221c,#381913);border-color:#6a2d24;color:#f0b0a2}
+  .btn:disabled,.btn.buy:disabled{background:#24282b;border-color:#30363a;color:#727a74;box-shadow:none;opacity:1}
+  .btn.wide{display:flex;width:100%;justify-content:center;align-items:center;gap:8px;padding:12px;font-size:14.5px;border-radius:13px}
+  .btn .cn{display:inline-flex;align-items:center;gap:4px}
+  .btn .cn svg{width:14px;height:14px}
+  .tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--khaki);background:#2a2719;border:1px solid #5a4f30;border-radius:999px;padding:3px 9px}
+  .xbtn{flex:0 0 34px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2b3134,#202427);border:1px solid #3a4247;color:#c9c4b4;padding:0}
+  .xbtn svg{width:14px;height:14px}
+  .xbtn:active{transform:scale(.94)}
+  /* fiches */
+  #panel{background:linear-gradient(180deg,#1a1e20 0,#141719 120px);border-top:1px solid #3a3a2c;box-shadow:0 -12px 30px rgba(0,0,0,.6)}
+  #panel .shead{background:linear-gradient(180deg,#1c2022,#181b1d);padding:14px 12px 10px}
+  .shead b{font-size:16px;font-weight:800;letter-spacing:.01em}
+  .shead .grab{top:5px;width:40px;background:#454c50}
+  .sect{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:800;color:#a59f8b;text-transform:uppercase;letter-spacing:.1em;margin:14px 2px 7px}
+  .sect::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#3a3f2f,transparent)}
+  .card{background:linear-gradient(180deg,var(--pan1),var(--pan2));border:1px solid var(--edge);border-radius:13px;padding:11px 12px;margin-bottom:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+  .card.sel{border-color:var(--khaki2);box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(200,178,115,.15)}
+  .note{font-size:11.5px;line-height:1.4}
+  .stats{font-size:12.5px;line-height:1.45;color:#d2cdbd}
+  .uprow .btn{border-radius:11px;padding:8px 4px}
+  .uprow .btn b{font-size:12.5px}
+  .chips{gap:7px}
+  .wchip{border-radius:999px;padding:6px 12px;font-weight:600}
+  .wchip.eq{background:linear-gradient(180deg,#34301f,#26231a);border-color:var(--khaki2);color:var(--gold1)}
+  .pip{width:14px;height:6px;border-radius:3px}
+  /* bilan */
+  .stiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .stile{background:linear-gradient(180deg,var(--pan1),var(--pan2));border:1px solid var(--edge);border-radius:13px;padding:10px 6px 9px;text-align:center}
+  .stile b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .stile span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:4px}
+  .stile.good b{color:#9cc46b}
+  .stile.bad b{color:#f08d74}
+  .stile.gold b{color:var(--gold1)}
+  .rrow{gap:9px;padding:8px 2px;border-bottom:1px solid #262b2e;font-size:12.5px}
+  .rrow:last-of-type{border-bottom:0}
+  .rrow .rr{flex:0 0 22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:#262b2e;color:#b9b3a0}
+  .rrow:first-of-type .rr{background:linear-gradient(180deg,#e2cd8a,#b0974f);color:#1d180b}
+  .rrow .rn{display:flex;flex-direction:column;line-height:1.2}
+  .rrow .rn small{font-size:10.5px;color:var(--mute)}
+  .rrow .rbar{flex:0 0 72px;height:8px;border-radius:4px;background:#262b2e}
+  .rrow .rbar i{background:linear-gradient(90deg,#9a8448,#e2cd8a);border-radius:4px}
+  .rrow .rp{flex:0 0 38px;font-weight:800;font-size:12px;color:var(--gold1)}
+  .rrow[data-act]:active{background:#1f2427}
+  .zl{gap:6px;margin:2px 0 8px}
+  .zc{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border:1px solid #30363a;border-left:1px solid #30363a;border-radius:999px;padding:4px 10px 4px 7px;background:#1b1f22}
+  .zc::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)}
+  .zc b{color:var(--gold1);font-weight:800}
+  .pmeter{position:relative;height:10px;border-radius:5px;background:#262b2e;margin:8px 0 4px;overflow:visible}
+  .pmeter i{display:block;height:100%;border-radius:5px}
+  .pmeter .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:#e6e2d6;border-radius:1px;box-shadow:0 0 4px rgba(0,0,0,.8)}
+  .plab{display:flex;justify-content:space-between;font-size:11px;color:var(--mute)}
+  .plab b{color:var(--txt)}
+  /* bandeau de fin de vague */
+  #recap{top:60px;gap:10px;padding:8px 8px 8px 9px;border-radius:14px;background:linear-gradient(180deg,rgba(30,34,37,.97),rgba(20,23,25,.97));border:1px solid #3a3a2c;box-shadow:0 8px 22px rgba(0,0,0,.55)}
+  #recap .rc{flex:0 0 30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#24331a;color:#9cc46b}
+  #recap .rc.hit{background:#3d1a13;color:#f08d74}
+  #recap .rc svg{width:16px;height:16px}
+  #recap .rt{line-height:1.3}
+  #recap .rt b{display:block;font-size:13.5px;color:var(--txt)}
+  #recap .rt span{font-size:11.5px;color:var(--mute)}
+  #recap .rt em{display:block;font-style:normal;font-size:11.5px;color:#f0a08a}
+  #recap .xbtn{flex:0 0 30px;width:30px;height:30px}
+  /* arbre */
+  #tree{background:radial-gradient(ellipse at 50% 38%,#1d2124 0%,#0b0c0d 78%)}
+  .thead{padding:10px 12px;background:linear-gradient(180deg,#1a1d1f,#131517);border-bottom:1px solid #2a2f32;box-shadow:0 6px 16px rgba(0,0,0,.35);position:relative;z-index:3}
+  .thead .tt{display:flex;flex-direction:column;gap:3px}
+  .thead b{font-family:inherit;font-weight:800;letter-spacing:.02em;font-size:18px}
+  .tm{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:#2a2719;border:1px solid #5a4f30;border-radius:999px;padding:2px 10px 2px 6px;font-size:12.5px}
+  .tm svg{width:14px;height:14px;color:var(--gold1)}
+  .tm #treeMoney{color:var(--gold1);font-weight:800;font-variant-numeric:tabular-nums}
+  .tzoom{gap:8px}
+  .tbtn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#272c2f,#1d2124);border:1px solid #353c40;color:#d6d0bd;font-size:20px;font-weight:700;padding:0;box-shadow:0 2px 0 #0b0c0d,0 4px 10px rgba(0,0,0,.4)}
+  .tbtn svg{width:18px;height:18px}
+  .gnode{border-radius:14px;background:linear-gradient(180deg,#1f2427,#15181a);border:2px solid #3c4347;box-shadow:0 5px 12px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05)}
+  .gnode img{border-radius:9px}
+  .gnode.own{border-color:var(--khaki);background:linear-gradient(180deg,#38331f,#211f15);box-shadow:0 0 14px rgba(214,184,92,.28),0 5px 12px rgba(0,0,0,.55)}
+  .gnode.av{border-color:#878e86}
+  .gnode.av.can{border-color:var(--gold1);animation:gcan 1.8s ease-in-out infinite}
+  @keyframes gcan{0%,100%{box-shadow:0 0 0 0 rgba(226,205,138,.45),0 5px 12px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 7px rgba(226,205,138,0),0 5px 12px rgba(0,0,0,.55)}}
+  @media (prefers-reduced-motion:reduce){.gnode.av.can{animation:none}}
+  .gnode.lock{opacity:.45}
+  .gnode.sel{border-color:#fff2c4;box-shadow:0 0 0 3px rgba(255,242,196,.25),0 0 18px rgba(255,242,196,.35)}
+  .gcost{top:-22px;padding:1px 7px;border-radius:999px;background:#1c1f21;border:1px solid #3a4045;color:#a8a28f;font-size:10.5px;text-shadow:none}
+  .gcost.ok{background:#2f2914;border-color:#7d6a3c;color:var(--gold1)}
+  .glab{top:62px;font-size:10px;font-weight:600;color:#d8d2c0}
+  .glv{right:3px;bottom:2px;font-weight:800}
+  #treeSheet{background:linear-gradient(180deg,#1a1e20,#141719);border-top:1px solid #3a3a2c;padding:12px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 24px rgba(0,0,0,.5)}
+  #treeSheet .shead{position:static;margin:0 0 8px;padding:0;background:none;border:0}
+  .ticon{flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#24292c,#181b1d);border:1px solid #3a4045}
+  .ticon.own{border-color:var(--khaki2);background:linear-gradient(180deg,#38331f,#211f15)}
+  #treeSheet .shead .ticon img{width:46px;height:46px;border:0;background:none;border-radius:8px}
+  .st{display:inline-block;margin-top:4px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:2px 8px;background:#262b2e;color:#a59f8b}
+  .st.own{background:#2a2719;color:var(--gold1)}
+  .st.av{background:#24331a;color:#a8cf78}
+  .lvrow{background:#1a1e20;border:1px solid #2a2f32;border-radius:10px;padding:7px 10px;margin-top:6px;opacity:.6}
+  .lvrow.cur{opacity:1;border-color:#5a4f30;color:var(--txt)}
+  .lvrow.cur b{color:var(--gold1)}
+  .lvrow.done{opacity:.85}
+  .thint{bottom:8px;font-size:10.5px}
+  /* menus sur la carte */
+  .sm{border-radius:15px;padding:7px;background:linear-gradient(180deg,rgba(28,32,35,.97),rgba(18,21,23,.97));border:1px solid #5a4f30;box-shadow:0 10px 26px rgba(0,0,0,.6)}
+  .sm button{border-radius:11px;background:linear-gradient(180deg,#262b2e,#1d2124);border:1px solid #343b3f;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .sm button.pick{background:linear-gradient(180deg,#3a3422,#29251a);border-color:var(--gold1)}
+  .sm button .p{display:inline-block;margin-top:2px;padding:1px 7px;border-radius:999px;background:#2f2914;color:var(--gold1);font-size:11.5px}
+  .sm .smt b{color:var(--gold1)}
+  /* écrans */
+  #overlay{background:radial-gradient(ellipse at 50% 30%,rgba(24,27,29,.94),rgba(6,7,8,.97))}
+  .ov{background:linear-gradient(180deg,#1b1f22,#131618);border:1px solid #2f3437;border-radius:20px;padding:22px 18px 18px;box-shadow:0 20px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);max-height:calc(100% - 8px);overflow-y:auto}
+  .ov h1{text-shadow:0 2px 0 #3d3420,0 0 24px rgba(200,178,115,.25)}
+  .ov h2{font-family:inherit;font-weight:800;letter-spacing:.03em;font-size:23px;color:var(--gold1)}
+  .ov .sub{font-size:13.5px}
+  .ov p{background:#15181a;border-radius:13px;border-color:#2a2f32}
+  .ov .big{border-radius:14px;padding:15px;font-size:15.5px;font-weight:800;background:linear-gradient(180deg,#dcc684,#b29a55);color:#1b170c;box-shadow:0 3px 0 var(--gold3),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .08s}
+  .ov .big:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gold3),inset 0 1px 0 rgba(255,255,255,.35)}
+  .ov .big.alt{background:linear-gradient(180deg,#2b3134,#22272a);color:var(--txt);border:1px solid #3a4247;box-shadow:0 3px 0 #0b0c0d,inset 0 1px 0 rgba(255,255,255,.05)}
+  .ov .big.diff{border-radius:14px}
+  .ov .why{border-radius:13px;background:#15181a}
+  .ov .big.pset{display:flex;align-items:center;justify-content:center;gap:10px}
+  .ov .big .pi svg{width:18px;height:18px;display:block}
+  .dcard{border-radius:15px;background:linear-gradient(180deg,#22272a,#181b1d);border:1px solid #33393d;border-left:5px solid var(--c);box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);padding:14px 14px 13px 16px}
+  .dcard .dk{display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.05);font-weight:800}
+  .dcard b{font-size:17px;font-weight:800;margin:6px 0 4px}
+  .dcard:active{transform:scale(.985)}
+  .perk,.goal{border-radius:13px;background:linear-gradient(180deg,var(--pan1),var(--pan2));border-color:var(--edge)}
+  #toast{border-radius:12px;border:1px solid #3a3a2c;box-shadow:0 8px 20px rgba(0,0,0,.5);font-weight:600}
+  #banner{border-radius:16px;padding:14px 26px;background:linear-gradient(180deg,rgba(26,29,31,.94),rgba(14,16,17,.94));box-shadow:0 12px 30px rgba(0,0,0,.55)}
+  #banner b{font-weight:900;letter-spacing:.05em;font-size:26px;text-transform:uppercase}
+  @media (max-width:370px){#hud .rv small{display:none}#hud .res{padding:0 7px 0 5px}.hbtn{flex-basis:32px;width:32px;height:32px}}
 </style>
 </head>
 <body>
 <div id="app">
   <header id="hud">
-    <div class="blk"><span class="lbl">Vague</span><span id="hudWave">0</span></div>
-    <div class="blk"><span class="lbl">Argent</span><span id="hudMoney">0</span></div>
-    <div class="blk" id="hpWrap"><span class="lbl">Bastion <span id="hpText"></span></span><div id="hpBar"><div id="hpFill"></div></div></div>
-    <button class="hbtn" id="btnSpeed">x1</button>
-    <button class="hbtn" id="btnPause">Pause</button>
-    <button class="hbtn on" id="btnSound">Son</button>
+    <div class="res rw"><span class="ri" id="icoWave"></span><span class="rv"><small>Vague</small><b id="hudWave">0</b></span></div>
+    <div class="res rm"><span class="ri" id="icoMoney"></span><span class="rv"><small>Argent</small><b id="hudMoney">0</b></span></div>
+    <div class="res rh" id="hpWrap"><span class="ri" id="icoHp"></span><span class="rv"><b id="hpText"></b><div id="hpBar"><div id="hpFill"></div></div></span></div>
+    <button class="hbtn" id="btnSpeed" aria-label="Vitesse du jeu">x1</button>
+    <button class="hbtn" id="btnPause" aria-label="Pause et réglages"></button>
   </header>
   <div id="stage">
     <canvas id="cv"></canvas>
@@ -313,10 +479,10 @@
   </nav>
 </div>
 <div id="tree" class="hide">
-  <div class="thead"><div><b>Améliorations</b><div class="note">Argent : <span id="treeMoney">0</span></div></div><button class="btn" data-act="closeTree">Fermer</button></div>
+  <div class="thead"><div class="tt"><b>Arbre d'évolution</b><span class="tm"><span id="tmIco"></span><span id="treeMoney">0</span></span></div><button class="xbtn" data-act="closeTree" aria-label="Fermer l'arbre" id="treeX"></button></div>
   <div id="treeView">
     <div id="treeWorld"><svg id="treeEdges"></svg><div id="treeNodes"></div></div>
-    <div class="tzoom"><button class="hbtn" data-act="tz" data-z="1.25">+</button><button class="hbtn" data-act="tz" data-z="0.8">&minus;</button><button class="hbtn" data-act="tcenter">Centrer</button></div>
+    <div class="tzoom"><button class="tbtn" data-act="tz" data-z="1.25" aria-label="Zoomer">+</button><button class="tbtn" data-act="tz" data-z="0.8" aria-label="Dézoomer">&minus;</button><button class="tbtn" data-act="tcenter" aria-label="Centrer" id="tcIco"></button></div>
     <div class="thint">Glisser pour se déplacer · pincer pour zoomer · toucher un élément</div>
   </div>
   <div id="treeSheet"></div>
@@ -1695,7 +1861,7 @@ function defMenuHtml(S, money) {
   const d = G.selected, D = DEF[d.type], N = D.levels[d.lv + 1], side = D.place === 'side';
   let up;
   if (!N) up = `<button disabled><span class="l">Niveau</span><span class="p">max</span></button>`;
-  else if (G.defTech[d.type] > d.lv) { const c = N.cost; up = `<button class="${S.pick === 'up' ? 'pick' : ''}" data-act="dUp" data-cost="${c}" ${money < c ? 'disabled' : ''}><span class="l">${S.pick === 'up' ? 'Confirmer' : 'Améliorer'}</span><span class="n">niv. ${d.lv + 2}</span><span class="p">${fmt(c)}</span></button>`; }
+  else if (G.defTech[d.type] > d.lv) { const c = N.cost; up = `<button class="${S.pick === 'up' ? 'pick' : ''}" data-act="dUp" data-cost="${c}" ${money < c ? 'disabled' : ''}><span class="l">${S.pick === 'up' ? 'Confirmer' : 'Niv. ' + (d.lv + 2)}</span><span class="n">améliorer</span><span class="p">${fmt(c)}</span></button>`; }
   else up = G.mode === 'wave' ? `<button disabled><span class="l">Niv. ${d.lv + 2}</span><span class="n">arbre après la vague</span></button>` : `<button data-act="openNode" data-id="${d.type}${d.lv + 2}"><span class="l">Niv. ${d.lv + 2}</span><span class="n">à débloquer</span><span class="p">Arbre</span></button>`;
   const tg = side ? `<button data-act="dTgt"><span class="l">Cible</span><span class="n">touchez pour changer</span><span class="p">${TGT[d.tgt]}</span></button>` : '';
   const sell = `<button class="${S.pick === 'sell' ? 'pick' : ''}" data-act="dSell"><span class="l">${S.pick === 'sell' ? 'Confirmer' : 'Vendre'}</span><span class="p">+${fmt(d.spent * 0.6)}</span></button>`;
@@ -1814,6 +1980,8 @@ function act(a, ds) {
     case 'goals': showOverlay('goals'); return;
     case 'mzPick': META.menacePick = clamp(+ds.l, 0, META.menace); saveMeta(); showOverlay('diff'); return;
     case 'share': shareResult(); return;
+    case 'resume': hideOverlay(); if (G.mode === 'wave') G.paused = false; renderButtons(); return;
+    case 'sound': SND.init(); SND.on = !SND.on; showOverlay('pause'); return;
     case 'back': showOverlay(ds.to || (G.mode === 'over' ? 'over' : G.mode === 'title' ? 'title' : G.draft ? 'draft' : 'victory')); return;
     case 'endless': hideOverlay(); toast('Mode infini : jusqu\'où tiendrez-vous ?', 2600); if (G.draft) showOverlay('draft'); return;
     case 'tgt': if (G.selected && TGT[ds.m]) G.selected.tgt = ds.m; break;
@@ -1886,13 +2054,27 @@ function banner(title, sub, red, ms) {
 }
 function renderRecap() {
   const el = $('recap'), R = G.report;
-  if (!(G.mode === 'build' && R && !G.treeOpen && !G.panelOpen)) { el.classList.add('hide'); return; }
+  if (!(G.mode === 'build' && R && !G.treeOpen && !G.panelOpen && !G.slotMenu && !G.wpOpen)) { el.classList.add('hide'); return; }
   const w = G.wave + 1; G.power = firepower(); const weak = G.next && G.power < advisedPower(w) * 0.8;
-  el.innerHTML = `<div class="rt"><b>Vague ${R.to} repoussée</b> · ${fmt(R.kills)} abattus · ${R.lost > 0 ? 'bastion -' + R.lost + ' %' : 'bastion intact'}` +
-    (weak ? `<br><span style="color:#e3a08f">Puissance sous le repère pour la vague ${w}</span>` : '') + `</div><button class="btn" data-act="openReport">Bilan</button><button class="btn" data-act="closeReport" aria-label="Fermer">×</button>`;
+  el.innerHTML = `<span class="rc ${R.lost > 0 ? 'hit' : ''}">${R.lost > 0 ? ICO.hit : ICO.check}</span><div class="rt"><b>Vague ${R.to} repoussée</b><span>${fmt(R.kills)} abattus · ${R.lost > 0 ? 'bastion -' + R.lost + ' %' : 'bastion intact'} · +${fmt(R.bonus + (R.prime || 0))}</span>` +
+    (weak ? `<em>Puissance sous le repère pour la vague ${w}</em>` : '') + `</div><button class="btn buy" data-act="openReport">Bilan</button>${XBTN('closeReport')}`;
   el.classList.remove('hide');
 }
 // Entrées des routes : nombre de zombies de la prochaine vague par route (Kingdom Rush)
+const ICO = {
+  coin: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="currentColor"/><circle cx="8" cy="8" r="4.3" fill="none" stroke="#2a2310" stroke-width="1.2" opacity=".55"/><path d="M8 5v6M6.4 6.3h2.4a1 1 0 0 1 0 2H7.2a1 1 0 0 0 0 2h2.4" fill="none" stroke="#2a2310" stroke-width="1.2" stroke-linecap="round"/></svg>',
+  shield: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.3 2.6 3.2v4.1c0 3.3 2.3 6.1 5.4 7.4 3.1-1.3 5.4-4.1 5.4-7.4V3.2z" fill="currentColor"/><path d="M8 3.4v9.1" stroke="#3d1a13" stroke-width="1.2" opacity=".5"/></svg>',
+  pause: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3" width="3.2" height="10" rx="1" fill="currentColor"/><rect x="9.3" y="3" width="3.2" height="10" rx="1" fill="currentColor"/></svg>',
+  play: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg>',
+  sndOn: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.6L8.6 3v10L5.1 10H2.5z" fill="currentColor"/><path d="M10.6 5.3a3.6 3.6 0 0 1 0 5.4M12.3 3.6a6 6 0 0 1 0 8.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  sndOff: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.6L8.6 3v10L5.1 10H2.5z" fill="currentColor"/><path d="m10.5 6 3.5 4m0-4-3.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  close: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  check: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8.4 3 3 6-6.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  hit: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v7M8 12.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  center: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><path d="M8 1v2.4M8 12.6V15M1 8h2.4M12.6 8H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+};
+const XBTN = (act, extra) => `<button class="xbtn" data-act="${act}" ${extra || ''} aria-label="Fermer">${ICO.close}</button>`;
+const COIN = v => `<span class="cn">${ICO.coin}${v}</span>`;
 const SKULL = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-3.3 0-5.5 2.2-5.5 5.2 0 1.8.8 3 1.9 3.7V13h1.6v-1.3h1.2V13h1.6v-1.3h1.2V13h1.6v-2.6c1.1-.7 1.9-1.9 1.9-3.7 0-3-2.2-5.2-5.5-5.2Z" fill="#f3e6df"/><circle cx="5.8" cy="7.4" r="1.4" fill="#4a1912"/><circle cx="10.2" cy="7.4" r="1.4" fill="#4a1912"/></svg>';
 function gateCounts() {
   const by = {};
@@ -2033,13 +2215,13 @@ function treeDetail(n) {
     h += lvRows(m.levels, lv, own, L => modDesc(n.ref, L));
     if (own && lv < 3) h += `<div class="br"><button class="btn buy" data-act="modUp" data-id="${n.ref}" data-cost="${m.levels[lv].cost}">Niv. ${lv + 1} : ${fmt(m.levels[lv].cost)}</button></div>`;
   }
-  if (!own) h += av ? `<div class="br"><button class="btn buy" data-act="node" data-id="${n.id}" data-cost="${nodeCost(n)}">Débloquer : ${fmt(nodeCost(n))}</button></div>`
+  if (!own) h += av ? `<div class="br" style="margin-top:10px"><button class="btn buy wide" data-act="node" data-id="${n.id}" data-cost="${nodeCost(n)}">Débloquer · ${COIN(fmt(nodeCost(n)))}</button></div>`
                    : `<div class="note" style="margin-top:6px">Requiert : ${reqText(n)}</div>`;
   const kids = TREE.filter(x => nodeReqs(x).some(([p]) => p === n.id));
   if (kids.length) h += `<div class="note" style="margin-top:6px">Ouvre : ${kids.map(shortName).join(', ')}</div>`;
   return h + '</div>';
 }
-const sheetHead = t => `<div class="shead"><span class="grab"></span><b>${t}</b><button class="btn" data-act="closeSheet">Fermer</button></div>`;
+const sheetHead = t => `<div class="shead"><span class="grab"></span><b>${t}</b>${XBTN('closeSheet')}</div>`;
 function panelBuild() {
   if (G.tab === 'bastion') return sheetBastion();
   if (G.tab === 'report') return sheetReport();
@@ -2050,18 +2232,23 @@ function nextWaveCard() {
   if (!G.next) return '';
   const w = G.wave + 1, S = waveSummary(G.next, w);
   G.power = firepower();
-  return `<div class="sect">Prochaine vague · ${w}${w === VICTORY && !G.won ? ' · la dernière avant la victoire' : ''}</div><div class="card"><div class="zl">${S.types.map(([k, n]) => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} x${n}</span>`).join('')}</div>` +
+  const A = advisedPower(w), k = G.power / A, col = k >= 1 ? '#9cc46b' : k >= 0.8 ? '#e0a040' : '#e8604a';
+  return `<div class="sect">Prochaine vague · ${w}${w === VICTORY && !G.won ? ' · la dernière avant la victoire' : ''}</div><div class="card"><div class="zl">${S.types.map(([k, n]) => `<span class="zc" style="--c:${ZT[k].color}">${ZT[k].name} <b>${n}</b></span>`).join('')}</div>` +
     `<div class="note">${S.total} zombies · ${S.paths.length > 1 ? 'routes' : 'route'} ${S.paths.join(', ')}${S.fresh.length ? ' · nouveau : ' + S.fresh.join(', ') : ''}</div>` +
-    `<div class="note">Votre puissance de feu : <b style="color:${G.power >= advisedPower(w) ? 'var(--khaki)' : '#e3a08f'}">${fmt(G.power)}</b> · repère ${DIFF[G.diff].name} : ${fmt(advisedPower(w))}</div>` +
-    (G.power < advisedPower(w) * 0.8 ? `<div class="note" style="color:#e3a08f">Puissance nettement sous le repère : une horde peut percer d'un coup. Renforcez tours et pièges, et le bastion.</div>` : '') + '</div>';
+    `<div class="pmeter"><i style="width:${Math.min(100, k / 1.4 * 100)}%;background:linear-gradient(90deg,${col}99,${col})"></i><span class="mk" style="left:${100 / 1.4}%"></span></div>` +
+    `<div class="plab"><span>Puissance de feu <b style="color:${col}">${fmt(G.power)}</b></span><span>repère ${DIFF[G.diff].name} <b>${fmt(A)}</b></span></div>` +
+    (k < 0.8 ? `<div class="note" style="color:#f0a08a;margin-top:6px">Nettement sous le repère : une horde peut percer d'un coup. Renforcez tours, pièges et bastion.</div>` : '') + '</div>';
 }
 function sheetReport() {
-  let h = sheetHead('Bilan et prochaine vague');
-  if (G.report) {
-    const R = G.report;
-    h += `<div class="sect">Bilan · vague${R.from < R.to ? 's ' + R.from + ' à ' + R.to : ' ' + R.to}</div><div class="card"><div class="note">${fmt(R.kills)} zombies abattus · bastion ${R.lost > 0 ? '-' + R.lost + ' % de PV' : 'intact'} · prime +${fmt(R.bonus)}${R.prime ? ' · appel anticipé +' + fmt(R.prime) : ''}</div>` +
-      R.rows.map(r => `<div class="rrow" ${r.def >= 0 ? `data-act="selDef" data-i="${r.def}"` : ''}><span class="rn">${r.name}${r.lv ? ' · niv. ' + r.lv : ''}</span><span class="rk">${r.k} élim.</span><span class="rbar"><i style="width:${r.pct}%"></i></span><span class="rp">${r.pct} %</span></div>`).join('') +
-      `<div class="note" style="margin-top:6px">Part des dégâts. Touchez une défense pour voir sa fiche.</div></div>`;
+  const R = G.report;
+  let h = sheetHead(R ? `Bilan · vague${R.from < R.to ? 's ' + R.from + ' à ' + R.to : ' ' + R.to}` : 'Prochaine vague');
+  if (R) {
+    h += `<div class="stiles"><div class="stile"><b>${fmt(R.kills)}</b><span>abattus</span></div>` +
+      `<div class="stile ${R.lost > 0 ? 'bad' : 'good'}"><b>${R.lost > 0 ? '-' + R.lost + ' %' : 'intact'}</b><span>bastion</span></div>` +
+      `<div class="stile gold"><b>+${fmt(R.bonus + (R.prime || 0))}</b><span>${R.prime ? 'primes + appel' : 'prime'}</span></div></div>`;
+    h += `<div class="sect">Qui a tenu la ligne</div><div class="card">` +
+      R.rows.map((r, i) => `<div class="rrow" ${r.def >= 0 ? `data-act="selDef" data-i="${r.def}"` : ''}><span class="rr">${i + 1}</span><span class="rn">${r.name}<small>${r.lv ? 'niv. ' + r.lv + ' · ' : ''}${r.k} élim.</small></span><span class="rbar"><i style="width:${r.pct}%"></i></span><span class="rp">${r.pct} %</span></div>`).join('') +
+      `<div class="note" style="margin-top:6px">Part des dégâts de la vague. Touchez une défense pour ouvrir sa fiche.</div></div>`;
   }
   return h + nextWaveCard();
 }
@@ -2119,7 +2306,7 @@ function sheetDef() {
         ? `<div class="br"><span style="flex:1;font-size:12px">Niv. ${d.lv + 2} · ${N.n} : ${defDesc(d.type, N)}</span></div><div class="row" style="margin-top:6px"><button class="btn buy" data-act="upInst" data-cost="${N.cost}">Améliorer celle-ci : ${fmt(N.cost)}</button>`
         : `<div class="note" style="margin-top:6px">Niveau ${d.lv + 2} (${N.n}) : option à débloquer dans l'arbre${G.mode === 'wave' ? ', entre deux vagues' : ''}.</div><div class="row" style="margin-top:6px">` + (G.mode === 'wave' ? '' : `<button class="btn buy" data-act="openNode" data-id="${d.type}${d.lv + 2}">Voir dans l'arbre</button>`);
     } else h += '<div class="row" style="margin-top:6px"><span class="tag">Niveau max</span>';
-    h += `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button><button class="btn" data-act="closeSel">Fermer</button></div>`;
+    h += `<button class="btn red" data-act="sellDef">Vendre +${fmt(d.spent * 0.6)}</button></div>`;
     if (D.place === 'side') h += `<div class="tgt"><span class="bl">Priorité de tir</span>${Object.keys(TGT).map(m => `<button class="wchip ${d.tgt === m ? 'eq' : ''}" data-act="tgt" data-m="${m}">${TGT[m]}</button>`).join('')}</div>`;
     h += `<div class="note" style="margin-top:7px">Depuis le début : ${fmt(d.st.kills)} éliminations, ${fmt(d.st.dmg)} dégâts. Dernière vague : ${fmt(d.st.wk)} éliminations.</div></div>`;
   }
@@ -2205,8 +2392,10 @@ function renderPlaceBar() {
 }
 function renderButtons() {
   $('btnSpeed').textContent = 'x' + G.speed; $('btnSpeed').classList.toggle('on', G.speed > 1);
-  $('btnPause').textContent = G.paused ? 'Reprendre' : 'Pause'; $('btnPause').classList.toggle('on', G.paused);
-  $('btnSound').classList.toggle('on', SND.on);
+  const pk = G.paused ? 'play' : 'pause';
+  if ($('btnPause').dataset.k !== pk) { $('btnPause').dataset.k = pk; $('btnPause').innerHTML = ICO[pk]; $('btnPause').setAttribute('aria-label', G.paused ? 'Reprendre' : 'Pause'); }
+  $('btnPause').classList.toggle('on', G.paused);
+
   $('weaponBar').classList.toggle('hide', G.panelOpen || !(G.mode === 'build' || G.mode === 'wave'));
 }
 function renderAll() { renderGates(); renderRecap(); renderTreeBadge(); renderSlotMenu(); renderBonusBar(true); renderPanel(); renderTree(); renderWeaponBar(); renderWaveBtn(); renderPlaceBar(); renderButtons(); hud(true); requestAnimationFrame(fit); }
@@ -2220,7 +2409,10 @@ function hud(force) {
   $('hudWave').textContent = G.won || G.mode === 'title' ? G.wave : `${G.wave}/${VICTORY}`;
   $('hudMoney').textContent = fmt(G.money);
   $('hpFill').style.width = clamp(G.hp / max * 100, 0, 100) + '%';
-  $('hpText').textContent = `${fmt(Math.ceil(G.hp))}/${fmt(max)}`;
+  $('hpText').innerHTML = `${fmt(Math.ceil(G.hp))}<small>/ ${fmt(max)}</small>`;
+  $('hpWrap').classList.toggle('low', G.hp < max * 0.35 && G.mode === 'wave');
+  $('hpWrap').setAttribute('aria-label', `Bastion : ${fmt(Math.ceil(G.hp))} PV sur ${fmt(max)}`);
+  if (!$('icoWave').firstChild) { $('icoWave').innerHTML = SKULL; $('icoMoney').innerHTML = ICO.coin; $('icoHp').innerHTML = ICO.shield; }
   if (G.mode === 'wave') renderWaveBtn();
   const pg = $('wprog');
   pg.classList.toggle('show', G.mode === 'wave');
@@ -2243,6 +2435,11 @@ function showOverlay(kind) {
     h += `<h2 style="color:var(--khaki)">Ravitaillement</h2><div class="sub">Vague ${G.wave} tenue. Choisissez une carte, valable pour toute la partie.</div>` +
       G.draft.map(id => { const C = CARDS[id], n = cardN(id); return `<button class="dcard" style="--c:${CAT_COL[C.cat]}" data-act="card" data-id="${id}"><span class="dk">${C.cat}</span><b>${C.name}</b><div class="dd">${cardDesc(id)}</div>${n && id !== 'ravit' ? `<div class="ds">Déjà prise ${n} fois · maximum ${C.max}</div>` : ''}</button>`; }).join('') +
       (G.rerolls > 0 ? `<button class="big alt" data-act="reroll">Relancer le tirage (${G.rerolls})</button>` : '');
+  } else if (kind === 'pause') {
+    h += `<h2>Pause</h2><div class="sub">${G.mode === 'wave' ? `Vague ${G.wave} en cours` : `Avant la vague ${G.wave + 1}`} · ${G.daily ? 'défi du jour' : DIFF[G.diff].name + (G.menace ? ' · Menace ' + G.menace : '')}</div>` +
+      `<button class="big" data-act="resume">Reprendre</button>` +
+      `<button class="big alt pset" data-act="sound"><span class="pi">${ICO[SND.on ? 'sndOn' : 'sndOff']}</span>Son : ${SND.on ? 'activé' : 'coupé'}</button>` +
+      `<div class="rec">La partie est sauvegardée au début de chaque vague.</div>`;
   } else if (kind === 'hq') {
     h += `<h2 style="color:var(--khaki)">Quartier général</h2><div class="sub">Insignes en réserve : <span class="ins">${fmt(META.ins)}</span>. Ils se gagnent à chaque vague tenue (x0,5 en Facile, x1,5 en Cauchemar, bonus à la victoire et en Menace).</div>` +
       PERK_ORDER.map(id => { const P = PERKS[id], r = META.perks[id] || 0, max = P.cost.length, c = P.cost[r];
@@ -2385,6 +2582,7 @@ function renderTree() {
   $('tree').classList.toggle('hide', !G.treeOpen);
   if (!G.treeOpen) return;
   $('treeMoney').textContent = fmt(G.money);
+  if (!$('tmIco').firstChild) { $('tmIco').innerHTML = ICO.coin; $('treeX').innerHTML = ICO.close; $('tcIco').innerHTML = ICO.center; }
   const vis = TREE.filter(nodeVisible);
   let edges = '', nodes = '';
   vis.forEach(n => {
@@ -2394,12 +2592,12 @@ function renderTree() {
   });
   vis.forEach(n => {
     const [x, y] = gpx(n.id), own = owned(n), av = nodeAvailable(n);
-    const cls = own ? 'own' : av ? 'av' : 'lock';
+    const cls = own ? 'own' : av ? 'av' + (nodeCost(n) <= G.money ? ' can' : '') : 'lock';
     const fresh = !G.treeSeen[n.id];
     G.treeSeen[n.id] = 1;
     nodes += `<div class="gnode ${cls} ${n.id === ROOT ? 'root' : ''} ${G.treeSel === n.id ? 'sel' : ''} ${fresh ? 'new' : ''}" style="left:${x}px;top:${y}px" data-id="${n.id}">` +
       `<img src="${icon(ICON_OF(n))}" alt="">` +
-      (own ? (n.kind === 'module' || n.kind === 'bonus' ? `<span class="glv">${nodeLevel(n)}/3</span>` : '') : `<span class="gcost">${fmt(nodeCost(n))}</span>`) +
+      (own ? (n.kind === 'module' || n.kind === 'bonus' ? `<span class="glv">${nodeLevel(n)}/3</span>` : '') : `<span class="gcost ${av && nodeCost(n) <= G.money ? 'ok' : ''}">${fmt(nodeCost(n))}</span>`) +
       (!own && !av ? '<span class="glk"></span>' : '') +
       (n.kind === 'tech' ? `<span class="grom">${n.lv === 1 ? 'II' : 'III'}</span>` : '') + `<span class="glab">${GLABEL[n.id] || shortName(n)}</span></div>`;
   });
@@ -2414,7 +2612,7 @@ function renderTree() {
   const sel = G.treeSel && NODE[G.treeSel];
   if (sel && nodeVisible(sel)) {
     const lv = nodeLevel(sel), own = lv > 0, av = nodeAvailable(sel);
-    sh.innerHTML = `<div class="shead"><img src="${icon(ICON_OF(sel))}" alt=""><div><b>${nodeName(sel)}</b><div class="note">${own ? (sel.kind === 'module' || sel.kind === 'bonus' ? 'Acquis · rang ' + lv + '/3' : 'Acquis') : av ? 'Disponible : ' + fmt(nodeCost(sel)) : 'Verrouillé'}</div></div><button class="btn" data-act="treeSel" data-id="${sel.id}">Fermer</button></div>` + treeDetail(sel);
+    sh.innerHTML = `<div class="shead"><span class="ticon ${own ? 'own' : ''}"><img src="${icon(ICON_OF(sel))}" alt=""></span><div><b>${nodeName(sel)}</b><br><span class="st ${own ? 'own' : av ? 'av' : ''}">${own ? (sel.kind === 'module' || sel.kind === 'bonus' ? 'Acquis · rang ' + lv + '/3' : 'Acquis') : av ? 'Disponible' : 'Verrouillé'}</span></div>${XBTN('treeSel', `data-id="${sel.id}"`)}</div>` + treeDetail(sel);
   } else {
     sh.innerHTML = `<div class="hint" style="margin:0">${rootOwned() ? 'Touchez un élément. Les éléments en gris sont les prochains achats possibles ; le reste se dévoile à mesure que vous avancez.' : 'Un seul choix pour commencer : le nid de mitrailleuse, au centre. Touchez-le.'}</div>`;
   }
@@ -3164,8 +3362,13 @@ $('btnWave').addEventListener('click', () => { SND.init(); startWave(); });
   panel.addEventListener('touchend', end); panel.addEventListener('touchcancel', end);
 })();
 $('btnSpeed').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; renderButtons(); });
-$('btnPause').addEventListener('click', () => { G.paused = !G.paused; renderButtons(); });
-$('btnSound').addEventListener('click', () => { SND.init(); SND.on = !SND.on; renderButtons(); });
+// pause : met le jeu en pause et ouvre le menu (reprendre, son) ; si déjà en pause sans menu, reprend
+$('btnPause').addEventListener('click', () => {
+  SND.init();
+  if (G.mode === 'wave' && G.paused && $('overlay').classList.contains('hide')) { G.paused = false; renderButtons(); return; }
+  if (G.mode === 'wave') G.paused = true;
+  showOverlay('pause'); renderButtons();
+});
 window.addEventListener('resize', fit);
 if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);
 document.addEventListener('visibilitychange', () => { if (document.hidden && G && G.mode === 'wave' && !G.paused) { G.paused = true; renderButtons(); } });

@@ -1,4 +1,4 @@
-# DERNIER BASTION — document de conception (V2.3)
+# DERNIER BASTION — document de conception (V2.4)
 
 Tower defense post-apocalyptique. Un homme seul tient un bastion central contre des hordes de zombies qui arrivent par plusieurs chemins. Toute la progression passe par **un arbre d'évolution unique** : armes de l'homme, tours, pièges et bunker.
 
@@ -75,6 +75,39 @@ Grille de 9 × 13 cases, bunker au centre.
 - **Fin de partie** : entre les vagues 30 et 70 selon le profil et la composition des hordes, avec une médiane d'environ 50.
 - **Pertes** : elles apparaissent vers la vague 20, puis montent par paliers modérés.
 - **Limite** : les joueurs automatiques jouent parfaitement. Un humain prendra des dégâts plus tôt, et le directeur l'accompagnera en conséquence.
+
+## 2 duodecies. Changement V2.4 : refonte visuelle
+
+**Demande de Renan** : une barre du haut aussi belle que celle du bas, des menus d'évolution et un bilan plus beaux, et un travail visuel d'ensemble, sur le modèle des meilleurs jeux.
+
+**Principes retenus** (pratiques reconnues du jeu mobile) :
+- les ressources s'affichent en icône plus chiffre, ancrées dans les coins (Bloons TD 6, Kingdom Rush) ;
+- peu d'informations à l'écran pendant l'action ;
+- des chiffres gros et gras ;
+- un style unique partout (Clash Royale) : panneaux sombres à liseré, boutons épais à biseau, une seule couleur d'action (kaki doré) ;
+- vert pour ce qui va bien, orange pour l'alerte, rouge pour le danger.
+
+**Barre du haut.**
+- Trois blocs : Vague (crâne), Argent (pièce, chiffre doré), Bastion (bouclier, PV en gros et barre de vie dessous, qui clignote sous 35 % pendant une vague).
+- À droite, la vitesse et un bouton Pause à icône. La pause ouvre un menu (Reprendre, Son activé ou coupé) : le bouton Son quitte la barre pour laisser de la place à la vie du bastion.
+- Sur un écran étroit (moins de 370 px), les petits libellés disparaissent.
+
+**Arbre d'évolution.**
+- En-tête : titre, argent dans une pastille, fermeture par une croix ronde. Zoom par boutons ronds à icône.
+- Nœuds arrondis. Un nœud acquis est doré et lumineux. Un nœud achetable avec l'argent disponible pulse en doré et son prix devient une pastille dorée. Un nœud verrouillé est estompé, et le nœud sélectionné est cerclé de blanc chaud.
+- Fiche du nœud : grande vignette, statut en pastille (Acquis, Disponible, Verrouillé), niveaux en cartes, et un grand bouton doré « Débloquer · prix ».
+
+**Bilan.**
+- Le bandeau de fin de vague porte une icône (coche verte si le bastion est intact, sinon alerte rouge), le résultat et la prime. Il a un bouton « Bilan » doré et une croix. Il se cache quand un menu de la carte est ouvert.
+- La fiche du bilan ouvre sur trois tuiles (abattus, état du bastion, primes). Suit « Qui a tenu la ligne » : un classement numéroté, le premier en or, avec une barre de part des dégâts.
+- La prochaine vague s'affiche en pastilles de couleur par type de zombie. Une jauge de puissance de feu porte un repère (vert au-dessus, orange un peu sous, rouge nettement sous).
+
+**Ensemble.**
+- Fiches : en-tête plus marqué, fermeture par croix ronde (les doubles « Fermer » ont été retirés), titres de section soulignés d'un filet.
+- Cartes et menus de la carte : arrondis, liseré, prix en pastille dorée.
+- Écrans (titre, difficulté, ravitaillement, Quartier général, défaite, victoire, pause) : présentés dans un cadre.
+- Les cartes de ravitaillement gagnent un relief et une catégorie en pastille. Le bandeau de vague passe en majuscules.
+- Toutes les animations respectent le réglage « réduire les animations » de l'appareil.
 
 ## 2 undecies. Changement V2.3 : rythme des achats, réalisme étendu, nouvelle barre de commande
 
